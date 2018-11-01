@@ -1,10 +1,13 @@
 package Engine;
-
+import Engine.Model.Parse ;
+import edu.stanford.nlp.trees.Tree;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
+import java.util.List;
 
 public class Main extends Application {
 
@@ -14,6 +17,17 @@ public class Main extends Application {
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
+        String str = "My dog 1123.000 10K also! , likes ,eating, 55 Billion $450,000";
+        Parse parser = new Parse();
+        Tree tree = parser.parse(str);
+
+        List<Tree> leaves = tree.getLeaves();
+        // Print words and Pos Tags
+        for (Tree leaf : leaves) {
+            Tree parent = leaf.parent(tree);
+            System.out.print( "'" + leaf.label().value() + "'");
+        }
+        System.out.println();
     }
 
 

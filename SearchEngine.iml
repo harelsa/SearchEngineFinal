@@ -7,6 +7,29 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Downloads/stanford-english-corenlp-2018-10-05-models.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$USER_HOME$/Downloads/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/ejml-0.23.jar!/" />
+          <root url="jar://$USER_HOME$/Downloads/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/stanford-parser.jar!/" />
+        </CLASSES>
+        <JAVADOC>
+          <root url="jar://$USER_HOME$/Downloads/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/stanford-parser-3.5.1-javadoc.jar!/" />
+        </JAVADOC>
+        <SOURCES>
+          <root url="jar://$USER_HOME$/Downloads/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/stanford-parser-3.5.1-sources.jar!/" />
+          <root url="file://$USER_HOME$/Downloads/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>
-
