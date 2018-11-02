@@ -3,7 +3,7 @@ import java.io.StringReader;
 import java.util.List;
 
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.process.TokenizerFactory;
+import edu.stanford.nlp.objectbank.TokenizerFactory;
 import edu.stanford.nlp.parser.lexparser.LexicalizedParser;
 import edu.stanford.nlp.process.CoreLabelTokenFactory;
 import edu.stanford.nlp.process.PTBTokenizer;
