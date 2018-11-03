@@ -17,7 +17,7 @@ public class Main extends Application {
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
-        String str = "My dog 1123.000 10K also! , likes ,eating, 55 Billion $450,000";
+        String str = "isn't it great to parse in Java-Parser , od don't it ? ";
         Parse parser = new Parse();
         Tree tree = parser.parse(str);
 
@@ -28,6 +28,7 @@ public class Main extends Application {
             System.out.print( "'" + leaf.label().value() + "'");
         }
         System.out.println();
+
     }
 
 
