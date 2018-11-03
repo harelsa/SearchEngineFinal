@@ -17,7 +17,7 @@ public class Main extends Application {
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
-        String str = "isn't it great to parse in Java-Parser , od don't it ? ";
+        String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
         Parse parser = new Parse();
         Tree tree = parser.parse(str);
 
