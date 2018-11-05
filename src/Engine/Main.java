@@ -1,6 +1,5 @@
 package Engine;
 import Engine.Model.Parse ;
-import edu.stanford.nlp.trees.Tree;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -17,7 +16,8 @@ public class Main extends Application {
         primaryStage.setTitle("Hello World");
         primaryStage.setScene(new Scene(root, 300, 275));
         primaryStage.show();
-        String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
+        //String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
+        String str = "1 Million";
         Parse parser = new Parse();
         parser.parse(str);
         // Print words and Pos Tags
