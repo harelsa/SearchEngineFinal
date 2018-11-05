@@ -12,12 +12,12 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("View/view.fxml"));
-        primaryStage.setTitle("Hello World");
-        primaryStage.setScene(new Scene(root, 300, 275));
-        primaryStage.show();
+        //Parent root = FXMLLoader.load(getClass().getResource("View/view.fxml"));
+//        primaryStage.setTitle("Hello World");
+//        primaryStage.setScene(new Scene(root, 300, 275));
+        //primaryStage.show();
         //String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
-        String str = "1 Million";
+        String str = "10.6 percent.";
         Parse parser = new Parse();
         parser.parse(str);
         // Print words and Pos Tags

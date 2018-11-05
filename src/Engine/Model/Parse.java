@@ -14,7 +14,7 @@ public class Parse {
     private StringTokenizer stringTokenizer;
 
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
-    Pattern NumberThousand = Pattern.compile("\\d*" + " " + "(Thousand|Million)");
+    Pattern NumberSize = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|percent|percentage|Dollars)");
 
 
     public HashSet<String> parse(String text) {
@@ -22,6 +22,8 @@ public class Parse {
         stringTokenizer = new StringTokenizer(text);
         documentTerms = new HashSet<>();
         getTermsFromTokens(stringTokenizer);
+
+        return null ;
     }
 
     private void getTermsFromTokens(StringTokenizer stringTokenizer) {
@@ -31,26 +33,49 @@ public class Parse {
     }
 
     private void checkValidTerm(String word) {
-        word = word.replaceAll("[]\\[()?\".,]","");
-        String anotherToken = stringTokenizer.nextToken();
+        String term = ""; // the finel term !
+
+        word = word.replaceAll("[]\\[()?\",]", ""); // clean token
+        if ( ! Character.isDigit(word.charAt(0)) )  word = word.replaceAll("[.]", ""); // clean token
+
+        String anotherToken = stringTokenizer.nextToken(); // save next token to check
+
+        anotherToken = anotherToken.replaceAll("[]\\[()?\",]", ""); // clean token
+        if ( ! Character.isDigit(anotherToken.charAt(0)) )  anotherToken = anotherToken.replaceAll("[.]", "");
+
         String newWord = word + " " + anotherToken;
-        System.out.println("Pattern print: " + NumberThousand.pattern());
-        Matcher m = NumberThousand.matcher(word + " " + anotherToken);
-        while (m.find()){
-            System.out.println(m.group());
+
+        // check <decimal + NumberSize >
+        System.out.println("Pattern print: " + NumberSize.pattern());
+        Matcher m = NumberSize.matcher(word + " " + anotherToken);
+        if(m.find()) {
+            String temp =anotherToken ;
+            switch (temp ){
+                case "Thousand" :
+                    term = word + "K" ;
+                    break;
+                case "Million" :
+                    term = word + "M" ;
+                    break;
+                case "Billion" :
+                    term = word + "B" ;
+                    break;
+                case "percent" :
+                    term = word + "%" ;
+                    break;
+                case "percentage" :
+                    term = word + "%" ;
+                    break;
+                case "Dollars" :
+                    term = word + "%" ;
+                    break;
+            }
+
         }
+        System.out.println( term );
 
-//            if (NUMBER_SIZES.contains(anotherToken))
-//                numberOperation(word, anotherToken);
-//            else{
-//                numberOperation(word);
-//                checkValidTerm(anotherToken);
-//            }
-
-        }
-
-
-        //documentTerms.add(newWord);
+        //documentTerms.add(term);
+    }
 
 
 
@@ -84,7 +109,7 @@ public class Parse {
                 }
             }
             for (String s : result) {
-                 res +=  s + " ";
+                res +=  s + " ";
             }
         } catch (Exception ex) {
             System.out.println(ex);
