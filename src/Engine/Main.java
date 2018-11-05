@@ -19,15 +19,13 @@ public class Main extends Application {
         primaryStage.show();
         String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
         Parse parser = new Parse();
-        Tree tree = parser.parse(str);
-
-        List<Tree> leaves = tree.getLeaves();
+        parser.parse(str);
         // Print words and Pos Tags
-        for (Tree leaf : leaves) {
-            Tree parent = leaf.parent(tree);
-            System.out.print( "'" + leaf.label().value() + "'");
-        }
-        System.out.println();
+//        for (Tree leaf : leaves) {
+//            Tree parent = leaf.parent(tree);
+//            System.out.print( "'" + leaf.label().value() + "'");
+//        }
+//        System.out.println();
 
     }
 
