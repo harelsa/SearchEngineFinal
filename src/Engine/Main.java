@@ -17,7 +17,7 @@ public class Main extends Application {
 //        primaryStage.setScene(new Scene(root, 300, 275));
         //primaryStage.show();
         //String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
-        String str = "30 March 10.6 percent";
+        String str = "SEPTEMBER 33";
         Parse parser = new Parse();
         parser.parse(str);
         // Print words and Pos Tags
