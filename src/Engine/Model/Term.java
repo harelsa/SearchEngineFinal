@@ -7,8 +7,4 @@ public class Term {
     private int tf = 0 ; // the number of
     private HashMap< Document , Integer > docs  ;// < doc obj , tr - number tomes the term appear in the doc >
 
-
-
-
-
 }

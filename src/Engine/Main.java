@@ -17,7 +17,8 @@ public class Main extends Application {
 //        primaryStage.setScene(new Scene(root, 300, 275));
         //primaryStage.show();
         //String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
-        String str = "SEPTEMBER 33";
+        String str = "$450,000 BLA BLA 0.6 percent BLA BLA 10.6 percentage BLA BLA  10,123 55 Million 55 Billion 1010.56 6% 1,000,000 Dollars 1.7320 Dollars $450,000,000 7 Trillion 10,123,000,000";
+        //String str = "7 Trillion";
         Parse parser = new Parse();
         parser.parse(str);
         // Print words and Pos Tags

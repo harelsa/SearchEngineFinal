@@ -12,15 +12,21 @@ public class Parse {
     private double THOUSAND = Math.pow(10, 3);
     private double MILLION = Math.pow(10, 6);
     private double BILLION = Math.pow(10, 9);
+    private double TRILLION = Math.pow(10, 12);
+
 
     //final ArrayList<String> NUMBER_SIZES = new ArrayList<String>(Arrays.asList("Thousand", "Million", "Billion", "Trillion")){};
     private HashSet<String> documentTerms;
     private StringTokenizer stringTokenizer;
+    private static  HashMap < String , Term  > AllTerms  = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
 
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
-    Pattern NumberSize = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|percent|percentage|Dollars)");
+    Pattern NUMBER_SIZE = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
     Pattern DATE_DD_MONTH = Pattern.compile("(3[01]|[0-2][0-9])" + " " + "(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)");
     Pattern DATE_MONTH_DD = Pattern.compile("(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)" + " " + "(3[01]|[0-2][0-9])");
+    Pattern PRICE_SIMPLE = Pattern.compile( "$" + "\\d*");
+    Pattern PRICE_SIMPLE_SIZE = Pattern.compile( "$" + "\\d*");
+
 
 
     public HashSet<String> parse(String text) {
@@ -32,31 +38,41 @@ public class Parse {
     }
 
     private void getTerms(String[] tokensArray) {
+
+
+
         for (int i = 0; i < tokensArray.length; ) {
-            if (i < tokensArray.length - 3) {
-                if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3])) {
-                    i += 4;
-                    continue;
+            if ( Character.isDigit(tokensArray[i].charAt(0)))
+            {  // change the term only if the first token is a number !!!!
+                if (i < tokensArray.length - 3) {
+                    if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3])) {
+                        i += 4;
+                        continue;
+                    }
                 }
-            }
-            if (i < tokensArray.length - 2) {
-                if (check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2])) {
-                    i += 3;
-                    continue;
+                if (i < tokensArray.length - 2) {
+                    if (check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2])) {
+                        i += 3;
+                        continue;
+                    }
                 }
-            }
-            if (i < tokensArray.length - 1) {
-                if (check2WordsPattern(tokensArray[i], tokensArray[i + 1])) {
-                    i += 2;
-                    continue;
+                if (i < tokensArray.length - 1) {
+                    if (check2WordsPattern(tokensArray[i], tokensArray[i + 1])) {
+                        i += 2;
+                        continue;
+                    }
                 }
-            }
-            if (i < tokensArray.length) {
-                if (check1WordPattern(tokensArray[i])) {
-                    i += 1;
-                    continue;
+                if (i < tokensArray.length) {
+                    if (check1WordPattern(tokensArray[i])) {
+                        i += 1;
+                        continue;
+                    }
                 }
+
             }
+            System.out.println("Term added: " + tokensArray[i]);
+            documentTerms.add(tokensArray[i]);
+            i++ ;
         }
     }
 
@@ -67,16 +83,59 @@ public class Parse {
     }
 
     private boolean check1WordPattern(String token) {
-        // check decimal num
-        token = cleanToken(token);
         String term;
-        if (Character.isDigit(token.charAt(0))) {
-            term = get_term_to_save(token);
+        String originalToken = token;
+        token = cleanToken(token);
+        // < $number >
+        if ( token.startsWith("$")  ){
+            String temp = token.replace( "$" , "" ) ;
+            if (  Character.isDigit(temp.charAt(0))) {
+                term = get_term_from_simple_price(temp , originalToken);
+                System.out.println("Term added: " + term);
+                documentTerms.add(term);
+                return true;
+            }
+        }
+        //< number + % >
+        if ( token.endsWith("%") ) {
+            term = token;
             System.out.println("Term added: " + term);
             documentTerms.add(term);
             return true;
         }
+
+        // < number >
+        if (Character.isDigit(token.charAt(0))) {
+            term = get_term_from_simple_number(token);
+            System.out.println("Term added: " + term);
+            documentTerms.add(term);
+            return true;
+        }
+
+        // < simple token - just add as is >
+        term = token ;
+        System.out.println("Term added: " + term);
+        documentTerms.add(term);
+
+
+
+
+
         return false;
+    }
+
+    private String get_term_from_simple_price(String token ,String originalToken ) {
+        originalToken = originalToken.replace( "$" , "") ;
+        double value = Double.parseDouble(token);
+
+        if (isBetween(value, 0, MILLION - 1))
+            return originalToken  + " Dollars"  ;
+
+        if (isBetween(value, MILLION, Double.MAX_VALUE))
+            return checkVal(value / MILLION) + " M Dollars";
+
+        return "ERROR!!!";
+
     }
 
     private boolean check2WordsPattern(String token1, String token2) {
@@ -85,14 +144,15 @@ public class Parse {
         token2 = cleanToken(token2);
 
         // check <decimal + NumberSize >
-        Matcher numberSizeMatcher = NumberSize.matcher(token1 + " " + token2);
+        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
         if (numberSizeMatcher.find()) {
-            term = PairTokensIsNumberFormat(token1, token2);
+            token1 =
+                    term = PairTokensIsNumberFormat(token1, token2);
             System.out.println("Term added: " + term);
             documentTerms.add(term);
             return true;
         }
-
+        //datre < decimal + Month >
         Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
         if (dateFormatMatcher.find()) {
             term = PairTokensIsDateFormat(token1, token2);
@@ -100,7 +160,7 @@ public class Parse {
             documentTerms.add(term);
             return true;
         }
-
+        //date - < Month + decimal >
         Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
         if (dateFormatMatcher2.find()) {
             term = PairTokensIsDate2Format(token1, token2);
@@ -143,7 +203,11 @@ public class Parse {
                 term = token + "%";
                 break;
             case "Dollars":
-                term = token + "$";
+                term = get_term_from_simple_price( token , token ) ;
+                break;
+            case "Trillion":
+                double value = Double.parseDouble(token) * TRILLION;
+                term =get_term_from_simple_number(value + "");
                 break;
         }
         return term;
@@ -245,7 +309,7 @@ public class Parse {
      *
      * @param token a number
      */
-    private String get_term_to_save(String token) {
+    private String get_term_from_simple_number(String token) {
         double value = Double.parseDouble(token);
 
         if (isBetween(value, 0, THOUSAND - 1))
