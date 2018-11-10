@@ -16,5 +16,12 @@ public class Document {
         this.parentFilePath = parentFilePath;
     }
 
+    public String getDocNo() {
+        return docNo;
+    }
+
+    public String getParentFilePath() {
+        return parentFilePath;
+    }
 
 }

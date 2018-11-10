@@ -17,8 +17,6 @@ public class Parse implements Runnable{
 
 
     //final ArrayList<String> NUMBER_SIZES = new ArrayList<String>(Arrays.asList("Thousand", "Million", "Billion", "Trillion")){};
-    private HashSet<String> documentTerms;
-    private StringTokenizer stringTokenizer;
     private static ConcurrentHashMap< String , Term  > AllTerms  = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
 
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
@@ -33,8 +31,8 @@ public class Parse implements Runnable{
     public HashSet<String> parse(String text , Document currDoc) {
         text = remove_stop_words(text);
         String[] tokens = text.split(" ");
-        documentTerms = new HashSet<>();
         getTerms(tokens ,currDoc);
+        System.out.println("Parsing document number: " + currDoc.getDocNo());
         return null;
     }
 
@@ -56,7 +54,7 @@ public class Parse implements Runnable{
                 Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher( tokensArray[i]+ " " + tokensArray[i+1]);
                 if (dateFormatMatcher2.find()) {
                     String term = PairTokensIsDate2Format(tokensArray[i], tokensArray[i + 1]);
-                    System.out.println("Term added: " + term);
+//                    System.out.println("Term added: " + term);
                     addToDocTerms(term ,currDoc)  ; ;
                     i += 2;
                     continue;
@@ -100,7 +98,7 @@ public class Parse implements Runnable{
                 }
 
             }
-            System.out.println("Term added: " + cleanToken(tokensArray[i])  );
+//            System.out.println("Term added: " + cleanToken(tokensArray[i])  );
             addToDocTerms(cleanToken(tokensArray[i]) , currDoc);
             i++ ;
         }
@@ -134,9 +132,10 @@ public class Parse implements Runnable{
         // < $number >
         if ( token.startsWith("$")  ){
             String temp = token.replace( "$" , "" ) ;
-            if (  Character.isDigit(temp.charAt(0))) {
+            //if (  Character.isDigit(temp.charAt(0))) {
+            if (  isNumeric(temp)) {
                 term = get_term_from_simple_price(temp , originalToken);
-                System.out.println("Term added: " + term);
+//                System.out.println("Term added: " + term);
                 addToDocTerms(term, currDoc)  ; ;
                 return true;
             }
@@ -144,7 +143,7 @@ public class Parse implements Runnable{
         //< number + % >
         if ( token.endsWith("%") ) {
             term = token;
-            System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
             addToDocTerms(term,currDoc)  ; ;
             return true;
         }
@@ -153,14 +152,14 @@ public class Parse implements Runnable{
         if (isNumeric(token)){
         //if (Character.isDigit(token.charAt(0))) {
             term = get_term_from_simple_number(token);
-            System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ; ;
             return true;
         }
 
         // < simple token - just add as is >
         term = token ;
-        System.out.println("Term added: " + term);
+//        System.out.println("Term added: " + term);
         addToDocTerms(term, currDoc)  ; ;
 
         return false;
@@ -190,7 +189,7 @@ public class Parse implements Runnable{
         if (numberSizeMatcher.find()) {
             token1 =
                     term = PairTokensIsNumberFormat(token1, token2);
-            System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ; ;
             return true;
         }
@@ -198,7 +197,7 @@ public class Parse implements Runnable{
         Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
         if (dateFormatMatcher.find()) {
             term = PairTokensIsDateFormat(token1, token2);
-            System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ; ;
             return true;
         }

@@ -14,7 +14,7 @@ import static java.util.stream.Collectors.joining;
 
 
 public class ReadFile {
-    public ArrayList<Pair<String, String>> readFile(String filePathName) {
+    synchronized public ArrayList<Pair<String, String>> readFile(String filePathName) {
         return generateDocuments(filePathName);
     }
 

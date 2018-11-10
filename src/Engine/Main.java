@@ -1,6 +1,7 @@
 package Engine;
 import Engine.Model.Document;
 import Engine.Model.Parse ;
+import Engine.Model.TextOperationsManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -22,10 +23,12 @@ public class Main extends Application {
         //String str = "7 Trillion";
 
         // move to TExt operationg !!!
-        Parse parser = new Parse();
-        Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020") ;
-        parser.parse(str , doc );
+//        Parse parser = new Parse();
+//        Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020") ;
+//        parser.parse(str , doc );
 
+        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Documents\\Engine\\corpus\\corpus");
+        textOperationsManager.StartTextOperations();
 
 
         // Print words and Pos Tags

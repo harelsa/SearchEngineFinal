@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Timer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TextOperationsManager {
     ReadFile reader;
@@ -15,6 +17,7 @@ public class TextOperationsManager {
     String curposPath;
     HashMap<Document, HashSet<String>> DocumentsTerms;
     public ArrayList<String> filesPathsList;
+    ExecutorService executor;
 
     /* FOR TEST ONLY */
     public static int filesCounter;
@@ -27,6 +30,7 @@ public class TextOperationsManager {
         this.parser = new Parse();
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
+        executor = Executors.newFixedThreadPool(4);
     }
 
     public void StartTextOperations(){
@@ -42,19 +46,21 @@ public class TextOperationsManager {
     }
 
     private void readAndParseOneFile(String filePath) {
-        System.out.println("Parsing documents from filepath: " + filePath);
         ArrayList<Pair<String, String>> documentsFromFile = reader.readFile(filePath); // The Pair is: <docNo, FullDocContent>
         for (int i = 0; i < documentsFromFile.size(); i++) {
             // Need to add more methods here
             String docText = getTextFromFullDoc(documentsFromFile.get(i).getValue());
             Document document = new Document(documentsFromFile.get(i).getKey(), filePath);
-            parser.parse(docText, document);
+            Thread parseThread = new Thread(){
+                    public void run(){
+                        parser.parse(docText,document);
+                    }
+            };
+            parser.parse(docText,document);
+            executor.execute(parseThread);
             docsCounter++;
         }
         filesCounter++;
-        System.out.println("Number of files parsing: " + filesCounter);
-        System.out.println("Number of documents parsing: " + docsCounter);
-
     }
 
     private String getTextFromFullDoc(String fullDocContent) {
