@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Parse implements Runnable{
+public class Parse {
     // enums
     private double THOUSAND = Math.pow(10, 3);
     private double MILLION = Math.pow(10, 6);
@@ -16,23 +16,32 @@ public class Parse implements Runnable{
     private double TRILLION = Math.pow(10, 12);
 
 
-    //final ArrayList<String> NUMBER_SIZES = new ArrayList<String>(Arrays.asList("Thousand", "Million", "Billion", "Trillion")){};
-    private static ConcurrentHashMap< String , Term  > AllTerms  = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
 
+    private static ConcurrentHashMap < String , Term  > AllTerms  = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
+
+
+
+
+    //[0-9]{1,2}(/|-)[0-9]{1,2}(/|-)[0-9]{4}
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
-    Pattern NUMBER_SIZE = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
-    Pattern DATE_DD_MONTH = Pattern.compile("(3[01]|[0-2][0-9])" + " " + "(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)");
-    Pattern DATE_MONTH_DD = Pattern.compile("(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)" + " " + "(3[01]|[0-2][0-9])");
+    //Pattern PRICE_DOU_DOLLAR = Pattern.compile( "$" + "\\d*" +" " + "(billion|million|Million|Billion)");
+    Pattern NUMBER_ADDS = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
+    Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d*" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
+    Pattern PRICE_DOU = Pattern.compile("\\d*" + "(m|bn) " + "(Dollars)");
+    Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\\d*" + " " +  "\\d*" + "/" + "\\d*" + " " + "(Dollars)");
+    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[01]|[0-2][0-9])$" + " " + "(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)");
+    Pattern DATE_MONTH_DD = Pattern.compile("(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)" + " " +  "(3[0-1]|[0-2][0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
     Pattern PRICE_SIMPLE = Pattern.compile( "$" + "\\d*");
-    Pattern PRICE_SIMPLE_SIZE = Pattern.compile( "$" + "\\d*");
+    Pattern FRACTURE_SIMPLE = Pattern.compile( "\\d*" + " " + "\\d*" + "/" + "\\d*" ) ;
+    Pattern DATE_MONTH_YYYY = Pattern.compile("(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)"+ " " +  "([1-2]|[0-9][0-9][0-9])$"); /*"[0-9]{4}");*/
+    Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$" ) ;
 
 
 
     public HashSet<String> parse(String text , Document currDoc) {
-        text = remove_stop_words(text);
+        //text = remove_stop_words(text);
         String[] tokens = text.split(" ");
         getTerms(tokens ,currDoc);
-//        System.out.println("Parsing document number: " + currDoc.getDocNo());
         return null;
     }
 
@@ -47,15 +56,25 @@ public class Parse implements Runnable{
 
         for (int i = 0; i < tokensArray.length; ) {
 
-
+            if ( tokensArray[i].equals("") || tokensArray[i] == null ) {i++ ; continue; }
             // check if its date first ..
-            //date - < Month + decimal >
-            if (i < tokensArray.length - 1) {
+            String [] s = {"January","February","March","April","May","June","July","August","September","October","November","December","JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"} ;
+            if (Arrays.stream(s).anyMatch(tokensArray[i]::equals) && i < tokensArray.length - 1) {
+                //date - < Month + decimal >
                 Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher( tokensArray[i]+ " " + tokensArray[i+1]);
                 if (dateFormatMatcher2.find()) {
                     String term = PairTokensIsDate2Format(tokensArray[i], tokensArray[i + 1]);
-//                    System.out.println("Term added: " + term);
-                    addToDocTerms(term ,currDoc)  ; ;
+                    //System.out.println("Term added: " + term);
+                    addToDocTerms(term ,currDoc)  ;
+                    i += 2;
+                    continue;
+                }
+                //date - < Month + YYYY >
+                Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher( tokensArray[i]+ " " + tokensArray[i+1]);
+                if (dateFormatMatcherYear.find()) {
+                    String term = PairTokensIsDate3Format(tokensArray[i], tokensArray[i + 1]);
+                    //System.out.println("Term added: " + term);
+                    addToDocTerms(term ,currDoc)  ;
                     i += 2;
                     continue;
                 }
@@ -64,33 +83,42 @@ public class Parse implements Runnable{
             // check if its $ or % ..
 
             if ((tokensArray[i].startsWith("$") || tokensArray[i].startsWith("%")) && i < tokensArray.length) {
-                if (check1WordPattern(tokensArray[i] , currDoc)) {
-                    i += 1;
-                    continue;
-                }
-            }
-
-            if (isNumeric(cleanToken(tokensArray[i])))
-            {  // change the term only if the first token is a number !!!!
-                if (i < tokensArray.length - 3) {
-                    if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3] , currDoc)) {
-                        i += 4;
-                        continue;
-                    }
-                }
-                if (i < tokensArray.length - 2) {
-                    if (check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2] , currDoc)) {
-                        i += 3;
-                        continue;
-                    }
-                }
                 if (i < tokensArray.length - 1) {
                     if (check2WordsPattern(tokensArray[i], tokensArray[i + 1] , currDoc)) {
                         i += 2;
                         continue;
                     }
                 }
-                if (i < tokensArray.length) {
+                if (check1WordPattern(tokensArray[i] , currDoc)) {
+                    i += 1;
+                    continue;
+                }
+            }
+
+            // check a term with  num
+            String [] sn = {"Thousand","Million","Billion","Trillion","percent","percentage","Dollars","billion","million","trillion"} ;
+            if ( (Character.isDigit(tokensArray[i].charAt(0))  && i < tokensArray.length - 1   ))
+            {  // change the term only if the first token is a number !!!
+                Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
+                if (i < tokensArray.length - 3 && regularNUMmatcher.find()&& tokensArray[i+2].equals("U.S.")) {
+                    if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3] , currDoc)) {
+                        i += 4;
+                        continue;
+                    }
+                }
+                if (i < tokensArray.length - 2 && Arrays.stream(sn).anyMatch(tokensArray[i+1]::equals) ) {
+                    if (check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2] , currDoc)) {
+                        i += 3;
+                        continue;
+                    }
+                }
+                if (i < tokensArray.length - 1 && regularNUMmatcher.find() &&Arrays.stream(sn).anyMatch(tokensArray[i+1]::equals)) {
+                    if (check2WordsPattern(tokensArray[i], tokensArray[i + 1] , currDoc)) {
+                        i += 2;
+                        continue;
+                    }
+                }
+                if (i < tokensArray.length && regularNUMmatcher.find()) {
                     if (check1WordPattern(tokensArray[i] , currDoc)) {
                         i += 1;
                         continue;
@@ -98,7 +126,16 @@ public class Parse implements Runnable{
                 }
 
             }
-//            System.out.println("Term added: " + cleanToken(tokensArray[i])  );
+            // < number >
+            Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
+            if ((Character.isDigit(tokensArray[i].charAt(0)) && regularNUMmatcher.find() )){
+                String term = get_term_from_simple_number(tokensArray[i]);
+                //System.out.println("Term added: " + term);
+                addToDocTerms(term , currDoc)  ;
+                i++ ;
+                continue;
+            }
+            //System.out.println("Term added: " + cleanToken(tokensArray[i])  );
             addToDocTerms(cleanToken(tokensArray[i]) , currDoc);
             i++ ;
         }
@@ -119,10 +156,22 @@ public class Parse implements Runnable{
 
     private String cleanToken(String token) {
         token = token.replaceAll("[]\\[()?\",]", ""); // clean token
-        if (!isNumeric(token))
+        if (!isNumeric(token) && !isExpression(token))
             token = token.replaceAll("[.]", "");
-        //if (!Character.isDigit(token.charAt(0))) token = token.replaceAll("[.]", ""); // clean token
+        if (!isNumeric(token)) {
+//            if (token.charAt(0) == '.')
+//                token = token.substring(1, token.length());
+//            if (token.charAt(token.length() - 1) == '.')
+//                token = token.substring(0, token.length() - 2);
+//            return token;
+        }
         return token;
+    }
+
+    private boolean isExpression(String token) {
+        if (token.equals("U.S."))
+            return true;
+        return false;
     }
 
     private boolean check1WordPattern(String token, Document currDoc) {
@@ -132,10 +181,9 @@ public class Parse implements Runnable{
         // < $number >
         if ( token.startsWith("$")  ){
             String temp = token.replace( "$" , "" ) ;
-            //if (  Character.isDigit(temp.charAt(0))) {
             if (  isNumeric(temp)) {
                 term = get_term_from_simple_price(temp , originalToken);
-//                System.out.println("Term added: " + term);
+                //System.out.println("Term added: " + term);
                 addToDocTerms(term, currDoc)  ; ;
                 return true;
             }
@@ -143,23 +191,14 @@ public class Parse implements Runnable{
         //< number + % >
         if ( token.endsWith("%") ) {
             term = token;
-//            System.out.println("Term added: " + term);
+            //System.out.println("Term added: " + term);
             addToDocTerms(term,currDoc)  ; ;
-            return true;
-        }
-
-        // < number >
-        if (isNumeric(token)){
-        //if (Character.isDigit(token.charAt(0))) {
-            term = get_term_from_simple_number(token);
-//            System.out.println("Term added: " + term);
-            addToDocTerms(term , currDoc)  ; ;
             return true;
         }
 
         // < simple token - just add as is >
         term = token ;
-//        System.out.println("Term added: " + term);
+        //System.out.println("Term added: " + term);
         addToDocTerms(term, currDoc)  ; ;
 
         return false;
@@ -167,7 +206,9 @@ public class Parse implements Runnable{
 
     private String get_term_from_simple_price(String token ,String originalToken ) {
         originalToken = originalToken.replace( "$" , "") ;
-        double value = Double.parseDouble(token);
+        double value = 0 ;
+        if (isNumeric(token))
+            value = Double.parseDouble(token);
 
         if (isBetween(value, 0, MILLION - 1))
             return originalToken  + " Dollars"  ;
@@ -181,23 +222,72 @@ public class Parse implements Runnable{
 
     private boolean check2WordsPattern(String token1, String token2, Document currDoc) {
         String term = "";
+        String saved_original = token1 ;
         token1 = cleanToken(token1);
         token2 = cleanToken(token2);
 
-        // check <decimal + NumberSize >
-        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
-        if (numberSizeMatcher.find()) {
-            token1 =
-                    term = PairTokensIsNumberFormat(token1, token2);
-//            System.out.println("Term added: " + term);
+        //datre < decimal + decimal\decimal  >
+        Matcher fractureMatcher = FRACTURE_SIMPLE.matcher(token1 + " " + token2);
+        if (fractureMatcher.find()) {
+            term = token1+ " " + token2 ;
+            //System.out.println("Term added: " + term);
+            addToDocTerms(term , currDoc)  ;
+            return true;
+        }
+
+        // check < $ + Decimal + million|billion >
+        Matcher priceDouMatcher$ = PRICE_SIMPLE.matcher(token1);
+        if (priceDouMatcher$.find() && token2.equals("million") || token2.equals("billion")) {
+            String temp = "" ;
+            double value = 0;
+            temp = token1.replace("$" , "") ;
+            if ( token2.equals("billion")){
+                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * BILLION ;
+            }
+            if ( token1.endsWith("million")){
+                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * MILLION ;
+            }
+
+            term = get_term_from_simple_price( value + "" , "" );
+            //System.out.println("Term added: " +term);
+            addToDocTerms(term , currDoc)  ;
+            return true;
+        }
+
+        // check < Decimal+m|bn + Dollars >
+        Matcher priceDouMatcher = PRICE_DOU.matcher(token1 + " " + token2);
+        if (priceDouMatcher.find()) {
+            String temp = "" ;
+            double value = 0;
+            if ( token1.endsWith("bn")){
+                temp = saved_original.replaceAll("bn" , "") ;
+                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * BILLION ;
+
+            }
+            if ( token1.endsWith("m")){
+                temp = saved_original.replaceAll("m" , "") ;
+                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * MILLION ;
+            }
+
+            term = get_term_from_simple_price(value +"", "");
+            //System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ; ;
             return true;
         }
-        //datre < decimal + Month >
+
+        // check <decimal + NumberSize >
+        Matcher numberSizeMatcher = NUMBER_ADDS.matcher(token1 + " " + token2);
+        if (numberSizeMatcher.find()) {
+            term = PairTokensIsNumberFormat(token1 , token2);
+            //System.out.println("Term added: " +term);
+            addToDocTerms(term , currDoc)  ; ;
+            return true;
+        }
+        //date < decimal + Month >
         Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
         if (dateFormatMatcher.find()) {
             term = PairTokensIsDateFormat(token1, token2);
-//            System.out.println("Term added: " + term);
+            //System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ; ;
             return true;
         }
@@ -205,7 +295,7 @@ public class Parse implements Runnable{
 //        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
 //        if (dateFormatMatcher2.find()) {
 //            term = PairTokensIsDate2Format(token1, token2);
-//            System.out.println("Term added: " + term);
+//            //System.out.println("Term added: " + term);
 //            addToDocTerms(term)  ; ;
 //            return true;
 //        }
@@ -217,6 +307,7 @@ public class Parse implements Runnable{
      * @param term
      */
     private void addToDocTerms(String term , Document currDoc) {
+        //System.out.println( "TERM ADDED :" + term );
         if ( term == "")
             return ;
 
@@ -241,14 +332,23 @@ public class Parse implements Runnable{
 //        String term = "";
 //        token1 = cleanToken(token1);
 //        token2 = cleanToken(token2);
-//        token3 = cleanToken(token2);
+//        token3 = cleanToken(token3);
+//
+//        // check <decimal + fraction + dollars>
+//        Matcher decFractionDollarsMatcher = PRICE_FRACTION_DOLLARS.matcher(token1 + " " + token2 + " " + token3);
+//        if (decFractionDollarsMatcher.find()){
+//            term = token1 + " " + token2 + " " + token3;
+//            //System.out.println("Term added: " + term);
+//            addToDocTerms(term , currDoc)  ;
+//            return true;
+//        }
 //
 //        // check <decimal + NumberSize >
 //        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
 //        if (numberSizeMatcher.find()) {
 //            token1 =
 //                    term = PairTokensIsNumberFormat(token1, token2);
-//            System.out.println("Term added: " + term);
+//            //System.out.println("Term added: " + term);
 //            addToDocTerms(term , currDoc)  ; ;
 //            return true;
 //        }
@@ -256,7 +356,7 @@ public class Parse implements Runnable{
 //        Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
 //        if (dateFormatMatcher.find()) {
 //            term = PairTokensIsDateFormat(token1, token2);
-//            System.out.println("Term added: " + term);
+//            //System.out.println("Term added: " + term);
 //            addToDocTerms(term , currDoc)  ; ;
 //            return true;
 //        }
@@ -264,11 +364,11 @@ public class Parse implements Runnable{
 ////        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
 ////        if (dateFormatMatcher2.find()) {
 ////            term = PairTokensIsDate2Format(token1, token2);
-////            System.out.println("Term added: " + term);
+////            //System.out.println("Term added: " + term);
 ////            addToDocTerms(term)  ; ;
 ////            return true;
 ////        }
-      return false;
+        return false;
 
 
 
@@ -276,37 +376,31 @@ public class Parse implements Runnable{
     }
 
     private boolean check4WordsPattern(String token1, String token2, String token3,String token4, Document currDoc) {
-        //        String term = "";
-//        token1 = cleanToken(token1);
-//        token2 = cleanToken(token2);
-//        token3 = cleanToken(token2);
-//
-//        // check <decimal + NumberSize >
-//        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
-//        if (numberSizeMatcher.find()) {
-//            token1 =
-//                    term = PairTokensIsNumberFormat(token1, token2);
-//            System.out.println("Term added: " + term);
-//            addToDocTerms(term , currDoc)  ; ;
-//            return true;
-//        }
-//        //datre < decimal + Month >
-//        Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
-//        if (dateFormatMatcher.find()) {
-//            term = PairTokensIsDateFormat(token1, token2);
-//            System.out.println("Term added: " + term);
-//            addToDocTerms(term , currDoc)  ; ;
-//            return true;
-//        }
-////        //date - < Month + decimal >
-////        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
-////        if (dateFormatMatcher2.find()) {
-////            term = PairTokensIsDate2Format(token1, token2);
-////            System.out.println("Term added: " + term);
-////            addToDocTerms(term)  ; ;
-////            return true;
-////        }
-//        return false;
+        String term = "";
+        token1 = cleanToken(token1);
+        token2 = cleanToken(token2);
+        token3 = cleanToken(token3);
+        token4 = cleanToken(token4);
+
+        Matcher priceSizeUSdollarsMatcher = PRICE_MBT_US_DOLLARS.matcher(token1 + " " + token2 + " " + token3 + " " + token4);
+        if (priceSizeUSdollarsMatcher.find()) {
+            String temp = token2;
+            switch (temp.toLowerCase()) {
+                case "million":
+                    term = token1 + "M Dollars";
+                    break;
+                case "billion":
+                    term = ((int)Double.parseDouble(token1) * 1000) + "M Dollars";
+                    break;
+                case "trillion":
+                    term = ((int)Double.parseDouble(token1) * 10000000) + "M Dollars";
+                    break;
+
+            }
+           // System.out.println(term);
+            addToDocTerms(term , currDoc)  ;
+            return true;
+        }
         return false;
     }
 
@@ -384,6 +478,53 @@ public class Parse implements Runnable{
                 break;
             case "december":
                 term = "12-" + anotherToken;
+                break;
+        }
+        return term;
+
+    }
+
+
+    /* Month YYYY */
+    private String PairTokensIsDate3Format(String token, String anotherToken) {
+        String term = "";
+        String temp = token;
+        switch (temp.toLowerCase()) {
+            case "january":
+                term =  anotherToken+"-01" ;
+                break;
+            case "february":
+                term =  anotherToken+"-02" ;
+                break;
+            case "march":
+                term =  anotherToken+"-03" ;
+                break;
+            case "april":
+                term =  anotherToken+"-04" ;
+                break;
+            case "may":
+                term =  anotherToken+"-05" ;
+                break;
+            case "june":
+                term =  anotherToken+"-06" ;
+                break;
+            case "july":
+                term =  anotherToken+"-07" ;
+                break;
+            case "august":
+                term =  anotherToken+"-08" ;
+                break;
+            case "september":
+                term =  anotherToken+"-09" ;
+                break;
+            case "october":
+                term =  anotherToken+"-10" ;
+                break;
+            case "november":
+                term =  anotherToken+"-11" ;
+                break;
+            case "december":
+                term =  anotherToken+"-12" ;
                 break;
         }
         return term;
@@ -507,12 +648,4 @@ public class Parse implements Runnable{
         return res;
     }
 
-    @Override
-    public void run() {
-
-    }
 }
-
-
-
-

@@ -42,16 +42,17 @@ public class TextOperationsManager {
 
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
+            reader.readAndParseLineByLine(filesPathsList.get(i), parser);
+//            reader.readAndParseLineByLine()
+//            int finalII = i+1;
 //            int finalI = i;
-            int finalII = i+1;
-            int finalI = i;
-            Thread parseThread = new Thread() {
-                public void run() {
-                    readAndParseTwoFiles(finalI, finalII);
-//                      readAndParseOneFile(filesPathsList.get(finalI));
-                }
-            };
-            executor.execute(parseThread);
+//            Thread parseThread = new Thread() {
+//                public void run() {
+//                    readAndParseTwoFiles(finalI, finalII);
+////                      readAndParseOneFile(filesPathsList.get(finalI));
+//                }
+//            };
+//            executor.execute(parseThread);
         }
     }
 

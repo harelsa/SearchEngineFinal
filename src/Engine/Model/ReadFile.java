@@ -2,6 +2,7 @@ package Engine.Model;
 
 import javafx.util.Pair;
 
+import javax.print.Doc;
 import java.io.*;
 import java.lang.reflect.Array;
 import java.nio.charset.Charset;
@@ -87,7 +88,53 @@ public class ReadFile {
             return null; //Need to fix this
     }
 
+    public void readAndParseLineByLine(String filePathName, Parse parser){
+        BufferedReader br = null;
+        System.out.println( filePathName );
 
+        try {
+            br = new BufferedReader(new FileReader(filePathName));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+
+            String line = "";
+
+            while ((line= br.readLine()) !=null) {
+                StringBuilder sb = new StringBuilder() ;
+                while (line != null && !line.equals("</DOC>")){
+                    sb.append(line);
+                    line = br.readLine();
+                }
+                sb.append(line);
+                String text = sb.toString() ;
+                String docNo = getDocNumber(sb.toString());
+                Document doc = new Document(docNo, filePathName);
+                parser.parse(text,doc);
+                sb.delete(0, sb.length());
+
+            }
+            //return splitDocumentsFromFile(sb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getTextFromDocument(String fullDocContent) {
+        if ( fullDocContent.equals("")) return "";
+        String text = "";
+        String[] s = fullDocContent.split("TEXT>") ;
+        if ( s.length < 1) return "";
+       // text = s[1].replaceAll("/<", "");
+        return s[1];
+    }
 
 
     private ArrayList<Pair<String, String>> splitDocumentsFromFile(String fileContent) {
