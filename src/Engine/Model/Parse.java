@@ -137,10 +137,6 @@ public class Parse {
         System.out.println("Term added: " + term);
         addToDocTerms(term, currDoc)  ; ;
 
-
-
-
-
         return false;
     }
 
