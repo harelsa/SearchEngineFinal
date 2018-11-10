@@ -3,11 +3,12 @@ package Engine.Model;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
-public class Parse {
+public class Parse implements Runnable{
     // enums
     private double THOUSAND = Math.pow(10, 3);
     private double MILLION = Math.pow(10, 6);
@@ -18,7 +19,7 @@ public class Parse {
     //final ArrayList<String> NUMBER_SIZES = new ArrayList<String>(Arrays.asList("Thousand", "Million", "Billion", "Trillion")){};
     private HashSet<String> documentTerms;
     private StringTokenizer stringTokenizer;
-    private static  HashMap < String , Term  > AllTerms  = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
+    private static ConcurrentHashMap< String , Term  > AllTerms  = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
 
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
     Pattern NUMBER_SIZE = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
@@ -430,6 +431,10 @@ public class Parse {
         return res;
     }
 
+    @Override
+    public void run() {
+
+    }
 }
 
 
