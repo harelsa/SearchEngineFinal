@@ -3,6 +3,7 @@ package Engine.Model;
 import javafx.util.Pair;
 
 import java.io.File;
+import java.sql.Array;
 import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalTime;
@@ -31,25 +32,40 @@ public class TextOperationsManager {
         this.parser = new Parse();
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
-        executor = Executors.newFixedThreadPool(4);
+        executor = Executors.newFixedThreadPool(8);
     }
 
     public void StartTextOperations() {
         initFilesPathList(curposPath);
         readAndParse();
-
     }
 
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
+//            int finalI = i;
+            int finalII = i+1;
             int finalI = i;
             Thread parseThread = new Thread() {
                 public void run() {
-                    readAndParseOneFile(filesPathsList.get(finalI));
+                    readAndParseTwoFiles(finalI, finalII);
+//                      readAndParseOneFile(filesPathsList.get(finalI));
                 }
             };
             executor.execute(parseThread);
-//            readAndParseOneFile(filesPathsList.get(i));
+        }
+    }
+
+    private void readAndParseTwoFiles(int finalI, int finalII) {
+        String path1 = filesPathsList.get(finalI);
+        String path2 = filesPathsList.get(finalII);
+        ArrayList<Pair<String, String>> twoDocumentsFromFile;
+        twoDocumentsFromFile = reader.read2files(path1, path2);
+        System.out.println("Starting to parse documents of file: " + path1);
+        for (int i = 0; i < twoDocumentsFromFile.size(); i++) {
+            // Need to add more methods here
+            String docText = getTextFromFullDoc(twoDocumentsFromFile.get(i).getValue());
+            Document document = new Document(twoDocumentsFromFile.get(i).getKey(), path1);
+            parser.parse(docText, document);
         }
     }
 
