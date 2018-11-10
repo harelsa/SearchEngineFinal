@@ -96,9 +96,24 @@ public class Parse {
         }
     }
 
+    public static boolean isNumeric(String str)
+    {
+        try
+        {
+            double d = Double.parseDouble(str);
+        }
+        catch(NumberFormatException nfe)
+        {
+            return false;
+        }
+        return true;
+    }
+
     private String cleanToken(String token) {
         token = token.replaceAll("[]\\[()?\",]", ""); // clean token
-        if (!Character.isDigit(token.charAt(0))) token = token.replaceAll("[.]", ""); // clean token
+        if (!isNumeric(token))
+            token = token.replaceAll("[.]", "");
+        //if (!Character.isDigit(token.charAt(0))) token = token.replaceAll("[.]", ""); // clean token
         return token;
     }
 
@@ -125,7 +140,8 @@ public class Parse {
         }
 
         // < number >
-        if (Character.isDigit(token.charAt(0))) {
+        if (isNumeric(token)){
+        //if (Character.isDigit(token.charAt(0))) {
             term = get_term_from_simple_number(token);
             System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ; ;
