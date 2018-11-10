@@ -32,7 +32,7 @@ public class Parse implements Runnable{
         text = remove_stop_words(text);
         String[] tokens = text.split(" ");
         getTerms(tokens ,currDoc);
-        System.out.println("Parsing document number: " + currDoc.getDocNo());
+//        System.out.println("Parsing document number: " + currDoc.getDocNo());
         return null;
     }
 

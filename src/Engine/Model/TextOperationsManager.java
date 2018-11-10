@@ -1,5 +1,7 @@
 package Engine.Model;
+
 import javafx.util.Pair;
+
 import java.io.File;
 import java.sql.Statement;
 import java.sql.Time;
@@ -24,7 +26,6 @@ public class TextOperationsManager {
     public static int docsCounter;
 
 
-
     public TextOperationsManager(String curposPath) {
         this.reader = new ReadFile();
         this.parser = new Parse();
@@ -33,7 +34,7 @@ public class TextOperationsManager {
         executor = Executors.newFixedThreadPool(4);
     }
 
-    public void StartTextOperations(){
+    public void StartTextOperations() {
         initFilesPathList(curposPath);
         readAndParse();
 
@@ -41,26 +42,32 @@ public class TextOperationsManager {
 
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
-            readAndParseOneFile(filesPathsList.get(i));
+            int finalI = i;
+            Thread parseThread = new Thread() {
+                public void run() {
+                    readAndParseOneFile(filesPathsList.get(finalI));
+                }
+            };
+            executor.execute(parseThread);
+//            readAndParseOneFile(filesPathsList.get(i));
         }
     }
 
     private void readAndParseOneFile(String filePath) {
         ArrayList<Pair<String, String>> documentsFromFile = reader.readFile(filePath); // The Pair is: <docNo, FullDocContent>
+        System.out.println("Starting to parse documents of file: " + filePath);
         for (int i = 0; i < documentsFromFile.size(); i++) {
             // Need to add more methods here
             String docText = getTextFromFullDoc(documentsFromFile.get(i).getValue());
             Document document = new Document(documentsFromFile.get(i).getKey(), filePath);
-            Thread parseThread = new Thread(){
-                    public void run(){
-                        parser.parse(docText,document);
-                    }
-            };
-            parser.parse(docText,document);
-            executor.execute(parseThread);
-            docsCounter++;
+//            Thread parseThread = new Thread(){
+//                    public void run(){
+//                        parser.parse(docText,document);
+//                    }
+//            };
+//            executor.execute(parseThread);
+            parser.parse(docText, document);
         }
-        filesCounter++;
     }
 
     private String getTextFromFullDoc(String fullDocContent) {
