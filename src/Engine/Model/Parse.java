@@ -45,10 +45,12 @@ public class Parse {
     private void getTerms(String[] tokensArray, Document currDoc) {
 
 
-        // check if its date first ..
-        //date - < Month + decimal >
+
         for (int i = 0; i < tokensArray.length; ) {
 
+
+            // check if its date first ..
+            //date - < Month + decimal >
             if (i < tokensArray.length - 1) {
                 Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher( tokensArray[i]+ " " + tokensArray[i+1]);
                 if (dateFormatMatcher2.find()) {
@@ -60,9 +62,16 @@ public class Parse {
                 }
             }
 
+            // check if its $ or % ..
 
+            if ((tokensArray[i].startsWith("$") || tokensArray[i].startsWith("%")) && i < tokensArray.length) {
+                if (check1WordPattern(tokensArray[i] , currDoc)) {
+                    i += 1;
+                    continue;
+                }
+            }
 
-            if ( Character.isDigit(tokensArray[i].charAt(0)))
+            if (isNumeric(cleanToken(tokensArray[i])))
             {  // change the term only if the first token is a number !!!!
                 if (i < tokensArray.length - 3) {
                     if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3] , currDoc)) {
@@ -90,8 +99,8 @@ public class Parse {
                 }
 
             }
-            System.out.println("Term added: " + tokensArray[i] );
-            addToDocTerms(tokensArray[i] , currDoc);
+            System.out.println("Term added: " + cleanToken(tokensArray[i])  );
+            addToDocTerms(cleanToken(tokensArray[i]) , currDoc);
             i++ ;
         }
     }
@@ -208,6 +217,9 @@ public class Parse {
      * @param term
      */
     private void addToDocTerms(String term , Document currDoc) {
+        if ( term == "")
+            return ;
+
         if ( AllTerms.containsKey(term)) {
             //update the existing term
         }
@@ -225,11 +237,76 @@ public class Parse {
 
     }
 
-    private boolean check3WordsPattern(String s, String s1, String s2, Document currDoc) {
-        return false;
+    private boolean check3WordsPattern(String token1, String token2, String token3, Document currDoc) {
+//        String term = "";
+//        token1 = cleanToken(token1);
+//        token2 = cleanToken(token2);
+//        token3 = cleanToken(token2);
+//
+//        // check <decimal + NumberSize >
+//        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
+//        if (numberSizeMatcher.find()) {
+//            token1 =
+//                    term = PairTokensIsNumberFormat(token1, token2);
+//            System.out.println("Term added: " + term);
+//            addToDocTerms(term , currDoc)  ; ;
+//            return true;
+//        }
+//        //datre < decimal + Month >
+//        Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
+//        if (dateFormatMatcher.find()) {
+//            term = PairTokensIsDateFormat(token1, token2);
+//            System.out.println("Term added: " + term);
+//            addToDocTerms(term , currDoc)  ; ;
+//            return true;
+//        }
+////        //date - < Month + decimal >
+////        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
+////        if (dateFormatMatcher2.find()) {
+////            term = PairTokensIsDate2Format(token1, token2);
+////            System.out.println("Term added: " + term);
+////            addToDocTerms(term)  ; ;
+////            return true;
+////        }
+      return false;
+
+
+
+
     }
 
-    private boolean check4WordsPattern(String s, String s1, String s2, String s3, Document currDoc) {
+    private boolean check4WordsPattern(String token1, String token2, String token3,String token4, Document currDoc) {
+        //        String term = "";
+//        token1 = cleanToken(token1);
+//        token2 = cleanToken(token2);
+//        token3 = cleanToken(token2);
+//
+//        // check <decimal + NumberSize >
+//        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
+//        if (numberSizeMatcher.find()) {
+//            token1 =
+//                    term = PairTokensIsNumberFormat(token1, token2);
+//            System.out.println("Term added: " + term);
+//            addToDocTerms(term , currDoc)  ; ;
+//            return true;
+//        }
+//        //datre < decimal + Month >
+//        Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
+//        if (dateFormatMatcher.find()) {
+//            term = PairTokensIsDateFormat(token1, token2);
+//            System.out.println("Term added: " + term);
+//            addToDocTerms(term , currDoc)  ; ;
+//            return true;
+//        }
+////        //date - < Month + decimal >
+////        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
+////        if (dateFormatMatcher2.find()) {
+////            term = PairTokensIsDate2Format(token1, token2);
+////            System.out.println("Term added: " + term);
+////            addToDocTerms(term)  ; ;
+////            return true;
+////        }
+//        return false;
         return false;
     }
 
