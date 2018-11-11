@@ -18,28 +18,44 @@ public class Parse {
 
 
     private static ConcurrentHashMap < String , Term  > AllTerms  = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
-
+    HashSet<String> stopwords = new HashSet<>() ;
 
 
 
     //[0-9]{1,2}(/|-)[0-9]{1,2}(/|-)[0-9]{4}
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
     //Pattern PRICE_DOU_DOLLAR = Pattern.compile( "$" + "\\d*" +" " + "(billion|million|Million|Billion)");
-    Pattern NUMBER_ADDS = Pattern.compile("\\d*" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
-    Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d*" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
-    Pattern PRICE_DOU = Pattern.compile("\\d*" + "(m|bn) " + "(Dollars)");
-    Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\\d*" + " " +  "\\d*" + "/" + "\\d*" + " " + "(Dollars)");
-    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[01]|[0-2][0-9])$" + " " + "(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)");
+    Pattern NUMBER_ADDS = Pattern.compile("\"^[0-9]*$\"" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
+    Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
+    Pattern PRICE_DOU = Pattern.compile("\"^[0-9]*$\"" + "(m|bn) " + "(Dollars)");
+    Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " +  "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
+    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9])" + " " + "(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)");
     Pattern DATE_MONTH_DD = Pattern.compile("(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)" + " " +  "(3[0-1]|[0-2][0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
-    Pattern PRICE_SIMPLE = Pattern.compile( "$" + "\\d*");
-    Pattern FRACTURE_SIMPLE = Pattern.compile( "\\d*" + " " + "\\d*" + "/" + "\\d*" ) ;
+    Pattern PRICE_SIMPLE = Pattern.compile( "$" + "\"^[0-9]*$\"");
+    Pattern FRACTURE_SIMPLE = Pattern.compile( "\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" ) ;
     Pattern DATE_MONTH_YYYY = Pattern.compile("(January|February|March|April|May|June|July|August|September|October|November|December|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)"+ " " +  "([1-2]|[0-9][0-9][0-9])$"); /*"[0-9]{4}");*/
     Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$" ) ;
 
+    public  Parse(){
+        try{
+        FileReader fr = new FileReader("src\\Engine\\resources\\stop_words.txt"); // read stop words from the file
+        BufferedReader br = new BufferedReader(fr);
+        String curr_line ;
 
+            while ( (curr_line = br.readLine()) != null  ){
+              stopwords.add(curr_line);
+            }
+        }
+        catch (Exception e) {
+
+        }
+
+
+    }
 
     public HashSet<String> parse(String text , Document currDoc) {
-        //text = remove_stop_words(text);
+
+        text = remove_stop_words(text);
         String[] tokens = text.split(" ");
         getTerms(tokens ,currDoc);
         return null;
@@ -56,10 +72,10 @@ public class Parse {
 
         for (int i = 0; i < tokensArray.length; ) {
 
-            if ( tokensArray[i].equals("") || tokensArray[i] == null ) {i++ ; continue; }
+
             // check if its date first ..
-            String [] s = {"January","February","March","April","May","June","July","August","September","October","November","December","JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"} ;
-            if (Arrays.stream(s).anyMatch(tokensArray[i]::equals) && i < tokensArray.length - 1) {
+
+            if (i < tokensArray.length - 1) {
                 //date - < Month + decimal >
                 Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher( tokensArray[i]+ " " + tokensArray[i+1]);
                 if (dateFormatMatcher2.find()) {
@@ -96,44 +112,35 @@ public class Parse {
             }
 
             // check a term with  num
-            String [] sn = {"Thousand","Million","Billion","Trillion","percent","percentage","Dollars","billion","million","trillion"} ;
-            if ( (Character.isDigit(tokensArray[i].charAt(0))  && i < tokensArray.length - 1   ))
-            {  // change the term only if the first token is a number !!!
-                Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
-                if (i < tokensArray.length - 3 && regularNUMmatcher.find()&& tokensArray[i+2].equals("U.S.")) {
+            Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
+            Matcher regularNUMmatcher2 = REGULAR_NUM.matcher(cleanToken(tokensArray[i].replaceAll("[mbn]" , "")));
+            if ( regularNUMmatcher.find() || regularNUMmatcher2.find())
+            {  // change the term only if the first token is a number !!!!
+                if (i < tokensArray.length - 3) {
                     if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3] , currDoc)) {
                         i += 4;
                         continue;
                     }
                 }
-                if (i < tokensArray.length - 2 && Arrays.stream(sn).anyMatch(tokensArray[i+1]::equals) ) {
+                if (i < tokensArray.length - 2) {
                     if (check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2] , currDoc)) {
                         i += 3;
                         continue;
                     }
                 }
-                if (i < tokensArray.length - 1 && regularNUMmatcher.find() &&Arrays.stream(sn).anyMatch(tokensArray[i+1]::equals)) {
+                if (i < tokensArray.length - 1) {
                     if (check2WordsPattern(tokensArray[i], tokensArray[i + 1] , currDoc)) {
                         i += 2;
                         continue;
                     }
                 }
-                if (i < tokensArray.length && regularNUMmatcher.find()) {
+                if (i < tokensArray.length) {
                     if (check1WordPattern(tokensArray[i] , currDoc)) {
                         i += 1;
                         continue;
                     }
                 }
 
-            }
-            // < number >
-            Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
-            if ((Character.isDigit(tokensArray[i].charAt(0)) && regularNUMmatcher.find() )){
-                String term = get_term_from_simple_number(tokensArray[i]);
-                //System.out.println("Term added: " + term);
-                addToDocTerms(term , currDoc)  ;
-                i++ ;
-                continue;
             }
             //System.out.println("Term added: " + cleanToken(tokensArray[i])  );
             addToDocTerms(cleanToken(tokensArray[i]) , currDoc);
@@ -155,16 +162,17 @@ public class Parse {
     }
 
     private String cleanToken(String token) {
-        token = token.replaceAll("[]\\[()?\",]", ""); // clean token
-        if (!isNumeric(token) && !isExpression(token))
-            token = token.replaceAll("[.]", "");
-        if (!isNumeric(token)) {
-//            if (token.charAt(0) == '.')
-//                token = token.substring(1, token.length());
-//            if (token.charAt(token.length() - 1) == '.')
-//                token = token.substring(0, token.length() - 2);
-//            return token;
-        }
+//        token = token.replaceAll("[]\\[()?\",]", ""); // clean token
+//        Matcher regularNUMmatcher = REGULAR_NUM.matcher(token);
+//        if ( !regularNUMmatcher.find() && !isExpression(token))
+//            token = token.replaceAll("[.]", "");
+//        if (!regularNUMmatcher.find()) {
+////            if (token.charAt(0) == '.')
+////                token = token.substring(1, token.length());
+////            if (token.charAt(token.length() - 1) == '.')
+////                token = token.substring(0, token.length() - 2);
+////            return token;
+//        }
         return token;
     }
 
@@ -175,13 +183,17 @@ public class Parse {
     }
 
     private boolean check1WordPattern(String token, Document currDoc) {
+        if ( token.equals("")) return false  ;
+
         String term;
         String originalToken = token;
         token = cleanToken(token);
         // < $number >
         if ( token.startsWith("$")  ){
+
             String temp = token.replace( "$" , "" ) ;
-            if (  isNumeric(temp)) {
+            Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
+            if ( regularNUMmatcher.find() ) {
                 term = get_term_from_simple_price(temp , originalToken);
                 //System.out.println("Term added: " + term);
                 addToDocTerms(term, currDoc)  ; ;
@@ -196,6 +208,16 @@ public class Parse {
             return true;
         }
 
+        // < number >
+        Matcher regularNUMmatcher = REGULAR_NUM.matcher(token);
+        if ( regularNUMmatcher.find()){
+            //if (Character.isDigit(token.charAt(0))) {
+            term = get_term_from_simple_number(token);
+            //System.out.println("Term added: " + term);
+            addToDocTerms(term , currDoc)  ; ;
+            return true;
+        }
+
         // < simple token - just add as is >
         term = token ;
         //System.out.println("Term added: " + term);
@@ -206,16 +228,20 @@ public class Parse {
 
     private String get_term_from_simple_price(String token ,String originalToken ) {
         originalToken = originalToken.replace( "$" , "") ;
+        Matcher regularNUMmatcher = REGULAR_NUM.matcher(token);
         double value = 0 ;
-        if (isNumeric(token))
-            value = Double.parseDouble(token);
+        if (regularNUMmatcher.find()) {
+            try {
+                value = Double.parseDouble(token);
+            }catch (Exception e ){
 
-        if (isBetween(value, 0, MILLION - 1))
-            return originalToken  + " Dollars"  ;
+            }
+            if (isBetween(value, 0, MILLION - 1))
+                return originalToken + " Dollars";
 
-        if (isBetween(value, MILLION, Double.MAX_VALUE))
-            return checkVal(value / MILLION) + " M Dollars";
-
+            if (isBetween(value, MILLION, Double.MAX_VALUE))
+                return checkVal(value / MILLION) + " M Dollars";
+        }
         return "ERROR!!!";
 
     }
@@ -241,15 +267,16 @@ public class Parse {
             String temp = "" ;
             double value = 0;
             temp = token1.replace("$" , "") ;
+            Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
             if ( token2.equals("billion")){
-                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * BILLION ;
+                if ( regularNUMmatcher.find()) value =  Double.parseDouble(temp) * BILLION ;
             }
             if ( token1.endsWith("million")){
-                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * MILLION ;
+                if ( regularNUMmatcher.find()) value =  Double.parseDouble(temp) * MILLION ;
             }
 
             term = get_term_from_simple_price( value + "" , "" );
-            //System.out.println("Term added: " +term);
+            //System.out.println("Term added: " + term);
             addToDocTerms(term , currDoc)  ;
             return true;
         }
@@ -261,12 +288,14 @@ public class Parse {
             double value = 0;
             if ( token1.endsWith("bn")){
                 temp = saved_original.replaceAll("bn" , "") ;
-                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * BILLION ;
+                Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
+                if ( regularNUMmatcher.find()) value =  Double.parseDouble(temp) * BILLION ;
 
             }
             if ( token1.endsWith("m")){
                 temp = saved_original.replaceAll("m" , "") ;
-                if ( isNumeric(temp)) value =  Double.parseDouble(temp) * MILLION ;
+                Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
+                if ( regularNUMmatcher.find()) value =  Double.parseDouble(temp) * MILLION ;
             }
 
             term = get_term_from_simple_price(value +"", "");
@@ -277,7 +306,7 @@ public class Parse {
 
         // check <decimal + NumberSize >
         Matcher numberSizeMatcher = NUMBER_ADDS.matcher(token1 + " " + token2);
-        if (numberSizeMatcher.find()) {
+        if (numberSizeMatcher.find() ) {
             term = PairTokensIsNumberFormat(token1 , token2);
             //System.out.println("Term added: " +term);
             addToDocTerms(term , currDoc)  ; ;
@@ -295,7 +324,7 @@ public class Parse {
 //        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
 //        if (dateFormatMatcher2.find()) {
 //            term = PairTokensIsDate2Format(token1, token2);
-//            //System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
 //            addToDocTerms(term)  ; ;
 //            return true;
 //        }
@@ -307,8 +336,8 @@ public class Parse {
      * @param term
      */
     private void addToDocTerms(String term , Document currDoc) {
-        //System.out.println( "TERM ADDED :" + term );
-        if ( term == "")
+        //System.out.println(term);
+        if ( term.equals(""))
             return ;
 
         if ( AllTerms.containsKey(term)) {
@@ -329,26 +358,26 @@ public class Parse {
     }
 
     private boolean check3WordsPattern(String token1, String token2, String token3, Document currDoc) {
-//        String term = "";
-//        token1 = cleanToken(token1);
-//        token2 = cleanToken(token2);
-//        token3 = cleanToken(token3);
-//
-//        // check <decimal + fraction + dollars>
-//        Matcher decFractionDollarsMatcher = PRICE_FRACTION_DOLLARS.matcher(token1 + " " + token2 + " " + token3);
-//        if (decFractionDollarsMatcher.find()){
-//            term = token1 + " " + token2 + " " + token3;
-//            //System.out.println("Term added: " + term);
-//            addToDocTerms(term , currDoc)  ;
-//            return true;
-//        }
+        String term = "";
+        token1 = cleanToken(token1);
+        token2 = cleanToken(token2);
+        token3 = cleanToken(token3);
+
+        // check <decimal + fraction + dollars>
+        Matcher decFractionDollarsMatcher = PRICE_FRACTION_DOLLARS.matcher(token1 + " " + token2 + " " + token3);
+        if (decFractionDollarsMatcher.find()){
+            term = token1 + " " + token2 + " " + token3;
+            //System.out.println("Term added: " + term);
+            addToDocTerms(term , currDoc)  ;
+            return true;
+        }
 //
 //        // check <decimal + NumberSize >
 //        Matcher numberSizeMatcher = NUMBER_SIZE.matcher(token1 + " " + token2);
 //        if (numberSizeMatcher.find()) {
 //            token1 =
 //                    term = PairTokensIsNumberFormat(token1, token2);
-//            //System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
 //            addToDocTerms(term , currDoc)  ; ;
 //            return true;
 //        }
@@ -356,7 +385,7 @@ public class Parse {
 //        Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2);
 //        if (dateFormatMatcher.find()) {
 //            term = PairTokensIsDateFormat(token1, token2);
-//            //System.out.println("Term added: " + term);
+//            System.out.println("Term added: " + term);
 //            addToDocTerms(term , currDoc)  ; ;
 //            return true;
 //        }
@@ -364,7 +393,7 @@ public class Parse {
 ////        Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(token1 + " " + token2);
 ////        if (dateFormatMatcher2.find()) {
 ////            term = PairTokensIsDate2Format(token1, token2);
-////            //System.out.println("Term added: " + term);
+////            System.out.println("Term added: " + term);
 ////            addToDocTerms(term)  ; ;
 ////            return true;
 ////        }
@@ -397,7 +426,7 @@ public class Parse {
                     break;
 
             }
-           // System.out.println(term);
+            //System.out.println(term);
             addToDocTerms(term , currDoc)  ;
             return true;
         }
@@ -432,7 +461,7 @@ public class Parse {
                 break;
             case "Trillion":
                 double value = Double.parseDouble(token) * TRILLION;
-                term =get_term_from_simple_number(value + "");
+                term = get_term_from_simple_number(value + "");
                 break;
         }
         return term;
@@ -582,7 +611,13 @@ public class Parse {
      * @param token a number
      */
     private String get_term_from_simple_number(String token) {
-        double value = Double.parseDouble(token);
+        double value = 0 ;
+        try {
+            value = Double.parseDouble(token);
+        }
+        catch (Exception e){
+
+        }
 
         if (isBetween(value, 0, THOUSAND - 1))
             return checkVal(value) + "";
@@ -611,41 +646,22 @@ public class Parse {
     }
 
     public String remove_stop_words(String str) {
-        String res = "";
-        int k = 0, i, j;
-        ArrayList<String> wordsList = new ArrayList<String>();
-        ArrayList<String> result = new ArrayList<String>();
-        String sCurrentLine;
-        String[] stopwords = new String[2000];
-        try {
-            FileReader fr = new FileReader("src\\Engine\\resources\\stop_words.txt"); // read stop words from the file
-            BufferedReader br = new BufferedReader(fr);
-            while ((sCurrentLine = br.readLine()) != null) {
-                stopwords[k] = sCurrentLine;
-                k++;
-            }
-            StringBuilder builder = new StringBuilder(str);
-            String[] words = builder.toString().split("\\s");
-            for (String word : words) {
-                wordsList.add(word);
-                result.add(word);
-            }
-            for (int ii = 0; ii < wordsList.size(); ii++) {
-                for (int jj = 0; jj < k; jj++) {
-                    if (stopwords[jj].contains(wordsList.get(ii).toLowerCase())) {
-                        result.remove(wordsList.get(ii));
-                        break;
-                    }
-                }
-            }
-            for (String s : result) {
-                res += s + " ";
-            }
-        } catch (Exception ex) {
-            System.out.println(ex);
-        }
 
-        return res;
+        StringBuilder res = new StringBuilder("");
+
+                String[] words = str.split(" ");
+                for (String s : words) {
+                    if (stopwords.contains(s ) || s.equals(" ") || s.equals("")) {
+                        // Do something with the stop words found in the sample input or discard them.
+                    }
+                    else {
+                        res.append(s); // Append non-stop word to textOutput.
+                        res.append(" ");
+                    }
+
+                }
+
+        return res.toString();
     }
 
 }
