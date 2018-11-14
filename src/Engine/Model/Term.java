@@ -16,7 +16,7 @@ public class Term {
              docs = new HashMap<>() ;
          }
 
-         public void  addDoc ( Document doc){ // check if we need to dsave row
+         public void addDoc ( Document doc){ // check if we need to save row
              //check if the doc exists and add accordinaly
              // if not df +1
              if ( docs.containsKey( doc )){
@@ -28,8 +28,7 @@ public class Term {
                 docs.put(doc, new LinkedList<Integer>() ) ;
 
              }
-
-
          }
+
 
 }

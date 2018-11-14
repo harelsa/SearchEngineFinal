@@ -28,7 +28,7 @@ public class Main extends Application {
 //        parser.parse(str , doc );
 
         //TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Documents\\Engine\\corpus\\corpus");
-        TextOperationsManager textOperationsManager = new TextOperationsManager("C:\\Users\\harel_000\\Desktop\\Retrival\\corpus");
+        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Downloads\\corpus");
         textOperationsManager.StartTextOperations();
 
 

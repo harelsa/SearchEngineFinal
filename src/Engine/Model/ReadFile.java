@@ -12,28 +12,36 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
 
 public class ReadFile {
+    ExecutorService executor;
+
+    public ReadFile() {
+        executor = Executors.newFixedThreadPool(8);
+    }
+
     public ArrayList<Pair<String, String>> readFile(String filePathName) {
         return generateDocuments(filePathName);
     }
+
     /*  */
-    public ArrayList<Pair<String, String>> read2files(String path1, String path2){
+    public ArrayList<Pair<String, String>> read2files(String path1, String path2) {
         Charset charset = Charset.forName("UTF-8");
         ArrayList<String> list = new ArrayList<String>();
-        try(
-                FileInputStream is1=new FileInputStream(path1);
-                FileInputStream is2=new FileInputStream(path2);
-                SequenceInputStream is=new SequenceInputStream(is1, is2);
-                BufferedReader reader=new BufferedReader(new InputStreamReader(is, charset));)
-        {
+        try (
+                FileInputStream is1 = new FileInputStream(path1);
+                FileInputStream is2 = new FileInputStream(path2);
+                SequenceInputStream is = new SequenceInputStream(is1, is2);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(is, charset));) {
             try {
                 String line;
-                while((line = reader.readLine()) != null){
+                while ((line = reader.readLine()) != null) {
                     list.add(line);
                 }
             } catch (IOException e) {
@@ -46,51 +54,43 @@ public class ReadFile {
         }
         ArrayList<Pair<String, String>> ans = splitDocumentsFromFile(list.toString());
         return splitDocumentsFromFile(list.toString());
-
-
-
-//        ArrayList<ArrayList<Pair<String, String>>> docsFrom2Files = new ArrayList<>();
-//        docsFrom2Files.add(generateDocuments(path1));
-//        docsFrom2Files.add(generateDocuments(path2));
-//        return docsFrom2Files;
     }
 
     /**
-     *
      * @param filePathName
      * @return ArrayList of Pairs in with the following format: <DocumentNumber, fullContentOfDocument>
      */
     private ArrayList<Pair<String, String>> generateDocuments(String filePathName) {
-            BufferedReader br = null;
-            try {
-                br = new BufferedReader(new FileReader(filePathName));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(filePathName));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+            while (line != null) {
+                sb.append(line);
+                sb.append("\n");
+                line = br.readLine();
             }
+            return splitDocumentsFromFile(sb.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
             try {
-                StringBuilder sb = new StringBuilder();
-                String line = br.readLine();
-                while (line != null) {
-                    sb.append(line);
-                    sb.append("\n");
-                    line = br.readLine();
-                }
-                return splitDocumentsFromFile(sb.toString());
+                br.close();
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
-            return null; //Need to fix this
+        }
+        return null; //Need to fix this
     }
 
-    public void readAndParseLineByLine(String filePathName, Parse parser){
+    public void readAndParseLineByLine(String filePathName, Parse parser) {
         BufferedReader br = null;
-        System.out.println( filePathName );
+        System.out.println(filePathName);
 
         try {
             br = new BufferedReader(new FileReader(filePathName));
@@ -101,17 +101,17 @@ public class ReadFile {
 
             String line = "";
 
-            while ((line= br.readLine()) !=null) {
-                StringBuilder sb = new StringBuilder() ;
-                while (line != null && !line.equals("</DOC>")){
+            while ((line = br.readLine()) != null) {
+                StringBuilder sb = new StringBuilder();
+                while (line != null && !line.equals("</DOC>")) {
                     sb.append(line);
                     line = br.readLine();
                 }
                 sb.append(line);
-                String text = sb.toString() ;
+                String text = sb.toString();
                 String docNo = getDocNumber(sb.toString());
                 Document doc = new Document(docNo, filePathName);
-                parser.parse(text,doc);
+                parser.parse(text, doc);
                 sb.delete(0, sb.length());
 
             }
@@ -127,15 +127,6 @@ public class ReadFile {
         }
     }
 
-    private String getTextFromDocument(String fullDocContent) {
-        if ( fullDocContent.equals("")) return "";
-        String text = "";
-        String[] s = fullDocContent.split("TEXT>") ;
-        if ( s.length < 1) return "";
-       // text = s[1].replaceAll("/<", "");
-        return s[1];
-    }
-
 
     private ArrayList<Pair<String, String>> splitDocumentsFromFile(String fileContent) {
         ArrayList<Pair<String, String>> doNODocument = new ArrayList<>();
@@ -143,7 +134,7 @@ public class ReadFile {
         for (int i = 0; i < fileDocuments.length; i++) {
             String currentFullDocument = fileDocuments[i];
             String docNumber = getDocNumber(currentFullDocument);
-            if (docNumber != null){
+            if (docNumber != null) {
                 doNODocument.add(new Pair<>(docNumber, currentFullDocument));
             }
         }
@@ -154,7 +145,7 @@ public class ReadFile {
         String[] str = fileDocument.split("DOCNO>");
         if (str.length > 1) {
             if (str[1].contains(" "))
-                str[1].replaceAll("\\s+","");
+                str[1].replaceAll("\\s+", "");
             int indexOfArrow = str[1].indexOf("<");
             String docNumber = str[1].substring(0, indexOfArrow);
             return docNumber;
