@@ -81,7 +81,7 @@ public class Parse {
             }
 
             if (isNumeric(tokensArray[i]) && !(specialwords.contains(tokensArray[i+1].toLowerCase()))){
-                System.out.println("token1: " + tokensArray[i] + " token2: " + tokensArray[i+1]);
+//                System.out.println("token1: " + tokensArray[i] + " token2: " + tokensArray[i+1]);
                 addToDocTerms(tokensArray[i],currDoc);
                 i += 1;
                 continue;
