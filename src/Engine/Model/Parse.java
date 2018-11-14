@@ -19,6 +19,7 @@ public class Parse {
     private static ConcurrentHashMap<String, Term> AllTerms = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
     HashSet<String> stopwords = new HashSet<>();
     HashSet<String> specialwords = new HashSet<>();
+    HashSet<String> specialchars = new HashSet<>();
 
 
     //[0-9]{1,2}(/|-)[0-9]{1,2}(/|-)[0-9]{4}
@@ -40,8 +41,10 @@ public class Parse {
 
             FileReader stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt"); // read stop words from the file
             FileReader specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
+            FileReader specialchars_fr= new FileReader("src\\Engine\\resources\\special_chars.txt");
             BufferedReader stopwords_br = new BufferedReader(stopwords_fr);
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
+            BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
             String curr_line;
 
             while ((curr_line = stopwords_br.readLine()) != null) {
@@ -49,6 +52,9 @@ public class Parse {
             }
             while ((curr_line = specialwords_br.readLine()) != null) {
                 specialwords.add(curr_line);
+            }
+            while ((curr_line = specialchars_br.readLine()) != null) {
+                specialchars.add(curr_line);
             }
         } catch (Exception e) {
 
@@ -74,13 +80,23 @@ public class Parse {
 
 
         for (int i = 0; i < tokensArray.length; ) {
-//            tokensArray[i] = remove_stop_words(tokensArray[i]);
-            if (stopwords.contains(tokensArray[i]) || tokensArray[i].equals("")) {
+
+
+           //tokensArray[i] = remove_stop_words(tokensArray[i]);
+            if ( tokensArray[i].equals("")) {
                 i += 1;
                 continue;
             }
 
-            if (isNumeric(tokensArray[i]) && !(specialwords.contains(tokensArray[i+1].toLowerCase()))){
+            tokensArray[i] = cleanToken(tokensArray[i] ) ;
+
+            if (stopwords.contains(tokensArray[i]) ) {
+                i += 1;
+                continue;
+            }
+
+           // Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
+            if ( i < tokensArray.length - 1 &&isNumeric(tokensArray[i]) && !(specialwords.contains(tokensArray[i+1].toLowerCase()))){
 //                System.out.println("token1: " + tokensArray[i] + " token2: " + tokensArray[i+1]);
                 addToDocTerms(tokensArray[i],currDoc);
                 i += 1;
@@ -88,33 +104,35 @@ public class Parse {
             }
 
 
-                // check if its date first ..
+            //  check if its date first ..
 
-                if (i < tokensArray.length - 1) {
-                    //date - < Month + decimal >
-                    Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
-                    if (dateFormatMatcher2.find()) {
-                        String term = PairTokensIsDate2Format(tokensArray[i].toLowerCase(), tokensArray[i + 1].toLowerCase());
-                        //System.out.println("Term added: " + term);
-                        addToDocTerms(term, currDoc);
-                        i += 2;
-                        continue;
-                    }
-                    //date - < Month + YYYY >
-                    Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
-                    if (dateFormatMatcherYear.find()) {
-                        String term = PairTokensIsDate3Format(tokensArray[i].toLowerCase(), tokensArray[i + 1].toLowerCase());
-                        //System.out.println("Term added: " + term);
-                        addToDocTerms(term, currDoc);
-                        i += 2;
-                        continue;
-                    }
+            if (i < tokensArray.length - 1) {
+                tokensArray[i+1] = cleanToken(tokensArray[i+1] ) ;
+                //date - < Month + decimal >
+                Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
+                if (dateFormatMatcher2.find()) {
+                    String term = PairTokensIsDate2Format(tokensArray[i].toLowerCase(), tokensArray[i + 1].toLowerCase());
+                    //System.out.println("Term added: " + term);
+                    addToDocTerms(term, currDoc);
+                    i += 2;
+                    continue;
                 }
+                //date - < Month + YYYY >
+                Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
+                if (dateFormatMatcherYear.find()) {
+                    String term = PairTokensIsDate3Format(tokensArray[i].toLowerCase(), tokensArray[i + 1].toLowerCase());
+                    //System.out.println("Term added: " + term);
+                    addToDocTerms(term, currDoc);
+                    i += 2;
+                    continue;
+                }
+            }
 
-            // check if its $ or % ..
+            //  check if its $ or % ..
 
             if ((tokensArray[i].startsWith("$") || tokensArray[i].startsWith("%")) && i < tokensArray.length) {
                 if (i < tokensArray.length - 1) {
+                    tokensArray [i+1] = cleanToken(tokensArray[i+1] ) ;
                     if (check2WordsPattern(tokensArray[i], tokensArray[i + 1], currDoc)) {
                         i += 2;
                         continue;
@@ -130,19 +148,27 @@ public class Parse {
             Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
             Matcher regularNUMmatcher2 = REGULAR_NUM.matcher(cleanToken(tokensArray[i].replaceAll("[mbn]", "")));
             if (regularNUMmatcher.find() || regularNUMmatcher2.find()) {  // change the term only if the first token is a number !!!!
+
+
                 if (i < tokensArray.length - 3) {
+                    tokensArray [i+3] = cleanToken(tokensArray[i+3] ) ;
+                    tokensArray [i+2] = cleanToken(tokensArray[i+2] ) ;
+                    tokensArray [i+1] = cleanToken(tokensArray[i+1] ) ;
                     if (check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3], currDoc)) {
                         i += 4;
                         continue;
                     }
                 }
                 if (i < tokensArray.length - 2) {
+                    tokensArray [i+1] = cleanToken(tokensArray[i+1] ) ;
+                    tokensArray [i+2] = cleanToken(tokensArray[i+2] ) ;
                     if (check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], currDoc)) {
                         i += 3;
                         continue;
                     }
                 }
                 if (i < tokensArray.length - 1) {
+                    tokensArray [i+1] = cleanToken(tokensArray[i+1] ) ;
                     if (check2WordsPattern(tokensArray[i], tokensArray[i + 1], currDoc)) {
                         i += 2;
                         continue;
@@ -157,7 +183,7 @@ public class Parse {
 
             }
             //System.out.println("Term added: " + cleanToken(tokensArray[i])  );
-            addToDocTerms(cleanToken(tokensArray[i]), currDoc);
+            addToDocTerms(tokensArray[i], currDoc);
             i++;
         }
     }
@@ -172,18 +198,13 @@ public class Parse {
     }
 
     private String cleanToken(String token) {
-//        token = token.replaceAll("[]\\[()?\",]", ""); // clean token
-//        Matcher regularNUMmatcher = REGULAR_NUM.matcher(token);
-//        if ( !regularNUMmatcher.find() && !isExpression(token))
-//            token = token.replaceAll("[.]", "");
-//        if (!regularNUMmatcher.find()) {
-////            if (token.charAt(0) == '.')
-////                token = token.substring(1, token.length());
-////            if (token.charAt(token.length() - 1) == '.')
-////                token = token.substring(0, token.length() - 2);
-////            return token;
-//        }
-        return token;
+
+        StringBuilder s = new StringBuilder(token);
+        if ( specialchars.contains(token.charAt(0)))
+            s.deleteCharAt(0);
+        if ( specialchars.contains(token.charAt(s.length()-1)))
+            s.deleteCharAt(s.length() -1 );
+        return s.toString();
     }
 
     private boolean isExpression(String token) {
@@ -199,9 +220,11 @@ public class Parse {
         String originalToken = token;
         token = cleanToken(token);
         // < $number >
+
         if (token.startsWith("$")) {
 
             String temp = token.replace("$", "");
+            temp = temp.replaceAll("," , "");
             Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
             if (regularNUMmatcher.find()) {
                 term = get_term_from_simple_price(temp, originalToken);
@@ -349,12 +372,12 @@ public class Parse {
      * @param term
      */
     private void addToDocTerms(String term, Document currDoc) {
-        //System.out.println(term);
+        System.out.println(term);
         if (term.equals(""))
             return;
 
         if (AllTerms.containsKey(term)) {
-            AllTerms.get(term).addDoc(currDoc);
+            // AllTerms.get(term).addDoc(currDoc);
         } else { // new term
 
             // mutex
