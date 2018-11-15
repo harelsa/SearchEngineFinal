@@ -200,7 +200,7 @@ public class Parse {
             } else { // new term
 
                 // mutex
-                Term obj_term = new Term(0, 0);
+                Term obj_term = new Term(0, 0, addTerm);
                 obj_term.addDoc(currDoc);
                 docTerms.put(addTerm, obj_term);
             }
