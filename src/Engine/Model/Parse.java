@@ -59,7 +59,7 @@ public class Parse {
             while ((curr_line = specialchars_br.readLine()) != null) {
                 specialchars.add(curr_line);
             }
-            SegmentFile parserSegmentFile = new SegmentFile();
+//            SegmentFile parserSegmentFile = new SegmentFile();
 
         } catch (Exception e) {
 
@@ -192,7 +192,7 @@ public class Parse {
             //REGULAR WORD
             if (addTerm.equals(""))
                 addTerm = tokensArray[i] ;
-            //System.out.println(addTerm);
+//            System.out.println(addTerm);
 
 
             if (AllTerms.containsKey(addTerm)) {
