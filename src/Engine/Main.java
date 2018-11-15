@@ -19,17 +19,17 @@ public class Main extends Application {
 //        primaryStage.setScene(new Scene(root, 300, 275));
         //primaryStage.show();
         //String str = "isn't it great to parse in Java-Parser KOKO - STR U.S.A  , od don't it ? ";
-        String str = "$450,000 BLA BLA June 16 16 June 0.6 percent BLA BLA 10.6 percentage BLA BLA 10,123 55 Million 55 Billion 1010.56 6% 1,000,000 Dollars 1.7320 Dollars $450,000,000 7 Trillion 10,123,000,000";
-        //String str = "16 June";
+      //  String str = "$450,000 BLA BLA June 16 16 June 0.6 percent BLA BLA 10.6 percentage BLA BLA 10,123 55 Million 55 Billion 1010.56 6% 1,000,000 Dollars 1.7320 Dollars $450,000,000 7 Trillion 10,123,000,000";
+        String str = " 55 Billion 1,000,000 Dollars, bla. bla (bla bla) , [bla] , bla bla] bla:: <bla>  ";
 
         // move to TExt operationg !!!
         Parse parser = new Parse();
         Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020") ;
         parser.parse(str , doc );
 
-        //TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Documents\\Engine\\corpus\\corpus");
-//        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
-//        textOperationsManager.StartTextOperations();
+        //TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus\\corpus");
+       // TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
+        //textOperationsManager.StartTextOperations();
 
 
         // Print words and Pos Tags
