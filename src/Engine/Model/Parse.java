@@ -32,11 +32,11 @@ public class Parse {
     Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
     Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
     Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
-    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)");
-    Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)" + " " + "(3[0-1]|[0-2][0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
+    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
+    Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
     Pattern PRICE_SIMPLE = Pattern.compile("$" + "\\d+");
     Pattern FRACTURE_SIMPLE = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"");
-    Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)" + " " + "([1-2]|[0-9][0-9][0-9])$"); /*"[0-9]{4}");*/
+    Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2]|[0-9][0-9][0-9])$"); /*"[0-9]{4}");*/
     Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
 
     public Parse() {
@@ -107,7 +107,7 @@ public class Parse {
             }
 
             // check number with bo special term
-            if (isNumber(tokensArray[i]) && ( i == tokensArray.length-1 ||(i < tokensArray.length - 1  && !specialwords.contains(tokensArray[i + 1].toLowerCase())))) {
+            if (isNumber(tokensArray[i]) && ( i == tokensArray.length-1 ||(i < tokensArray.length - 1  && !specialwords.contains(cleanToken(tokensArray[i + 1].toLowerCase()))))) {
 //                System.out.println("token1: " + tokensArray[i] + " token2: " + tokensArray[i+1]);
                 addTerm = check1WordPattern(tokensArray[i]) ;
 
@@ -192,7 +192,7 @@ public class Parse {
             //REGULAR WORD
             if (addTerm.equals(""))
                 addTerm = tokensArray[i] ;
-            System.out.println(addTerm);
+            //System.out.println(addTerm);
 
 
             if (AllTerms.containsKey(addTerm)) {
@@ -238,14 +238,15 @@ public class Parse {
     private String cleanToken(String token) {
         StringBuilder s = null;
         boolean changed = true  ;
-        while ( !token.equals("") && token != null && changed ) {
+        while (  token != null  && token.length() >0  &&!token.equals("") && changed ) {
             changed = false;
              s = new StringBuilder(token);
-            if (specialchars.contains(token.charAt(0))) {
+            if (specialchars.contains(""+s.charAt(0))) {
                 s.deleteCharAt(0);
+                token = s.toString() ;
                 changed = true ;
             }
-            if (specialchars.contains(token.charAt(s.length() - 1))) {
+            if ( token != null  && token.length() >0  && !token.equals("")   && specialchars.contains(""+s.charAt(s.length()-1))) {
                 s.deleteCharAt(s.length() - 1);
                 changed = true;
             }
@@ -266,15 +267,15 @@ public class Parse {
 
         String term;
         String originalToken = token;
-        // token = cleanToken(token);
+         token = cleanToken(token);
         // < $number >
 
         if (token.startsWith("$")) {
 
             String temp = token.replace("$", "");
             temp = temp.replaceAll("," , "");
-            Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
-            if (regularNUMmatcher.find()) {
+            //Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
+            if (isNumber(temp)) {
                 term = get_term_from_simple_price(temp, originalToken);
                 return term ;
             }
@@ -511,7 +512,8 @@ public class Parse {
                 term = get_term_from_simple_price(token, token);
                 break;
             case "trillion":
-
+                token= token.replaceAll("," ,"");
+                if (isNumber(token)) ;
                 double value = Double.parseDouble(token) * TRILLION;
                 term = get_term_from_simple_number(value + "");
                 break;
