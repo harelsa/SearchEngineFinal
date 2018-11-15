@@ -20,7 +20,7 @@ public class TextOperationsManager {
     String curposPath;
     HashMap<Document, HashSet<String>> DocumentsTerms;
     public ArrayList<String> filesPathsList;
-    ExecutorService executor;
+    public static ExecutorService executor;
 
     /* FOR TEST ONLY */
     public static int filesCounter;
@@ -42,10 +42,32 @@ public class TextOperationsManager {
 
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
+            String segmentFilePath = getSegmentFilePath(i);
             int finalI = i;
             Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parser));
             executor.execute(parseThread);
         }
+    }
+
+    private String getSegmentFilePath(int i) {
+        String segmantBaseFilePath = "src\\Engine\\resources\\Segment Files";
+        String segmantFilePath = "";
+        int ans = i % 4;
+        switch (ans) {
+            case 0:
+                segmantFilePath = segmantBaseFilePath + "\\Thread1";
+                break;
+            case 1:
+                segmantFilePath = segmantBaseFilePath + "\\Thread2";
+                break;
+            case 2:
+                segmantFilePath = segmantBaseFilePath + "\\Thread3";
+                break;
+            case 3:
+                segmantFilePath = segmantBaseFilePath + "\\Thread4";
+                break;
+        }
+        return segmantFilePath;
     }
 
     private void initFilesPathList(String curposPath) {

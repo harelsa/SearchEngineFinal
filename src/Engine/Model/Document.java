@@ -1,11 +1,12 @@
 package Engine.Model;
 
+import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.TreeSet;
 
-public class Document {
+public class Document implements Serializable {
     private String docNo;
     private String parentFilePath;
     private int max_tf  = 0 ; // frequancy of the most common term in doc
@@ -49,4 +50,17 @@ public class Document {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Document{" +
+                "docNo='" + docNo + '\'' +
+                ", parentFilePath='" + parentFilePath + '\'' +
+                ", max_tf=" + max_tf +
+                ", unique_t=" + unique_t +
+                ", city='" + city + '\'' +
+                ", termFrequency=" + termFrequency +
+                ", maxFreqTerm=" + maxFreqTerm +
+                ", maxFreqTermNumber=" + maxFreqTermNumber +
+                '}';
+    }
 }
