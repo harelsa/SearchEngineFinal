@@ -65,8 +65,11 @@ public class Parse {
 
     public HashSet<String> parse(String text, Document currDoc) {
         //text = remove_stop_words(text);
+        HashMap<String, Term> AllTerms = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
         String[] tokens = text.split(" ");
-        getTerms(tokens, currDoc);
+        AllTerms = getTerms(tokens, currDoc);
+        SegmentFile parserSegmentFile = new SegmentFile(AllTerms, currDoc);
+        parserSegmentFile.writeToFile();
         return null;
     }
 
@@ -76,9 +79,8 @@ public class Parse {
      * @param tokensArray
      * @param currDoc
      */
-    private void getTerms(String[] tokensArray, Document currDoc) {
-
-
+    private HashMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
+        HashMap<String, Term> docTerms = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
         for (int i = 0; i < tokensArray.length; ) {
 
 
@@ -385,8 +387,6 @@ public class Parse {
             obj_term.addDoc(currDoc);
             AllTerms.put(term, obj_term);
         }
-
-
     }
 
     private boolean check3WordsPattern(String token1, String token2, String token3, Document currDoc) {
