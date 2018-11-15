@@ -18,7 +18,7 @@ public class Parse {
     private double TRILLION = Math.pow(10, 12);
 
 
-    private static ConcurrentHashMap<String, Term> AllTerms = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
+    //private static ConcurrentHashMap<String, Term> AllTerms = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
     SegmentFile parserSegmentFile ;
     HashSet<String> stopwords = new HashSet<>();
     HashSet<String> specialwords = new HashSet<>();
@@ -32,11 +32,11 @@ public class Parse {
     Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
     Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
     Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
-    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
-    Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
+    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
+    Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
     Pattern PRICE_SIMPLE = Pattern.compile("$" + "\\d+");
     Pattern FRACTURE_SIMPLE = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"");
-    Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2]|[0-9][0-9][0-9])$"); /*"[0-9]{4}");*/
+    Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2]|[0-9][0-9][0-9]|[0-9])$"); /*"[0-9]{4}");*/
     Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
 
     public Parse() {
@@ -192,16 +192,16 @@ public class Parse {
             //REGULAR WORD
             if (addTerm.equals(""))
                 addTerm = tokensArray[i] ;
-            //System.out.println(addTerm);
+            System.out.println(addTerm);
 
 
-            if (AllTerms.containsKey(addTerm)) {
+            if (docTerms.containsKey(addTerm)) {
                 // AllTerms.get(term).addDoc(currDoc);
             } else { // new term
 
                 // mutex
                 Term obj_term = new Term(0, 0);
-                obj_term.addDoc(currDoc);
+                //obj_term.addDoc(currDoc);
                 docTerms.put(addTerm, obj_term);
             }
             i++;
@@ -525,6 +525,7 @@ public class Parse {
     private String PairTokensIsDate2Format(String token, String anotherToken) {
         String term = "";
         String temp = token;
+        if (anotherToken.length() == 1) anotherToken = "0"+anotherToken ;
         switch (temp.toLowerCase().substring(0,3)) {
             case "jan":
                 term = "01-" + anotherToken;
@@ -618,6 +619,7 @@ public class Parse {
     private String PairTokensIsDateFormat(String token, String anotherToken) {
         String term = "";
         String temp = anotherToken;
+        if (token.length() == 1) token = "0"+token ;
         switch (temp.toLowerCase().substring(0,3)) {
             case "jan":
                 term = "01-" + token;
