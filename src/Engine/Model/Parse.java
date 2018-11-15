@@ -1,16 +1,18 @@
 package Engine.Model;
 
-import com.sun.deploy.util.StringUtils;
+
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 public class Parse {
+
+
     // enums
     private double THOUSAND = Math.pow(10, 3);
     private double MILLION = Math.pow(10, 6);
