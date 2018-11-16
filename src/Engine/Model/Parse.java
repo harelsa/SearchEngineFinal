@@ -194,7 +194,7 @@ public class Parse {
             //REGULAR WORD
             if (addTerm.equals(""))
                 addTerm = tokensArray[i] ;
-            System.out.println(addTerm);
+//            System.out.println(addTerm);
 
 
             if (docTerms.containsKey(addTerm)) {
@@ -202,7 +202,7 @@ public class Parse {
             } else { // new term
 
                 // mutex
-                Term obj_term = new Term(0, 0);
+                Term obj_term = new Term(0, 0, addTerm);
                 //obj_term.addDoc(currDoc);
                 docTerms.put(addTerm, obj_term);
             }
