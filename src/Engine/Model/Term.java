@@ -7,16 +7,18 @@ import java.util.List;
 
 public class Term implements Comparable, Serializable {
     private int df = 0; // the number of docs the term is appearing
-    private int tf = 0; // the number of
+    private int tf = 0; // length of location docs
     private String content;
-    private HashMap<Document, LinkedList<Integer>> docs;// < doc obj , a list of locations(row num)
+    private HashMap<Document, LinkedList<Integer>> location_docs;// < doc obj , a list of locations(row num)
+    private HashMap<Document, Integer > tf_docs ;
     // in doc (tr - number tomes the term appear in the doc , the length of the list ) >
 
     public Term(int df, int tf, String content) {
         this.df = df;
         this.tf = tf;
         this.content = content;
-        docs = new HashMap<>();
+        location_docs = new HashMap<>();
+        tf_docs = new HashMap<>();
     }
 
     public String getContent() {
@@ -26,14 +28,13 @@ public class Term implements Comparable, Serializable {
     public void addDoc(Document doc ) { // check if we need to save row
         //check if the doc exists and add accordinaly
         // if not df +1
-        if (docs.containsKey(doc)) {
-            docs.get(doc).add(0) ; // need to add location in doc
-
-        } else {
+        if (location_docs.containsKey(doc)) {
+           location_docs.get(doc).add(0) ; // need to add location in doc
+            tf_docs.put(doc, tf_docs.get(doc) + 1);
+        } else { // create new doc
             df++;
-            tf++ ;
-            docs.put(doc, new LinkedList<Integer>());
-
+            location_docs.put(doc, new LinkedList<Integer>());
+            tf_docs.put ( doc , 1) ;
         }
     }
 
@@ -43,7 +44,7 @@ public class Term implements Comparable, Serializable {
                 "df=" + df +
                 ", tf=" + tf +
                 ", content='" + content + '\'' +
-                ", docs=" + docs +
+                ", docs=" + location_docs +
                 '}';
     }
 

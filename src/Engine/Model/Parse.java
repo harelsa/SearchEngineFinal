@@ -45,9 +45,9 @@ public class Parse {
     private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
     private static Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
     private static Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
-    private static Pattern PRICE_SIMPLE = Pattern.compile("$" + "\\d+");
+    private static Pattern PRICE_SIMPLE = Pattern.compile( "\\$"+ "\\d+$");
     private static Pattern FRACTURE_SIMPLE = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"");
-    private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2]|[0-9][0-9][0-9]|[0-9])$"); /*"[0-9]{4}");*/
+    private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2][0-9][0-9][0-9]|[0-9][0-9][0-9] )$"); /*"[0-9]{4}");*/
     private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
 
     private SegmentFile segmantFile;
@@ -114,15 +114,27 @@ public class Parse {
             }
 
             // check stop word
-            if (stopwords.contains(tokensArray[i])) {
+            if (!tokensArray[i].equals( "may") && stopwords.contains(tokensArray[i])) {
                 i += 1;
                 continue;
             }
 
-            // check number with bo special term
+            // check number with no special term
             if (isNumber(tokensArray[i]) && ( i == tokensArray.length-1 ||(i < tokensArray.length - 1  && !specialwords.contains(cleanToken(tokensArray[i + 1].toLowerCase()))))) {
 //                System.out.println("token1: " + tokensArray[i] + " token2: " + tokensArray[i+1]);
-                addTerm = check1WordPattern(tokensArray[i]) ;
+                //datre < decimal + decimal\decimal  >
+                if ( i < tokensArray.length -1) {
+                    tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
+                    Matcher fractureMatcher = FRACTURE_SIMPLE.matcher(tokensArray[i] + " " + tokensArray[i + 1]);
+                    if (fractureMatcher.find()) {
+                        //addTerm = tokensArray[i] + " " + tokensArray[i + 1];
+                        addTerm = "fraction" ;
+                    }
+                }
+
+
+                if ( addTerm.equals("")) addTerm = check1WordPattern(tokensArray[i]) ; //regular num
+                addTerm = "" ;
 
             }
 
@@ -148,6 +160,11 @@ public class Parse {
 
                 }
                 if (!addTerm.equals("")) i += 1;
+                if ( tokensArray[i].equals("may") && addTerm.equals("") ) // stop word  - fix may
+                {
+                    i++;
+                    continue;
+                }
             }
 
 
@@ -159,7 +176,7 @@ public class Parse {
                     addTerm = check2WordsPattern(tokensArray[i], tokensArray[i + 1]) ;
                     if (!addTerm.equals("")) i += 1;
                 }
-                addTerm = check1WordPattern(tokensArray[i]);
+                if (addTerm.equals(""))  addTerm = check1WordPattern(tokensArray[i]);
 
             }
 
@@ -209,12 +226,14 @@ public class Parse {
 
 
             if (docTerms.containsKey(addTerm)) {
+                System.out.println(addTerm);
                   docTerms.get(addTerm).addDoc(currDoc);
 
             } else { // new term
 
                 // mutex
-                Term obj_term = new Term(0, 0, addTerm);
+                Term obj_term = new Term(1, 1, addTerm);
+                obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
                 System.out.println(addTerm);
                 docTerms.put(addTerm, obj_term);
@@ -362,14 +381,11 @@ public class Parse {
             temp = token1.replace("$", "");
 
             if (token2.equals("billion")) {
-//                // for test
-//                System.out.println(currDoc.getDocNo());
-//                System.out.println(temp);
-                temp = token1.replaceAll("," , "");
+                temp = temp.replaceAll("," , "");
                 if (isNumber(temp)) value = Double.parseDouble(temp) * BILLION;
             }
-            if (token1.endsWith("million")) {
-                temp = token1.replaceAll("," , "");
+            if (token2.equals("million")) {
+                temp = temp.replaceAll("," , "");
                 if (isNumber(temp)) value = Double.parseDouble(temp) * MILLION;
             }
 
