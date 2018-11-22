@@ -23,14 +23,15 @@ public class Term implements Comparable, Serializable {
         return content;
     }
 
-    public void addDoc(Document doc) { // check if we need to save row
+    public void addDoc(Document doc ) { // check if we need to save row
         //check if the doc exists and add accordinaly
         // if not df +1
         if (docs.containsKey(doc)) {
-            //updates the curr doc
+            docs.get(doc).add(0) ; // need to add location in doc
+
         } else {
             df++;
-            //tf++ ;
+            tf++ ;
             docs.put(doc, new LinkedList<Integer>());
 
         }

@@ -40,7 +40,7 @@ public class Parse {
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
     //Pattern PRICE_DOU_DOLLAR = Pattern.compile( "$" + "\\d*" +" " + "(billion|million|Million|Billion)");
     private static Pattern NUMBER_ADDS = Pattern.compile("\\d+" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
-    private static Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
+    private static Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S" + " " + "dollars");
     private static Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
     private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
     private static Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
@@ -209,12 +209,14 @@ public class Parse {
 
 
             if (docTerms.containsKey(addTerm)) {
-                // AllTerms.get(term).addDoc(currDoc);
+                  docTerms.get(addTerm).addDoc(currDoc);
+
             } else { // new term
 
                 // mutex
                 Term obj_term = new Term(0, 0, addTerm);
                 //obj_term.addDoc(currDoc);
+                System.out.println(addTerm);
                 docTerms.put(addTerm, obj_term);
             }
             i++;
@@ -481,17 +483,17 @@ public class Parse {
             String temp = token2;
             switch (temp.toLowerCase()) {
                 case "million":
-                    term = token1 + "M Dollars";
+                    term = token1 + " M Dollars";
                     break;
                 case "billion":
                     token1=token1.replaceAll("," ,"");
                     if (isNumber(token1))
-                        term = ((int) Double.parseDouble(token1) * 1000) + "M Dollars";
+                        term = (( checkVal(Double.parseDouble(token1) * THOUSAND)) ) + " M Dollars";
                     break;
                 case "trillion":
                     token1= token1.replaceAll("," ,"");
                     if (isNumber(token1)) ;
-                    term = ((int) Double.parseDouble(token1) * 10000000) + "M Dollars";
+                    term = (  (checkVal(Double.parseDouble(token1) * MILLION ) )) + " M Dollars";
                     break;
 
             }
