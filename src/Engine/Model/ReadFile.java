@@ -26,72 +26,10 @@ public class ReadFile {
         executor = Executors.newFixedThreadPool(8);
     }
 
-    public ArrayList<Pair<String, String>> readFile(String filePathName) {
-        return generateDocuments(filePathName);
-    }
-
-    /*  */
-    public ArrayList<Pair<String, String>> read2files(String path1, String path2) {
-        Charset charset = Charset.forName("UTF-8");
-        ArrayList<String> list = new ArrayList<String>();
-        try (
-                FileInputStream is1 = new FileInputStream(path1);
-                FileInputStream is2 = new FileInputStream(path2);
-                SequenceInputStream is = new SequenceInputStream(is1, is2);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is, charset));) {
-            try {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    list.add(line);
-                }
-            } catch (IOException e) {
-                System.err.format("IOException: %s%n", e);
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        ArrayList<Pair<String, String>> ans = splitDocumentsFromFile(list.toString());
-        return splitDocumentsFromFile(list.toString());
-    }
-
-    /**
-     * @param filePathName
-     * @return ArrayList of Pairs in with the following format: <DocumentNumber, fullContentOfDocument>
-     */
-    private ArrayList<Pair<String, String>> generateDocuments(String filePathName) {
-        BufferedReader br = null;
-        try {
-            br = new BufferedReader(new FileReader(filePathName));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            StringBuilder sb = new StringBuilder();
-            String line = br.readLine();
-            while (line != null) {
-                sb.append(line);
-                sb.append("\n");
-                line = br.readLine();
-            }
-            return splitDocumentsFromFile(sb.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                br.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return null; //Need to fix this
-    }
 
     public void readAndParseLineByLine(String filePathName, Parse parser) {
         BufferedReader br = null;
         System.out.println(filePathName);
-
         try {
             br = new BufferedReader(new FileReader(filePathName));
         } catch (FileNotFoundException e) {
@@ -100,24 +38,25 @@ public class ReadFile {
         try {
 
             String line = "";
-
+            StringBuilder sb = new StringBuilder();
             while ((line = br.readLine()) != null) {
-                StringBuilder sb = new StringBuilder();
                 while (line != null && !line.equals("</DOC>")) {
                     sb.append(line);
                     line = br.readLine();
                 }
                 sb.append(line);
                 String text = sb.toString();
-                String docNo = getDocNumber(sb.toString());
+                String docNo = getDocNumber(text);
                 Document doc = new Document(docNo, filePathName);
 //                parser.parse(text, doc);
                 Thread parseThread = new Thread(() -> parser.parse(text,doc));
 //                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
-                executor.execute(parseThread);
                 sb.delete(0, sb.length());
-
+                sb.setLength(0);
+                sb = new StringBuilder();
+                executor.execute(parseThread);
             }
+            br.close();
             //return splitDocumentsFromFile(sb.toString());
         } catch (IOException e) {
             e.printStackTrace();

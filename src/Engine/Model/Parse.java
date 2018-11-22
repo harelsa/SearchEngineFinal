@@ -84,10 +84,10 @@ public class Parse {
 
     public HashSet<String> parse(String text, Document currDoc) {
         //text = remove_stop_words(text);
-        HashMap<String, Term> AllTerms = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
-        String[] tokens = text.split(" ");
-        AllTerms = getTerms(tokens, currDoc);
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+        String[] tokens;
+        tokens = text.split(" ");
+        HashMap<String, Term> AllTerms = getTerms(tokens, currDoc);
+//        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 

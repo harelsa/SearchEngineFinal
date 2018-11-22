@@ -17,9 +17,7 @@ public class SegmentFilePartition implements Serializable {
     ObjectInputStream o_is;
     BufferedWriter writer;
     BufferedReader reader;
-    //    SortedMap<Term, Document> segmentTerms;
-    StringBuilder sb;
-    String segmantPartitionFilePath;
+    private String segmantPartitionFilePath;
 
     public SegmentFilePartition(String path, char from, char to) {
         segmantPartitionFilePath = path + "_" + from + "_" + "to" + "_" + to + ".txt";
@@ -29,23 +27,18 @@ public class SegmentFilePartition implements Serializable {
 
             f_is = new FileInputStream(new File(segmantPartitionFilePath));
             o_is = new ObjectInputStream(f_is);
-
-            //        FileInputStream fi = new FileInputStream(new File("myObjects.txt"));
-//        ObjectInputStream oi = new ObjectInputStream(fi);
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
             e1.printStackTrace();
         }
-//        writer = new BufferedWriter();
-//        reader = new BufferedReader()
     }
 
     synchronized public void signNewTerm(Term term, Document doc) {
         Pair<Term, Document> object = new Pair<>(term, doc);
         try {
             o_os.writeObject(object);
-            o_os.flush();
+//            o_os.flush();
 //            System.out.println("The following term added to: " + segmantPartitionFilePath); //for test
 //            System.out.println(term.toString()); //for test
         } catch (IOException e) {
