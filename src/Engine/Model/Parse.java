@@ -3,6 +3,7 @@ package Engine.Model;
 
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.*;
 
@@ -14,42 +15,53 @@ public class Parse {
 
 
     // enums
-    private double THOUSAND = Math.pow(10, 3);
-    private double MILLION = Math.pow(10, 6);
-    private double BILLION = Math.pow(10, 9);
-    private double TRILLION = Math.pow(10, 12);
-
+    private static double THOUSAND = Math.pow(10, 3);
+    private static double MILLION = Math.pow(10, 6);
+    private static double BILLION = Math.pow(10, 9);
+    private static double TRILLION = Math.pow(10, 12);
 
     //private static ConcurrentHashMap<String, Term> AllTerms = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
-    SegmentFile parserSegmentFile ;
-    HashSet<String> stopwords = new HashSet<>();
-    HashSet<String> specialwords = new HashSet<>();
-    HashSet<String> specialchars = new HashSet<>();
-
-
+    private static HashSet<String> stopwords = new HashSet<>();
+    private static HashSet<String> specialwords = new HashSet<>();
+    private static HashSet<String> specialchars = new HashSet<>();
+    private static FileReader stopwords_fr; // read stop words from the file
+    private static FileReader specialwords_fr;
+    private static FileReader specialchars_fr;
+    static {
+        try {
+            stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt");
+            specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
+            specialchars_fr = new FileReader("src\\Engine\\resources\\special_chars.txt");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
     //[0-9]{1,2}(/|-)[0-9]{1,2}(/|-)[0-9]{4}
     //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
     //Pattern PRICE_DOU_DOLLAR = Pattern.compile( "$" + "\\d*" +" " + "(billion|million|Million|Billion)");
-    Pattern NUMBER_ADDS = Pattern.compile("\\d+" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
-    Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
-    Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
-    Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
-    Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
-    Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
-    Pattern PRICE_SIMPLE = Pattern.compile("$" + "\\d+");
-    Pattern FRACTURE_SIMPLE = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"");
-    Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2]|[0-9][0-9][0-9]|[0-9])$"); /*"[0-9]{4}");*/
-    Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
+    private static Pattern NUMBER_ADDS = Pattern.compile("\\d+" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
+    private static Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S." + " " + "dollars");
+    private static Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
+    private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
+    private static Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
+    private static Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
+    private static Pattern PRICE_SIMPLE = Pattern.compile("$" + "\\d+");
+    private static Pattern FRACTURE_SIMPLE = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"");
+    private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2]|[0-9][0-9][0-9]|[0-9])$"); /*"[0-9]{4}");*/
+    private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
 
-    public Parse() {
+    private SegmentFile segmantFile;
+
+
+    public Parse(SegmentFile segmantFile) {
         try {
-
-            FileReader stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt"); // read stop words from the file
-            FileReader specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
-            FileReader specialchars_fr= new FileReader("src\\Engine\\resources\\special_chars.txt");
+//            FileReader stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt"); // read stop words from the file
+//            FileReader specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
+//            FileReader specialchars_fr= new FileReader("src\\Engine\\resources\\special_chars.txt");
             BufferedReader stopwords_br = new BufferedReader(stopwords_fr);
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
+            this.segmantFile = segmantFile;
             String curr_line;
 
             while ((curr_line = stopwords_br.readLine()) != null) {
@@ -75,8 +87,7 @@ public class Parse {
         HashMap<String, Term> AllTerms = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
         String[] tokens = text.split(" ");
         AllTerms = getTerms(tokens, currDoc);
-
-        //  parserSegmentFile.writeToFile(AllTerms , currDoc);
+        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 

@@ -111,7 +111,10 @@ public class ReadFile {
                 String text = sb.toString();
                 String docNo = getDocNumber(sb.toString());
                 Document doc = new Document(docNo, filePathName);
-                parser.parse(text, doc);
+//                parser.parse(text, doc);
+                Thread parseThread = new Thread(() -> parser.parse(text,doc));
+//                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+                executor.execute(parseThread);
                 sb.delete(0, sb.length());
 
             }

@@ -60,4 +60,6 @@ public class SegmentFile implements Serializable {
             return 4;
     }
 
+    public void writeToFile(HashMap<String, Term> allTerms, Document currDoc) {
+    }
 }

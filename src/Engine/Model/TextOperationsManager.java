@@ -19,6 +19,7 @@ public class TextOperationsManager {
     Parse parser;
     String curposPath;
     HashMap<Document, HashSet<String>> DocumentsTerms;
+    private Parse[] parsers = new Parse[4];
     public ArrayList<String> filesPathsList;
     public static ExecutorService executor;
 
@@ -29,10 +30,17 @@ public class TextOperationsManager {
 
     public TextOperationsManager(String curposPath) {
         this.reader = new ReadFile();
-        this.parser = new Parse();
+        initParsers();
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
         executor = Executors.newFixedThreadPool(8);
+    }
+
+    private void initParsers() {
+        for (int i = 0; i < 4; i++) {
+            SegmentFile sf = new SegmentFile(getSegmentFilePath(i));
+            parsers[i] = new Parse(sf);
+        }
     }
 
     public void StartTextOperations() {
@@ -42,29 +50,28 @@ public class TextOperationsManager {
 
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
-            String segmentFilePath = getSegmentFilePath(i);
             int finalI = i;
-            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parser));
-            executor.execute(parseThread);
+            reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]);
+//            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+//            executor.execute(parseThread);
         }
     }
 
     private String getSegmentFilePath(int i) {
         String segmantBaseFilePath = "src\\Engine\\resources\\Segment Files";
         String segmantFilePath = "";
-        int ans = i % 4;
-        switch (ans) {
+        switch (i) {
             case 0:
-                segmantFilePath = segmantBaseFilePath + "\\Thread1";
+                segmantFilePath = segmantBaseFilePath + "\\Parser1";
                 break;
             case 1:
-                segmantFilePath = segmantBaseFilePath + "\\Thread2";
+                segmantFilePath = segmantBaseFilePath + "\\Parser2";
                 break;
             case 2:
-                segmantFilePath = segmantBaseFilePath + "\\Thread3";
+                segmantFilePath = segmantBaseFilePath + "\\Parser3";
                 break;
             case 3:
-                segmantFilePath = segmantBaseFilePath + "\\Thread4";
+                segmantFilePath = segmantBaseFilePath + "\\Parser4";
                 break;
         }
         return segmantFilePath;
