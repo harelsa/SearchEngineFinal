@@ -42,13 +42,14 @@ public class Parse {
     private static Pattern NUMBER_ADDS = Pattern.compile("\\d+" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
     private static Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S" + " " + "dollars");
     private static Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
-    private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"" + " " + "(Dollars)");
+    private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("[0-9]*" + " " + "[0-9]*" + "/" + "[0-9]*" + " " + "Dollars");
     private static Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
     private static Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
     private static Pattern PRICE_SIMPLE = Pattern.compile( "\\$"+ "\\d+$");
-    private static Pattern FRACTURE_SIMPLE = Pattern.compile("\"^[0-9]*$\"" + " " + "\"^[0-9]*$\"" + "/" + "\"^[0-9]*$\"");
+    private static Pattern FRACTURE_SIMPLE = Pattern.compile("[0-9]*" + " " + "[0-9]*" + "/" + "[0-9]*$");
     private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2][0-9][0-9][0-9]|[0-9][0-9][0-9] )$"); /*"[0-9]{4}");*/
     private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
+    private static Pattern DOUBLE_NUM = Pattern.compile("^[0-9]*$" + "." + "^[0-9]*$");
 
     private SegmentFile segmantFile;
 
@@ -120,22 +121,10 @@ public class Parse {
             }
 
             // check number with no special term
-            if (isNumber(tokensArray[i]) && ( i == tokensArray.length-1 ||(i < tokensArray.length - 1  && !specialwords.contains(cleanToken(tokensArray[i + 1].toLowerCase()))))) {
-//                System.out.println("token1: " + tokensArray[i] + " token2: " + tokensArray[i+1]);
-                //datre < decimal + decimal\decimal  >
-                if ( i < tokensArray.length -1) {
-                    tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
-                    Matcher fractureMatcher = FRACTURE_SIMPLE.matcher(tokensArray[i] + " " + tokensArray[i + 1]);
-                    if (fractureMatcher.find()) {
-                        //addTerm = tokensArray[i] + " " + tokensArray[i + 1];
-                        addTerm = "fraction" ;
-                    }
-                }
-
+            if (isNumber(tokensArray[i]) && ( i == tokensArray.length-1 ||(i < tokensArray.length - 1  && (!specialwords.contains(cleanToken(tokensArray[i + 1].toLowerCase())) || !tokensArray[i+1].contains("/"))))) {
 
                 if ( addTerm.equals("")) addTerm = check1WordPattern(tokensArray[i]) ; //regular num
                 addTerm = "" ;
-
             }
 
 
@@ -183,7 +172,7 @@ public class Parse {
             // check a term with  num
             // Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
             Matcher regularNUMmatcher2 = REGULAR_NUM.matcher(cleanToken(tokensArray[i].replaceAll("[mbn]", "")));
-            if (addTerm.equals("") && (isNumber(tokensArray[i]) || regularNUMmatcher2.find())) {  // change the term only if the first token is a number !!!!
+            if (addTerm.equals("") && (isNumber(tokensArray[i]) || regularNUMmatcher2.find()|| isNumber(tokensArray[i].replaceAll("[mbn]", "")))) {  // change the term only if the first token is a number !!!!
 
                 if (i < tokensArray.length - 3) {
                     tokensArray[i + 3] = cleanToken(tokensArray[i + 3]);
@@ -226,7 +215,7 @@ public class Parse {
 
 
             if (docTerms.containsKey(addTerm)) {
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
                   docTerms.get(addTerm).addDoc(currDoc);
 
             } else { // new term
@@ -235,7 +224,7 @@ public class Parse {
                 Term obj_term = new Term(1, 1, addTerm);
                 obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
                 docTerms.put(addTerm, obj_term);
             }
             i++;
@@ -407,8 +396,8 @@ public class Parse {
             }
             if (token1.endsWith("m")) {
                 temp = saved_original.replaceAll("m", "");
-                Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
-                if (regularNUMmatcher.find()) value = Double.parseDouble(temp) * MILLION;
+
+                if (isNumber(temp)) value = Double.parseDouble(temp) * MILLION;
             }
 
             term = get_term_from_simple_price(value + "", "");

@@ -36,24 +36,32 @@ public class ReadFile {
             e.printStackTrace();
         }
         try {
-
+            boolean text_adding = false ;
             String line = "";
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb_docInfo = new StringBuilder();
+            StringBuilder sb_text = new StringBuilder();
             while ((line = br.readLine()) != null) {
                 while (line != null && !line.equals("</DOC>")) {
-                    sb.append(line);
+                    if ( line.equals("<TEXT>")) text_adding  = true ;
+                    if (! text_adding )
+                    sb_docInfo.append(line);
+                    else sb_text.append(line) ;
                     line = br.readLine();
                 }
-                sb.append(line);
-                String text = sb.toString();
-                String docNo = getDocNumber(text);
+                sb_docInfo.append(line);
+                String text = sb_text.toString();
+                String doc_text = sb_docInfo.toString();
+                String docNo = getDocNumber(doc_text);
                 Document doc = new Document(docNo, filePathName);
 //                parser.parse(text, doc);
                 Thread parseThread = new Thread(() -> parser.parse(text,doc));
 //                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
-                sb.delete(0, sb.length());
-                sb.setLength(0);
-                sb = new StringBuilder();
+                sb_docInfo.delete(0, sb_docInfo.length());
+                sb_text.delete(0, sb_text.length());
+                sb_docInfo.setLength(0);
+                sb_text.setLength(0);
+                sb_text = new StringBuilder();
+                sb_docInfo = new StringBuilder();
                 executor.execute(parseThread);
             }
             br.close();
