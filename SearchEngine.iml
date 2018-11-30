@@ -13,23 +13,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="jar://$USER_HOME$/Desktop/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/stanford-parser.jar!/" />
-          <root url="jar://$USER_HOME$/Desktop/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/ejml-0.23.jar!/" />
-          <root url="file://$MODULE_DIR$" />
-        </CLASSES>
-        <JAVADOC>
-          <root url="jar://$USER_HOME$/Desktop/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/stanford-parser-3.5.1-javadoc.jar!/" />
-        </JAVADOC>
-        <SOURCES>
-          <root url="jar://$USER_HOME$/Desktop/stanford-parser-full-2015-01-29/stanford-parser-full-2015-01-30/stanford-parser-3.5.1-sources.jar!/" />
-          <root url="file://$MODULE_DIR$/src" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="library" scope="TEST" name="Maven: junit:junit:4.12" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-core:1.3" level="project" />
+    <orderEntry type="library" name="java" level="project" />
   </component>
 </module>

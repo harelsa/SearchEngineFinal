@@ -18,7 +18,7 @@ public class Document implements Serializable {
 
 
 
-    public Document(String docNo, String parentFilePath) {
+    public Document(String docNo, String parentFilePath , String docCity) {
         this.docNo = docNo;
         this.parentFilePath = parentFilePath;
         termFrequency = new HashMap<>();
