@@ -51,9 +51,9 @@ public class Term implements Comparable, Serializable {
                 '}';
     }
 
-    // The short format will be: <TermContent>,<df>,<tf>,"<LOC_IN_DOC>:"<location_docs>,
+    // The short format will be: <TermContent>,<df>,<tf>,"<LOCS>:"<location_docs>,
     public String shortToString() {
-        return content+","+tf+","+"<LOC_IN_DOC:" + location_docs + ">" + "," +">";
+        return content+","+tf+","+"<LOCS:" + location_docs + ">" + "," +">";
     }
 
     @Override
@@ -62,7 +62,8 @@ public class Term implements Comparable, Serializable {
     }
 
     public void addPosition(int termPosition) {
-        location_docs.add(termPosition);
+        int firstFullPosition = location_docs.getFirst();
+        location_docs.add(termPosition - firstFullPosition);
     }
 }
 

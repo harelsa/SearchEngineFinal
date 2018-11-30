@@ -92,6 +92,7 @@ public class Parse {
         String[] tokens;
         tokens = text.split(" ");
         HashMap<String, Term> AllTerms = getTerms(tokens, currDoc);
+        currDoc.updateAfterParsing();
         segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
@@ -220,19 +221,22 @@ public class Parse {
 
             if (docTerms.containsKey(addTerm)) {
                 //System.out.println(addTerm);
-                  docTerms.get(addTerm).advanceTf();
-                  docTerms.get(addTerm).addPosition(termPosition);
-                  termPosition++;
+                Term tmp = docTerms.get(addTerm);
+                tmp.advanceTf();
+                tmp.addPosition(termPosition);
+                currDoc.addTerm(tmp);
+                termPosition++;
 
             } else { // new term
 
                 // mutex
                 Term obj_term = new Term(termPosition, 1, addTerm);
                 termPosition++;
+                currDoc.addTerm(obj_term);
+                docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
                 //System.out.println(addTerm);
-                docTerms.put(addTerm, obj_term);
             }
             i++;
         } //end for

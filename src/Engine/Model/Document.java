@@ -1,27 +1,23 @@
 package Engine.Model;
 
 import java.io.Serializable;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.TreeSet;
 
-public class Document implements Serializable {
+public class Document {
     private String docNo;
-    private String parentFilePath;
-    private int max_tf  = 0 ; // frequancy of the most common term in doc
-    private int unique_t  = 0 ; // quantity of unique terms in doc
+    private String parentFileName;
+    private int unique_t; // quantity of unique terms in doc
     private String city = "" ; // city of doc - appear in <F P=104> ...</F>
     private HashMap<Term, Integer> termFrequency;
     private Term maxFreqTerm;
-    private int maxFreqTermNumber;
+    private int maxFreqTermNumber;  // frequancy of the most common term in doc
 
 
 
-    public Document(String docNo, String parentFilePath , String docCity) {
+    public Document(String docNo, String parentFileName, String docCity) {
         this.docNo = docNo;
         city = docCity;
-        this.parentFilePath = parentFilePath;
+        this.parentFileName = parentFileName;
         termFrequency = new HashMap<>();
     }
 
@@ -29,11 +25,16 @@ public class Document implements Serializable {
         return docNo;
     }
 
-    public String getParentFilePath() {
-        return parentFilePath;
+    public String getParentFileName() {
+        return parentFileName;
     }
 
-    public void advanceTermFrequency(Term term){
+    public void addTerm(Term term){
+        if (maxFreqTermNumber == 0){
+            maxFreqTerm = term;
+            maxFreqTermNumber++;
+        }
+
         if (termFrequency.containsKey(term)){
             int termFreq = termFrequency.get(term) + 1;
             if (termFreq > maxFreqTermNumber) {
@@ -55,19 +56,24 @@ public class Document implements Serializable {
     public String toString() {
         return "Document{" +
                 "docNo='" + docNo + '\'' +
-                ", parentFileName='" + parentFilePath + '\'' +
-                ", max_tf=" + max_tf +
+                ", parentFileName='" + parentFileName + '\'' +
+                ", max_tf=" + maxFreqTermNumber +
                 ", unique_t=" + unique_t +
                 ", city='" + city + '\'' +
-                ", termFrequency=" + termFrequency +
+                //", termFrequency=" + termFrequency +
                 ", maxFreqTerm=" + maxFreqTerm +
                 ", maxFreqTermNumber=" + maxFreqTermNumber +
                 '}';
     }
     // Format: <docNo>,<max_tf>,<unique_t>,<city>,<maxFreqTerm>,<maxFreqTermNumber>
     public String shortToString(){
-        return docNo+","+max_tf+","+unique_t+","+city+","+maxFreqTermNumber; //+maxFreqTerm.shortToString()+","
+        return docNo+","+maxFreqTermNumber+","+unique_t+","+city+","+maxFreqTermNumber; //+maxFreqTerm.shortToString()+","
     }
+
+    public void updateAfterParsing() {
+        unique_t = termFrequency.size();
+    }
+
 
     //private byte[]
 }

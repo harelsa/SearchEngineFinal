@@ -1,5 +1,6 @@
 package Engine.Model;
 
+import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.util.Pair;
 
 import javax.print.Doc;
@@ -30,6 +31,7 @@ public class ReadFile {
     public void readAndParseLineByLine(String filePathName, Parse parser) {
         BufferedReader br = null;
         System.out.println(filePathName);
+        String parentFileName = getParentFileName(filePathName);
         try {
             br = new BufferedReader(new FileReader(filePathName));
         } catch (FileNotFoundException e) {
@@ -67,14 +69,15 @@ public class ReadFile {
                     }
                     if (line.startsWith("<DOCNO>")){ // Doc num
                         String[] arr =  line.split(" ");
-                        docNo = arr [1] ;
+                        if (arr.length >= 2)
+                            docNo = arr [1] ;
                     }
                     line = br.readLine();
                 }
                 sb_docInfo.append(line);
                 String text = sb_text.toString();
                 String doc_text = sb_docInfo.toString();
-                Document doc = new Document(docNo, filePathName , docCity);
+                Document doc = new Document(docNo, parentFileName , docCity);
 //                parser.parse(text, doc);
                 //Thread parseThread = new Thread(() -> parser.parse(text,doc));
 //                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
@@ -107,6 +110,11 @@ public class ReadFile {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String getParentFileName(String filePathName) {
+        String[] split = filePathName.split("\\\\");
+        return split[split.length-1];
     }
 
     public static boolean testAllUpperCase(String str){
