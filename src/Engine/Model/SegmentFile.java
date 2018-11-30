@@ -22,27 +22,34 @@ public class SegmentFile implements Serializable {
 /* Need to do it concurrent (new thread in parser which calls this method) */
     public void signToSpecificPartition(HashMap<String, Term> allTerms, Document currDoc) {
         Iterator it = allTerms.entrySet().iterator();
+        signNewDocSection(currDoc);
         while (it.hasNext()) {
             HashMap.Entry pair = (HashMap.Entry)it.next();
             String term = (String) pair.getKey();
             int partitionNum = getPartitionDest(term); // 0-4
             switch (partitionNum){
                 case 0:
-                    filePartitions[0].signNewTerm((Term)pair.getValue(), currDoc);
+                    filePartitions[0].signNewTerm((Term)pair.getValue());
                     break;
                 case 1:
-                    filePartitions[1].signNewTerm((Term)pair.getValue(), currDoc);
+                    filePartitions[1].signNewTerm((Term)pair.getValue());
                     break;
                 case 2:
-                    filePartitions[2].signNewTerm((Term)pair.getValue(), currDoc);
+                    filePartitions[2].signNewTerm((Term)pair.getValue());
                     break;
                 case 3:
-                    filePartitions[3].signNewTerm((Term)pair.getValue(), currDoc);
+                    filePartitions[3].signNewTerm((Term)pair.getValue());
                     break;
                 case 4:
-                    filePartitions[4].signNewTerm((Term)pair.getValue(), currDoc);
+                    filePartitions[4].signNewTerm((Term)pair.getValue());
                     break;
             }
+        }
+    }
+
+    private void signNewDocSection(Document currDoc) {
+        for (int i = 0; i < filePartitions.length; i++) {
+            filePartitions[i].signDocSection(currDoc);
         }
     }
 

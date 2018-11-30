@@ -53,7 +53,7 @@ public class Main extends Application {
 //        HashMap<String, Term> allTerms, Document currDoc
 
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Downloads\\corpus-split");
-        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Downloads\\corpus");
+        TextOperationsManager textOperationsManager = new TextOperationsManager("D:\\documents\\users\\bardanad\\corpus\\corpus");
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
         textOperationsManager.StartTextOperations();
 

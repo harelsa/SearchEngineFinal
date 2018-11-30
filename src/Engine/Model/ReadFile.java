@@ -52,7 +52,7 @@ public class ReadFile {
                 String text = sb_text.toString();
                 String doc_text = sb_docInfo.toString();
                 String docNo = getDocNumber(doc_text);
-                Document doc = new Document(docNo, filePathName);
+                Document doc = new Document(docNo, getFileName(filePathName));
 //                parser.parse(text, doc);
                 //Thread parseThread = new Thread(() -> parser.parse(text,doc));
 //                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
@@ -85,6 +85,11 @@ public class ReadFile {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String getFileName(String filePathName) {
+        String[] splited = filePathName.split("\\\\");
+        return splited[splited.length-1];
     }
 
 

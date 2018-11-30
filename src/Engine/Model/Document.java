@@ -10,7 +10,7 @@ public class Document implements Serializable {
     private String docNo;
     private String parentFilePath;
     private int max_tf  = 0 ; // frequancy of the most common term in doc
-    private int unique_t  = 0 ; // quantity of unuque terms in doc
+    private int unique_t  = 0 ; // quantity of unique terms in doc
     private String city = "" ; // city of doc - appear in <F P=104> ...</F>
     private HashMap<Term, Integer> termFrequency;
     private Term maxFreqTerm;
@@ -54,7 +54,7 @@ public class Document implements Serializable {
     public String toString() {
         return "Document{" +
                 "docNo='" + docNo + '\'' +
-                ", parentFilePath='" + parentFilePath + '\'' +
+                ", parentFileName='" + parentFilePath + '\'' +
                 ", max_tf=" + max_tf +
                 ", unique_t=" + unique_t +
                 ", city='" + city + '\'' +
@@ -63,4 +63,10 @@ public class Document implements Serializable {
                 ", maxFreqTermNumber=" + maxFreqTermNumber +
                 '}';
     }
+    // Format: <docNo>,<max_tf>,<unique_t>,<city>,<maxFreqTerm>,<maxFreqTermNumber>
+    public String shortToString(){
+        return docNo+","+max_tf+","+unique_t+","+city+","+maxFreqTermNumber; //+maxFreqTerm.shortToString()+","
+    }
+
+    //private byte[]
 }

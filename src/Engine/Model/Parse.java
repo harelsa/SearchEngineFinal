@@ -52,6 +52,8 @@ public class Parse {
     private static Pattern DOUBLE_NUM = Pattern.compile("^[0-9]*$" + "." + "^[0-9]*$");
 
     private SegmentFile segmantFile;
+    private int termPosition;
+
 
 
     public Parse(SegmentFile segmantFile) {
@@ -75,6 +77,7 @@ public class Parse {
                 specialchars.add(curr_line);
             }
             //SegmentFile parserSegmentFile = new SegmentFile();
+            termPosition = 0;
 
         } catch (Exception e) {
 
@@ -84,12 +87,11 @@ public class Parse {
     }
 
     public HashSet<String> parse(String text, Document currDoc) {
+        int termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
         tokens = text.split(" ");
         HashMap<String, Term> AllTerms = getTerms(tokens, currDoc);
-
-
         segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
@@ -218,13 +220,14 @@ public class Parse {
 
             if (docTerms.containsKey(addTerm)) {
                 //System.out.println(addTerm);
-                  docTerms.get(addTerm).addDoc(currDoc);
+                  docTerms.get(addTerm).advanceTf();
 
             } else { // new term
 
                 // mutex
-                Term obj_term = new Term(1, 1, addTerm);
-                obj_term.addDoc(currDoc);
+                Term obj_term = new Term(termPosition, 1, addTerm);
+                termPosition++;
+                //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
                 //System.out.println(addTerm);
                 docTerms.put(addTerm, obj_term);

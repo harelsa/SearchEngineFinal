@@ -2,12 +2,8 @@ package Engine.Model;
 
 import javafx.util.Pair;
 
-import javax.print.Doc;
 import java.io.*;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.SortedMap;
 
 public class SegmentFilePartition implements Serializable {
     Hashtable<Character, Integer> prefixCharLastWordPositionInFile;
@@ -15,15 +11,32 @@ public class SegmentFilePartition implements Serializable {
     FileInputStream f_is;
     ObjectOutputStream o_os;
     ObjectInputStream o_is;
-    BufferedWriter writer;
-    BufferedReader reader;
+    BufferedWriter file_buffer_writer;
+    BufferedOutputStream file_buffer_output;
+    BufferedWriter o_buf_os;
+    BufferedReader f_buf_is;
+    BufferedReader o_buf_is;
     private String segmantPartitionFilePath;
+
+    //inputStream = new BufferedReader(new FileReader("xanadu.txt"));
+    //outputStream = new BufferedWriter(new FileWriter("characteroutput.txt"));
 
     public SegmentFilePartition(String path, char from, char to) {
         segmantPartitionFilePath = path + "_" + from + "_" + "to" + "_" + to + ".txt";
         try {
+//            Writer file_os_writer = new OutputStreamWriter(new ObjectOutputStream(
+//                    new FileOutputStream(
+//                            new File(segmantPartitionFilePath))));
+            //ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(
+                                                                    //new File(segmantPartitionFilePath)));
+            //file_buffer_output = new BufferedOutputStream(oos);
+            file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
+
+            //file_buffer_output = new BufferedOutputStream(new FileOutputStream(new File(segmantPartitionFilePath)));
+
             f_os = new FileOutputStream(new File(segmantPartitionFilePath));
             o_os = new ObjectOutputStream(f_os);
+           // Writer w2 = new
 
             f_is = new FileInputStream(new File(segmantPartitionFilePath));
             o_is = new ObjectInputStream(f_is);
@@ -34,10 +47,16 @@ public class SegmentFilePartition implements Serializable {
         }
     }
 
-    synchronized public void signNewTerm(Term term, Document doc) {
-        Pair<Term, Document> object = new Pair<>(term, doc);
+    synchronized public void signNewTerm(Term term) {
+        //Pair<Term, Document> object = new Pair<>(term, doc);
         try {
-            o_os.writeObject(object);
+            file_buffer_writer.write(term.shortToString());
+            //file_buffer_output.write();
+            //file_buffer_output.write(1351);
+            //o_os.writeBytes("blala");
+            //o_os.writeBytes("#" + term.shortToString() + "*" + doc.shortToString() + "#");
+            //o_os.writeBytes(term.toString() + doc.toString());
+            //file_buffer_output.write
 //            o_os.flush();
 //            System.out.println("The following term added to: " + segmantPartitionFilePath); //for test
 //            System.out.println(term.toString()); //for test
@@ -59,6 +78,14 @@ public class SegmentFilePartition implements Serializable {
 
 //        System.out.println(pr1.toString()); //for test
         return pr1;
+    }
+
+    public void signDocSection(Document currDoc) {
+        try {
+            file_buffer_writer.write("<DOC>" + currDoc.toString() +"</DOC>");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 //    Charset charset = Charset.forName("UTF-8");
