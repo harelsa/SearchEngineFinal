@@ -66,4 +66,18 @@ public class SegmentFile implements Serializable {
         else
             return 4;
     }
+
+    public SegmentFilePartition getSegmentFilePartitions(char from, char to){
+        if (from == '0' && to == '9')
+            return filePartitions[0];
+        if (from == 'a' && to == 'f')
+            return filePartitions[1];
+        if (from == 'g' && to == 'p')
+            return filePartitions[2];
+        if (from == 'q' && to == 'z')
+            return filePartitions[3];
+        if (from == 'z' && to == 'z')
+            return filePartitions[4];
+        return null;
+    }
 }

@@ -12,6 +12,7 @@ public class SegmentFilePartition implements Serializable {
     ObjectOutputStream o_os;
     ObjectInputStream o_is;
     BufferedWriter file_buffer_writer;
+    BufferedReader file_buffer_reader;
     BufferedOutputStream file_buffer_output;
     BufferedWriter o_buf_os;
     BufferedReader f_buf_is;
@@ -31,6 +32,7 @@ public class SegmentFilePartition implements Serializable {
                                                                     //new File(segmantPartitionFilePath)));
             //file_buffer_output = new BufferedOutputStream(oos);
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
+            file_buffer_reader = new BufferedReader(new FileReader(segmantPartitionFilePath));
 
             //file_buffer_output = new BufferedOutputStream(new FileOutputStream(new File(segmantPartitionFilePath)));
 
@@ -66,18 +68,13 @@ public class SegmentFilePartition implements Serializable {
 //        segmentTerms.put(term, doc);
     }
 
-    synchronized public Pair<Term, Document> extractTermFromSegmentFilePartition() {
-        Pair<Term,Document> pr1 = null;
+    synchronized public String extractDocTermsFromSegmentFile() {
         try {
-            pr1 = (Pair<Term,Document>) o_is.readObject();
+            return file_buffer_reader.readLine();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
         }
-
-//        System.out.println(pr1.toString()); //for test
-        return pr1;
+        return "";
     }
 
     public void signDocSection(Document currDoc) {
