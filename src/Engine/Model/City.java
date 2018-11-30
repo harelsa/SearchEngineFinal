@@ -7,6 +7,7 @@ import java.util.LinkedList;
  *
  */
 public class City {
+    private  String city_name  = "" ;
     private  String state_name = "" ;
     private  String currency = "" ;
     private  String population = "" ;
@@ -23,9 +24,11 @@ public class City {
         docs_appearences = new HashMap<>( ) ;
     }
 
-    public City() {
-        docs_appearences = new HashMap<>( ) ;
 
+
+    public City(String docCity) {
+        docs_appearences = new HashMap<>( ) ;
+        city_name = docCity ;
     }
 
 

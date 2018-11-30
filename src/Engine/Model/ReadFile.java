@@ -23,9 +23,7 @@ import static java.util.stream.Collectors.joining;
 public class ReadFile {
     ExecutorService executor;
 
-
-
-    private  static ConcurrentHashMap< String ,City> Cities = new ConcurrentHashMap<>() ; // save all the doc info cities
+    ConcurrentHashMap< String ,City> cities = new ConcurrentHashMap<>() ; // save all the doc info cities
 
     public ReadFile() {
         executor = Executors.newFixedThreadPool(8);
@@ -69,6 +67,7 @@ public class ReadFile {
                           docCity = docCity +" " + arr[i] ;
                           i++;
                        }
+                       cities.put( docCity , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
                     if (line.startsWith("<DOCNO>")){ // Doc num
@@ -133,7 +132,7 @@ public class ReadFile {
     }
 
     public  ConcurrentHashMap<String, City> getCities() {
-        return Cities;
+        return cities;
     }
 
 
