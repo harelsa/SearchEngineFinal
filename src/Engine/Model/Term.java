@@ -61,6 +61,9 @@ public class Term implements Comparable, Serializable {
         return content.compareTo(((Term) (o)).content);
     }
 
+    public void addPosition(int termPosition) {
+        location_docs.add(termPosition);
+    }
 }
 
 

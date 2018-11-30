@@ -20,6 +20,7 @@ public class Document implements Serializable {
 
     public Document(String docNo, String parentFilePath , String docCity) {
         this.docNo = docNo;
+        city = docCity;
         this.parentFilePath = parentFilePath;
         termFrequency = new HashMap<>();
     }

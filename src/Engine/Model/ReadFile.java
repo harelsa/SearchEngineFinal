@@ -53,9 +53,13 @@ public class ReadFile {
                     else sb_text.append(line) ; // add to text
                     if (line.startsWith("<F P=104>")){ // CITY
                        String[] arr =  line.split(" ");
+                       if (arr.length < 4){
+                           line = br.readLine();
+                           continue;
+                       }
                        int i = 4 ;
                         docCity = arr [3] ;
-                       while( !testAllUpperCase(arr[i])){
+                       while(i < arr.length-1 && !testAllUpperCase(arr[i])){
                           docCity = docCity +" " + arr[i] ;
                           i++;
                        }

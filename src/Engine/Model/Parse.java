@@ -221,6 +221,8 @@ public class Parse {
             if (docTerms.containsKey(addTerm)) {
                 //System.out.println(addTerm);
                   docTerms.get(addTerm).advanceTf();
+                  docTerms.get(addTerm).addPosition(termPosition);
+                  termPosition++;
 
             } else { // new term
 
