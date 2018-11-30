@@ -1,6 +1,5 @@
 package Engine.Model;
 
-import com.sun.org.apache.xpath.internal.SourceTree;
 import javafx.util.Pair;
 
 import javax.print.Doc;
@@ -13,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Stream;
@@ -22,6 +22,10 @@ import static java.util.stream.Collectors.joining;
 
 public class ReadFile {
     ExecutorService executor;
+
+
+
+    private  static ConcurrentHashMap< String ,City> Cities = new ConcurrentHashMap<>() ; // save all the doc info cities
 
     public ReadFile() {
         executor = Executors.newFixedThreadPool(8);
@@ -126,6 +130,10 @@ public class ReadFile {
         }
         //str.charAt(index)
         return true;
+    }
+
+    public  ConcurrentHashMap<String, City> getCities() {
+        return Cities;
     }
 
 

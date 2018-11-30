@@ -59,6 +59,8 @@ public class Main extends Application {
         textOperationsManager.StartTextOperations();
 
 
+
+
         // Print words and Pos Tags
 //        for (Tree leaf : leaves) {
 //            Tree parent = leaf.parent(tree);
