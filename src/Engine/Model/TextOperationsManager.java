@@ -24,7 +24,7 @@ public class TextOperationsManager {
     private Parse[] parsers = new Parse[4];
     public ArrayList<String> filesPathsList;
     public static ExecutorService parseExecutor;
-    ConcurrentHashMap<String, City> cities ; // cities after parsing
+    static ConcurrentHashMap<String, City> cities ; // cities after parsing
 
     /* FOR TEST ONLY */
     public static int filesCounter;
@@ -37,6 +37,7 @@ public class TextOperationsManager {
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(8);
+        cities = new ConcurrentHashMap<>();
     }
 
     private void initParsers() {
