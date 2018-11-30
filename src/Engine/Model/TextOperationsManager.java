@@ -2,15 +2,17 @@ package Engine.Model;
 
 import javafx.util.Pair;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.sql.Array;
 import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Timer;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -22,6 +24,7 @@ public class TextOperationsManager {
     private Parse[] parsers = new Parse[4];
     public ArrayList<String> filesPathsList;
     public static ExecutorService parseExecutor;
+    ConcurrentHashMap<String, City> cities ; // cities after parsing
 
     /* FOR TEST ONLY */
     public static int filesCounter;
@@ -46,6 +49,11 @@ public class TextOperationsManager {
     public void StartTextOperations() {
         initFilesPathList(curposPath);
         readAndParse();
+        //end of parse
+         cities = reader.getCities() ;
+         getCitiesInfo () ; // get all cities info from api
+
+
     }
 
     private void readAndParse() {
@@ -91,6 +99,43 @@ public class TextOperationsManager {
                 filesPathsList.add(fileEntry.getPath());
             }
         }
+    }
+
+    /**
+     * save city in a global hash map
+     * @param
+     */
+    public void getCitiesInfo (){
+        for (Map.Entry<String, City> entry : cities.entrySet())
+        {
+            System.out.println(entry.getKey() + "/" + entry.getValue());
+        }
+
+
+
+    }
+    /**
+     * return the info about a city
+     * @param city_name
+     * @return
+     * @throws Exception
+     */
+    public  String getText(String city_name) throws Exception {
+        URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
+        URLConnection connection = website.openConnection();
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(
+                        connection.getInputStream()));
+
+        StringBuilder response = new StringBuilder();
+        String inputLine;
+
+        while ((inputLine = in.readLine()) != null)
+            response.append(inputLine);
+
+        in.close();
+
+        return response.toString();
     }
 
 }
