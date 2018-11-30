@@ -74,7 +74,7 @@ public class Parse {
             while ((curr_line = specialchars_br.readLine()) != null) {
                 specialchars.add(curr_line);
             }
-            SegmentFile parserSegmentFile = new SegmentFile();
+            //SegmentFile parserSegmentFile = new SegmentFile();
 
         } catch (Exception e) {
 
@@ -88,7 +88,9 @@ public class Parse {
         String[] tokens;
         tokens = text.split(" ");
         HashMap<String, Term> AllTerms = getTerms(tokens, currDoc);
-//        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+
+
+        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 

@@ -21,7 +21,7 @@ public class TextOperationsManager {
     HashMap<Document, HashSet<String>> DocumentsTerms;
     private Parse[] parsers = new Parse[4];
     public ArrayList<String> filesPathsList;
-    public static ExecutorService executor;
+    public static ExecutorService parseExecutor;
 
     /* FOR TEST ONLY */
     public static int filesCounter;
@@ -33,7 +33,7 @@ public class TextOperationsManager {
         initParsers();
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
-        executor = Executors.newFixedThreadPool(8);
+        parseExecutor = Executors.newFixedThreadPool(8);
     }
 
     private void initParsers() {
@@ -51,7 +51,8 @@ public class TextOperationsManager {
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
-            reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]);
+            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+            parseExecutor.execute(readNParseThread);
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }

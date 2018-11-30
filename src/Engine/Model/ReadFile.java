@@ -54,15 +54,25 @@ public class ReadFile {
                 String docNo = getDocNumber(doc_text);
                 Document doc = new Document(docNo, filePathName);
 //                parser.parse(text, doc);
-                Thread parseThread = new Thread(() -> parser.parse(text,doc));
+                //Thread parseThread = new Thread(() -> parser.parse(text,doc));
 //                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+
+//                Thread parseThread = new Thread(){
+//                    public void run(){
+//                        parser.parse(text, doc);
+//                        text = null;
+//                        doc = null;
+//                    }
+//                };
+
                 sb_docInfo.delete(0, sb_docInfo.length());
                 sb_text.delete(0, sb_text.length());
                 sb_docInfo.setLength(0);
                 sb_text.setLength(0);
                 sb_text = new StringBuilder();
                 sb_docInfo = new StringBuilder();
-                executor.execute(parseThread);
+                parser.parse(text,doc);
+                //executor.execute(parseThread);
             }
             br.close();
             //return splitDocumentsFromFile(sb.toString());
