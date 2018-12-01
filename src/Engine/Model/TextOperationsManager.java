@@ -167,6 +167,12 @@ public class TextOperationsManager {
         for (Map.Entry<String, City> entry : cities.entrySet())
         {
             System.out.println(entry.getKey() + "/" + entry.getValue());
+            try {
+                System.out.println(getText(entry.getKey()));
+            }
+            catch (Exception e ){
+
+            }
         }
 
 
@@ -179,7 +185,8 @@ public class TextOperationsManager {
      * @throws Exception
      */
     public  String getText(String city_name) throws Exception {
-        URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
+        //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
+        URL website = new URL("http://restcountries.eu/rest/v2/all?fields=name;capital;population;currencies" + city_name);
         URLConnection connection = website.openConnection();
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(
