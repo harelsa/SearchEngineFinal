@@ -7,9 +7,6 @@ import java.util.Iterator;
 public class SegmentFile implements Serializable {
     private SegmentFilePartition[] filePartitions;
 
-    public SegmentFile() {
-    }
-
     public SegmentFile(String path) {
         filePartitions = new SegmentFilePartition[5]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
         filePartitions[0] = new SegmentFilePartition(path, '0', '9');

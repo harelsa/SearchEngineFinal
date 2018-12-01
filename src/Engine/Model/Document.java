@@ -61,7 +61,7 @@ public class Document {
                 ", unique_t=" + unique_t +
                 ", city='" + city + '\'' +
                 //", termFrequency=" + termFrequency +
-                ", maxFreqTerm=" + maxFreqTerm +
+                ", maxFreqTerm=" + getFreqTermContent() +
                 ", maxFreqTermNumber=" + maxFreqTermNumber +
                 '}';
     }
@@ -72,6 +72,12 @@ public class Document {
 
     public void updateAfterParsing() {
         unique_t = termFrequency.size();
+    }
+
+    public String getFreqTermContent() {
+        if (maxFreqTerm != null)
+            return maxFreqTerm.getContent();
+        return null;
     }
 
 

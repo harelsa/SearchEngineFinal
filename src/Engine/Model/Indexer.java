@@ -8,8 +8,11 @@ public class Indexer {
 
     public Indexer(SegmentFilePartition[] segmentFilePartitions) {
 
+
+
     }
 
     public void addSegmentPartitionFile(SegmentFilePartition segmentFilePartitions) {
+
     }
 }

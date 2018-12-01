@@ -17,13 +17,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TextOperationsManager {
+    final int NUM_OF_PARSERS = 8;
+    final int NUM_OF_SEGMENT_FILES= 8;
+    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 5;
+    final int NUM_OF_INVERTERS = 5;
+
+
+
     ReadFile reader;
-    Parse parser;
     String curposPath;
-    HashMap<Document, HashSet<String>> DocumentsTerms;
-    private Parse[] parsers = new Parse[4];
-    private Indexer[] inverters = new Indexer[5];
-    private SegmentFile[] segmentFiles = new SegmentFile[4];
+    private Parse[] parsers = new Parse[NUM_OF_PARSERS];
+    private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
+    private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
     public ArrayList<String> filesPathsList;
     public static ExecutorService parseExecutor;
     static ConcurrentHashMap<String, City> cities ; // cities after parsing
@@ -39,23 +44,26 @@ public class TextOperationsManager {
         initInverters();
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
-        parseExecutor = Executors.newFixedThreadPool(8);
+        parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
         cities = new ConcurrentHashMap<>();
     }
 
     private void initInverters() {
-        SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[5];
-        SegmentFilePartition[] segmentFilesInverter2 = new SegmentFilePartition[5];
-        SegmentFilePartition[] segmentFilesInverter3 = new SegmentFilePartition[5];
-        SegmentFilePartition[] segmentFilesInverter4 = new SegmentFilePartition[5];
-        SegmentFilePartition[] segmentFilesInverter5 = new SegmentFilePartition[5];
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < segmentFiles.length; j++) {
-                segmentFilesInverter1[0] = segmentFiles[j].getSegmentFilePartitions('0', '9');
-                segmentFilesInverter2[0] = segmentFiles[j].getSegmentFilePartitions('a', 'f');
-                segmentFilesInverter3[0] = segmentFiles[j].getSegmentFilePartitions('g', 'p');
-                segmentFilesInverter4[0] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
-                segmentFilesInverter5[0] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
+        SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        SegmentFilePartition[] segmentFilesInverter2 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        SegmentFilePartition[] segmentFilesInverter3 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        SegmentFilePartition[] segmentFilesInverter4 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        SegmentFilePartition[] segmentFilesInverter5 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+//        SegmentFilePartition[] segmentFilesInverter6 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+//        SegmentFilePartition[] segmentFilesInverter7 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+//        SegmentFilePartition[] segmentFilesInverter8 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
+            for (int j = 0; j < NUM_OF_SEGMENT_FILES; j++) {
+                segmentFilesInverter1[i] = segmentFiles[j].getSegmentFilePartitions('0', '9');
+                segmentFilesInverter2[i] = segmentFiles[j].getSegmentFilePartitions('a', 'f');
+                segmentFilesInverter3[i] = segmentFiles[j].getSegmentFilePartitions('g', 'p');
+                segmentFilesInverter4[i] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
+                segmentFilesInverter5[i] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
             }
         }
         inverters[0] = new Indexer(segmentFilesInverter1);
@@ -63,22 +71,26 @@ public class TextOperationsManager {
         inverters[2] = new Indexer(segmentFilesInverter3);
         inverters[3] = new Indexer(segmentFilesInverter4);
         inverters[4] = new Indexer(segmentFilesInverter5);
+//        inverters[5] = new Indexer(segmentFilesInverter6);
+//        inverters[6] = new Indexer(segmentFilesInverter7);
+//        inverters[7] = new Indexer(segmentFilesInverter8);
     }
 
 
     private void initParsers() {
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < NUM_OF_PARSERS; i++) {
             segmentFiles[i] = new SegmentFile(getSegmentFilePath(i));
             parsers[i] = new Parse(segmentFiles[i]);
         }
     }
 
     public void StartTextOperations() {
-        initFilesPathList(curposPath);
-        readAndParse();
-        //end of parse
-         cities = reader.getCities() ;
+         initFilesPathList(curposPath);
+         readAndParse();
+         //end of parse
+         cities = reader.getCities();
          getCitiesInfo () ; // get all cities info from api
+
 
 
     }
@@ -86,8 +98,13 @@ public class TextOperationsManager {
     private void readAndParse() {
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
-            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%NUM_OF_PARSERS]));
             parseExecutor.execute(readNParseThread);
+            try {
+                readNParseThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
@@ -108,6 +125,18 @@ public class TextOperationsManager {
                 break;
             case 3:
                 segmantFilePath = segmantBaseFilePath + "\\Parser4";
+                break;
+            case 4:
+                segmantFilePath = segmantBaseFilePath + "\\Parser5";
+                break;
+            case 5:
+                segmantFilePath = segmantBaseFilePath + "\\Parser6";
+                break;
+            case 6:
+                segmantFilePath = segmantBaseFilePath + "\\Parser7";
+                break;
+            case 7:
+                segmantFilePath = segmantBaseFilePath + "\\Parser8";
                 break;
         }
         return segmantFilePath;
