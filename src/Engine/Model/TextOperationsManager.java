@@ -12,6 +12,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.time.LocalTime;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,6 +26,7 @@ public class TextOperationsManager {
 
 
     ReadFile reader;
+    Parse parser;
     String curposPath;
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
@@ -85,29 +87,29 @@ public class TextOperationsManager {
     }
 
     public void StartTextOperations() {
-         initFilesPathList(curposPath);
-         readAndParse();
-         //end of parse
-         cities = reader.getCities();
-         getCitiesInfo () ; // get all cities info from api
+        initFilesPathList(curposPath);
+        try {
+            readAndParse();
+        }
+        catch (Exception e ){
 
-
-
+        }
+        cities = reader.getCities() ;
+        getCitiesInfo () ;
+        //end of parse
     }
 
-    private void readAndParse() {
+    private void readAndParse() throws InterruptedException {
+        List<Callable<Object>> calls = new ArrayList<Callable<Object>>();
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
-            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%NUM_OF_PARSERS]));
-            parseExecutor.execute(readNParseThread);
-            try {
-                readNParseThread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
+            parseExecutor.execute(readNParseThread) ;
+            calls.add(Executors.callable(readNParseThread));
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
+        parseExecutor.invokeAll(calls) ;
     }
 
     private String getSegmentFilePath(int i) {

@@ -67,7 +67,7 @@ public class ReadFile {
                           docCity = docCity +" " + arr[i] ;
                           i++;
                        }
-                       cities.put( docCity , new City(docCity) ) ;
+                       this.cities.put( docCity , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
                     if (line.startsWith("<DOCNO>")){ // Doc num
