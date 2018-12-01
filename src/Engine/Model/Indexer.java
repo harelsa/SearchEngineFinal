@@ -1,8 +1,15 @@
 package Engine.Model;
 
+import java.util.SortedMap;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Indexer {
-    ConcurrentHashMap<Term, PostingList> dictionary;
-//    PostingList a_f_
+    public static ConcurrentHashMap<Term, PostingList> dictionary;
+
+    public Indexer(SegmentFilePartition[] segmentFilePartitions) {
+
+    }
+
+    public void addSegmentPartitionFile(SegmentFilePartition segmentFilePartitions) {
+    }
 }
