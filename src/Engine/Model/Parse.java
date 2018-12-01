@@ -91,7 +91,7 @@ public class Parse {
         //text = remove_stop_words(text);
         String[] tokens;
         tokens = text.split(" ");
-        HashMap<String, Term> AllTerms = getTerms(tokens, currDoc);
+        SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
         segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
@@ -103,8 +103,12 @@ public class Parse {
      * @param tokensArray
      * @param currDoc
      */
-    private HashMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
-        HashMap<String, Term> docTerms = new HashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
+    private SortedMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
+        TreeMap<String, Term> docTerms = new TreeMap<String, Term>((Comparator) (o1, o2) -> {
+            String s1 = ((String)(o1)).toLowerCase();
+            String s2 = ((String)(o2)).toLowerCase();
+            return s1.compareTo(s2);
+        });  // < str_term , obj_term >  // will store all the terms in curpos
 
         String addTerm ;
         for (int i = 0; i < tokensArray.length; ) {

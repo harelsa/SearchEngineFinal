@@ -102,6 +102,7 @@ public class ReadFile {
                 sb_docInfo = new StringBuilder();
                 parser.parse(text,doc);
                 //executor.execute(parseThread);
+
             }
             br.close();
             //return splitDocumentsFromFile(sb.toString());

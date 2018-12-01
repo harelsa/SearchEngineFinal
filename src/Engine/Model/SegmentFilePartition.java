@@ -53,15 +53,7 @@ public class SegmentFilePartition implements Serializable {
         //Pair<Term, Document> object = new Pair<>(term, doc);
         try {
             file_buffer_writer.write(term.lightToString() + "\n");
-            //file_buffer_output.write();
-            //file_buffer_output.write(1351);
-            //o_os.writeBytes("blala");
-            //o_os.writeBytes("#" + term.shortToString() + "*" + doc.shortToString() + "#");
-            //o_os.writeBytes(term.toString() + doc.toString());
-            //file_buffer_output.write
-//            o_os.flush();
-//            System.out.println("The following term added to: " + segmantPartitionFilePath); //for test
-//            System.out.println(term.toString()); //for test
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -69,13 +61,24 @@ public class SegmentFilePartition implements Serializable {
     }
 
     synchronized public String extractDocTermsFromSegmentFile() {
+        StringBuilder sb = new StringBuilder();
         try {
-            return file_buffer_reader.readLine();
+            String line = "";
+            if ((line = file_buffer_reader.readLine()) != null)
+                sb.append(file_buffer_reader.readLine());
+            else
+                return null;
+            while ((line = file_buffer_reader.readLine()) != null && !(line = file_buffer_reader.readLine()).contains("<D>")) {
+                sb.append(file_buffer_reader.readLine());
+            }
+            file_buffer_reader.readLine();
+            return sb.toString();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "";
+        return sb.toString();
     }
+
 
     public void signDocSection(Document currDoc) {
         try {

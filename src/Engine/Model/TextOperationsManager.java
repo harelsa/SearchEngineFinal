@@ -18,10 +18,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TextOperationsManager {
-    final int NUM_OF_PARSERS = 8;
-    final int NUM_OF_SEGMENT_FILES= 8;
-    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 5;
-    final int NUM_OF_INVERTERS = 5;
+    private final int NUM_OF_PARSERS = 8;
+    private final int NUM_OF_SEGMENT_FILES= 8;
+    private final int NUM_OF_SEGMENT_FILE_PARTITIONS= 7;
+    private final int NUM_OF_INVERTERS = 7;
 
 
 
@@ -56,16 +56,18 @@ public class TextOperationsManager {
         SegmentFilePartition[] segmentFilesInverter3 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
         SegmentFilePartition[] segmentFilesInverter4 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
         SegmentFilePartition[] segmentFilesInverter5 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-//        SegmentFilePartition[] segmentFilesInverter6 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-//        SegmentFilePartition[] segmentFilesInverter7 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        SegmentFilePartition[] segmentFilesInverter6 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
+        SegmentFilePartition[] segmentFilesInverter7 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
 //        SegmentFilePartition[] segmentFilesInverter8 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
         for (int i = 0; i < NUM_OF_INVERTERS; i++) {
             for (int j = 0; j < NUM_OF_SEGMENT_FILES; j++) {
                 segmentFilesInverter1[i] = segmentFiles[j].getSegmentFilePartitions('0', '9');
-                segmentFilesInverter2[i] = segmentFiles[j].getSegmentFilePartitions('a', 'f');
-                segmentFilesInverter3[i] = segmentFiles[j].getSegmentFilePartitions('g', 'p');
-                segmentFilesInverter4[i] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
-                segmentFilesInverter5[i] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
+                segmentFilesInverter2[i] = segmentFiles[j].getSegmentFilePartitions('a', 'c');
+                segmentFilesInverter3[i] = segmentFiles[j].getSegmentFilePartitions('d', 'f');
+                segmentFilesInverter4[i] = segmentFiles[j].getSegmentFilePartitions('g', 'k');
+                segmentFilesInverter5[i] = segmentFiles[j].getSegmentFilePartitions('l', 'p');
+                segmentFilesInverter6[i] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
+                segmentFilesInverter7[i] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
             }
         }
         inverters[0] = new Indexer(segmentFilesInverter1);
@@ -73,8 +75,8 @@ public class TextOperationsManager {
         inverters[2] = new Indexer(segmentFilesInverter3);
         inverters[3] = new Indexer(segmentFilesInverter4);
         inverters[4] = new Indexer(segmentFilesInverter5);
-//        inverters[5] = new Indexer(segmentFilesInverter6);
-//        inverters[6] = new Indexer(segmentFilesInverter7);
+        inverters[5] = new Indexer(segmentFilesInverter6);
+        inverters[6] = new Indexer(segmentFilesInverter7);
 //        inverters[7] = new Indexer(segmentFilesInverter8);
     }
 
@@ -95,21 +97,34 @@ public class TextOperationsManager {
         }
         cities = reader.getCities() ;
         getCitiesInfo () ;
+        System.out.println("Starting Indexer.initIndexer");
+        Indexer.initIndexer();
+        System.out.println("Starting buildInvertedIndex");
+        buildInvertedIndex();
         //end of parse
     }
 
-    synchronized private void readAndParse() throws InterruptedException {
-        List<Callable<Object>> calls = new ArrayList<Callable<Object>>();
+
+
+    private void readAndParse() throws InterruptedException {
         Thread readNParseThread = null;
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
             readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
             parseExecutor.execute(readNParseThread) ;
-            calls.add(Executors.callable(readNParseThread));
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
-        parseExecutor.isTerminated();
+
+    }
+
+    private void buildInvertedIndex() {
+        Thread buildInvertedIndexThread;
+        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
+            int finalI = i;
+            buildInvertedIndexThread = new Thread(() -> inverters[finalI].buildInvertedIndex());
+            TextOperationsManager.parseExecutor.execute(buildInvertedIndexThread);
+        }
     }
 
     private String getSegmentFilePath(int i) {

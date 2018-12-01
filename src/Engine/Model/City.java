@@ -46,4 +46,8 @@ public class City {
     public void setDocs_appearences(HashMap<String, LinkedList> docs_appearences) {
         this.docs_appearences = docs_appearences;
     }
+
+    public String getCityName() {
+        return city_name;
+    }
 }
