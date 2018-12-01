@@ -267,13 +267,39 @@ public class TextOperationsManager {
 
         StringBuilder response = new StringBuilder();
         String inputLine;
+        inputLine = in.readLine() ;
+        //while (() != null) {
+        //response.append(inputLine);
+        String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
+        for ( int i= 0 ; i < splited.length-3; ) {
+            String s =  splited[i] ;
+            if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
+                i++;
+                continue;
+            }
+            //String[] splited_split = StringUtils.split(inputLine,"") ;
 
-        while ((inputLine = in.readLine()) != null)
-            response.append(inputLine);
+            String state = splited[i];
+            String city = splited[i+2];
+            String first_part = "" ;
+            if ( city.contains(" ") ) // 2 word city
+                first_part = city.split(" ")[0];
+            if (cities.containsKey(city) || cities.containsKey(first_part)) {
+                City city_obj = cities.get(city);
+                if (city_obj == null )
+                    city_obj = cities.get(first_part) ;
+                city_obj.setState_name(state);
+                cities.put(s, city_obj);
+
+            }
+            i=i+3;
+        }
+
+        // }
 
         in.close();
 
-        return response.toString();
+        return null ;
     }
     public  String getCitiesCurrencies() throws Exception {
 
