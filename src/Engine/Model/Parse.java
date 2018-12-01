@@ -87,7 +87,7 @@ public class Parse {
     }
 
     public HashSet<String> parse(String text, Document currDoc) {
-        int termPosition = 0;
+        termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
         tokens = text.split(" ");

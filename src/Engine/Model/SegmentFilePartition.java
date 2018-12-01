@@ -52,7 +52,7 @@ public class SegmentFilePartition implements Serializable {
     synchronized public void signNewTerm(Term term) {
         //Pair<Term, Document> object = new Pair<>(term, doc);
         try {
-            file_buffer_writer.write(term.shortToString());
+            file_buffer_writer.write(term.lightToString() + "\n");
             //file_buffer_output.write();
             //file_buffer_output.write(1351);
             //o_os.writeBytes("blala");
@@ -79,7 +79,7 @@ public class SegmentFilePartition implements Serializable {
 
     public void signDocSection(Document currDoc) {
         try {
-            file_buffer_writer.write("<DOC>" + currDoc.toString() +"</DOC>");
+            file_buffer_writer.write("<D>" + currDoc.lightToString() +"</D>" + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -79,7 +79,7 @@ public class ReadFile {
                 }
                 sb_docInfo.append(line);
                 String text = sb_text.toString();
-                String doc_text = sb_docInfo.toString();
+                //String doc_text = sb_docInfo.toString();
                 Document doc = new Document(docNo, parentFileName , docCity);
 //                parser.parse(text, doc);
                 //Thread parseThread = new Thread(() -> parser.parse(text,doc));

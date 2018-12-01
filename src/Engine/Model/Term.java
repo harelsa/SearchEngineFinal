@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Term implements Comparable, Serializable {
-    private int tf = 0; // length of location docs
+    private int tf; // length of location docs
     private String content;
     private LinkedList<Integer> location_docs;// < doc obj , a list of locations(row num)
     //private HashMap<Document, Integer > tf_docs ;
@@ -52,8 +52,8 @@ public class Term implements Comparable, Serializable {
     }
 
     // The short format will be: <TermContent>,<df>,<tf>,"<LOCS>:"<location_docs>,
-    public String shortToString() {
-        return content+","+tf+","+"<LOCS:" + location_docs + ">" + "," +">";
+    public String lightToString() {
+        return content+ "," + tf + "," + location_docs;
     }
 
     @Override

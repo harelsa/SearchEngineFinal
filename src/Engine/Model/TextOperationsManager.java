@@ -92,24 +92,24 @@ public class TextOperationsManager {
             readAndParse();
         }
         catch (Exception e ){
-
         }
         cities = reader.getCities() ;
         getCitiesInfo () ;
         //end of parse
     }
 
-    private void readAndParse() throws InterruptedException {
+    synchronized private void readAndParse() throws InterruptedException {
         List<Callable<Object>> calls = new ArrayList<Callable<Object>>();
+        Thread readNParseThread = null;
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
-            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
+            readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
             parseExecutor.execute(readNParseThread) ;
             calls.add(Executors.callable(readNParseThread));
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
-        parseExecutor.invokeAll(calls) ;
+        parseExecutor.isTerminated();
     }
 
     private String getSegmentFilePath(int i) {
