@@ -62,11 +62,11 @@ public class ReadFile {
                            continue;
                        }
                        int i = 4 ;
-                        docCity = arr [3] ;
-                       while(i < arr.length-1 && !testAllUpperCase(arr[i])){
-                          docCity = docCity +" " + arr[i] ;
-                          i++;
-                       }
+                        docCity = arr [3] ; // only the first word between tags
+//                       while(i < arr.length-1 && !testAllUpperCase(arr[i])){
+//                          docCity = docCity +" " + arr[i] ;
+//                          i++;
+//                       }
                        this.cities.put( docCity , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
@@ -120,6 +120,11 @@ public class ReadFile {
         return split[split.length-1];
     }
 
+    /**
+     * check if all the chars are upper case 
+     * @param str
+     * @return
+     */
     public static boolean testAllUpperCase(String str){
         for(int i=0; i<str.length(); i++){
             char c = str.charAt(i);
