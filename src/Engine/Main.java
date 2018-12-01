@@ -57,6 +57,9 @@ public class Main extends Application {
         //TextOperationsManager textOperationsManager = new TextOperationsManager("D:\\documents\\users\\bardanad\\corpus\\test");
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
         textOperationsManager.StartTextOperations();
+        //System.out.println("lalal");
+        //textOperationsManager.p();
+        textOperationsManager.BuildCitiesPosting();
 
 
 

@@ -1,16 +1,12 @@
 package Engine.Model;
 
-import javafx.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.sql.Array;
-import java.sql.Statement;
-import java.sql.Time;
-import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,6 +30,8 @@ public class TextOperationsManager {
     public ArrayList<String> filesPathsList;
     public static ExecutorService parseExecutor;
     static ConcurrentHashMap<String, City> cities ; // cities after parsing
+
+
 
     /* FOR TEST ONLY */
     public static int filesCounter;
@@ -94,9 +92,11 @@ public class TextOperationsManager {
         catch (Exception e ){
 
         }
-        cities = reader.getCities() ;
-        getCitiesInfo () ;
-        //end of parse
+
+
+    }
+    public void p () {
+        System.out.println("LAAAAAAAAAA");
     }
 
     private void readAndParse() throws InterruptedException {
@@ -109,7 +109,22 @@ public class TextOperationsManager {
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
-        parseExecutor.invokeAll(calls) ;
+        parseExecutor.shutdown();
+        while (!parseExecutor.isTerminated()) {
+
+        }
+
+
+
+
+
+    }
+
+    public void BuildCitiesPosting(){
+        cities = reader.getCities() ;
+        getCitiesInfo () ;
+        //end of parse
+
     }
 
     private String getSegmentFilePath(int i) {
@@ -164,33 +179,91 @@ public class TextOperationsManager {
      * @param
      */
     public void getCitiesInfo (){
-        for (Map.Entry<String, City> entry : cities.entrySet())
-        {
-            System.out.println(entry.getKey() + "/" + entry.getValue());
+//        for (Map.Entry<String, City> entry : cities.entrySet())
+//        {
+            //System.out.println(entry.getKey() + "/" + entry.getValue());
             try {
-                System.out.println(getText(entry.getKey()));
+               // System.out.println(getText(entry.getKey()));
+                //get hash maps
+                getCitiesState();
+                getCitiesCurrencies() ;
+                getCitiesPopulation() ;
             }
             catch (Exception e ){
 
             }
-        }
+//        }
 
 
 
     }
-    /**
-     * return the info about a city
-     * @param city_name
-     * @return
-     * @throws Exception
-     */
-    public  String getText(String city_name) throws Exception {
+
+    public  String getCitiesState() throws Exception {
+
         //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
-        URL website = new URL("http://restcountries.eu/rest/v2/all?fields=name;capital;population;currencies" + city_name);
-        URLConnection connection = website.openConnection();
+        URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;capital;");
+
+
+        //URLConnection connection = website.openConnection();
+        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        con.setRequestMethod("GET");
+
+
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(
-                        connection.getInputStream()));
+                        con.getInputStream()));
+
+        StringBuilder response = new StringBuilder();
+        String inputLine;
+        inputLine = in.readLine() ;
+        //while (() != null) {
+            //response.append(inputLine);
+            String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
+                for ( int i= 0 ; i < splited.length-3; ) {
+                    String s =  splited[i] ;
+                    if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
+                        i++;
+                        continue;
+                    }
+                    //String[] splited_split = StringUtils.split(inputLine,"") ;
+
+                    String state = splited[i];
+                    String city = splited[i+2];
+                    String first_part = "" ;
+                    if ( city.contains(" ") ) // 2 word city 
+                        first_part = city.split(" ")[0];  
+                    if (cities.containsKey(city) || cities.containsKey(first_part)) {
+                        City city_obj = cities.get(city);
+                        if (city_obj == null )
+                            city_obj = cities.get(first_part) ;
+                        city_obj.setState_name(state);
+                        cities.put(s, city_obj);
+
+                    }
+                    i=i+3;
+                }
+
+           // }
+
+        in.close();
+
+        return null ;
+    }
+
+    public  String getCitiesPopulation() throws Exception {
+
+        //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
+        URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;population");
+
+
+        //URLConnection connection = website.openConnection();
+        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        con.setRequestMethod("GET");
+
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(
+                        con.getInputStream()));
 
         StringBuilder response = new StringBuilder();
         String inputLine;
@@ -202,6 +275,34 @@ public class TextOperationsManager {
 
         return response.toString();
     }
+    public  String getCitiesCurrencies() throws Exception {
+
+
+        URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");
+
+
+        //URLConnection connection = website.openConnection();
+        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        con.setRequestMethod("GET");
+
+
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(
+                        con.getInputStream()));
+
+        StringBuilder response = new StringBuilder();
+        String inputLine;
+
+        while ((inputLine = in.readLine()) != null)
+            response.append(inputLine);
+
+        in.close();
+
+        return response.toString();
+    }
+
+    //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");
+    //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;population");
 
 }
 
