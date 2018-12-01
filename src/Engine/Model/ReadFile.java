@@ -48,6 +48,7 @@ public class ReadFile {
             String docCity = "" ;
             while ((line = br.readLine()) != null) {
                 while (line != null && !line.equals("</DOC>") && !line.equals("</TEXT>")) {
+                    if ( line.equals("<DOC>")) line = br.readLine() ;  // start doc
                     if ( line.equals("<TEXT>")) {
                         text_adding  = true ;
                         line = br.readLine();
@@ -121,7 +122,7 @@ public class ReadFile {
     }
 
     /**
-     * check if all the chars are upper case 
+     * check if all the chars are upper case
      * @param str
      * @return
      */
