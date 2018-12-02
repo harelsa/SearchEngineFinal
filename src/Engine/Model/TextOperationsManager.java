@@ -5,6 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -18,6 +20,7 @@ public class TextOperationsManager {
     final int NUM_OF_SEGMENT_FILES= 8;
     final int NUM_OF_SEGMENT_FILE_PARTITIONS= 5;
     final int NUM_OF_INVERTERS = 5;
+    private static double MILLION = Math.pow(10, 6);
 
 
 
@@ -36,6 +39,7 @@ public class TextOperationsManager {
     /* FOR TEST ONLY */
     public static int filesCounter;
     public static int docsCounter;
+    private HashMap<String,String > inveted_city;
 
 
     public TextOperationsManager(String curposPath) {
@@ -46,6 +50,7 @@ public class TextOperationsManager {
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
         cities = new ConcurrentHashMap<>();
+        inveted_city = new HashMap<String , String >() ;
     }
 
     private void initInverters() {
@@ -186,11 +191,11 @@ public class TextOperationsManager {
                // System.out.println(getText(entry.getKey()));
                 //get hash maps
                 getCitiesState();
-                getCitiesCurrencies() ;
                 getCitiesPopulation() ;
+                getCitiesCurrencies() ;
             }
             catch (Exception e ){
-
+                System.out.println(e.getCause());
             }
 //        }
 
@@ -198,6 +203,11 @@ public class TextOperationsManager {
 
     }
 
+    /**
+     * get cities info about states and insert to citias hashmap
+     * @return
+     * @throws Exception
+     */
     public  String getCitiesState() throws Exception {
 
         //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
@@ -236,8 +246,18 @@ public class TextOperationsManager {
                         City city_obj = cities.get(city);
                         if (city_obj == null )
                             city_obj = cities.get(first_part) ;
-                        city_obj.setState_name(state);
-                        cities.put(s, city_obj);
+                        if ( city_obj == null ) {
+                            i=i+3 ;
+                            continue;
+                        }
+                        try {
+                            city_obj.setState_name(state);
+                            inveted_city.put(state, city);
+                            cities.put(s, city_obj);
+                        }
+                        catch (Exception e ){
+                            System.out.println(city + " : " + state);
+                        }
 
                     }
                     i=i+3;
@@ -250,10 +270,94 @@ public class TextOperationsManager {
         return null ;
     }
 
+    /**
+     * get info of cities pop from api
+     * @return
+     * @throws Exception
+     */
     public  String getCitiesPopulation() throws Exception {
-
         //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
         URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;population");
+        //URLConnection connection = website.openConnection();
+        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        con.setRequestMethod("GET");
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(
+                        con.getInputStream()));
+       //StringBuilder response = new StringBuilder();
+        String inputLine;
+        inputLine = in.readLine() ;
+        String[] splited = StringUtils.split(inputLine,"[]}{:\"") ;
+        for ( int i= 0 ; i < splited.length-3; ) {
+            String s =  splited[i] ;
+            if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("population")) {
+                i++;
+                continue;
+            }
+            //String[] splited_split = StringUtils.split(inputLine,"") ;
+            String state = splited[i];
+            String population = splited[i+3];
+            String first_part = "" ;
+
+            if (inveted_city.containsKey(state) ) {
+               String city = inveted_city.get(state);
+
+                    City city_obj = cities.get(city); // try 1 word city first
+                    if (city_obj == null) {
+                        first_part = city.split(" ")[0];// try 2 words city
+                        city_obj = cities.get(first_part);
+                    }
+                //round num
+                int num = Integer.parseInt(population);
+                try {
+                if ( Parse.isNumber( population ) && num > MILLION ){
+
+                    double num_d = round_num ( num ) ;
+                    population =  "M" + Double.toString(num_d) ;
+                }
+                    city_obj.setPopulation(population);
+                    cities.put(s, city_obj);
+                }
+                catch (Exception e ){
+                    System.out.println(state + " " + city_obj.toString());
+                }
+            }
+            i=i+4;
+        }
+        in.close();
+
+        return null ;
+    }
+
+    /**
+     * round a num over 1 m
+     * @param num
+     * @return
+     */
+    private double round_num(int num) {
+        double rounded = num / MILLION;
+        rounded = round( rounded , 2 ) ;
+        return rounded ;
+    }
+
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
+
+    /**
+     * get cities info about currencies and insert to citias hashmap
+     * @return
+     * @throws Exception
+     */
+    public  String getCitiesCurrencies() throws Exception {
+
+
+        //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
+        URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");
 
 
         //URLConnection connection = website.openConnection();
@@ -271,28 +375,52 @@ public class TextOperationsManager {
         //while (() != null) {
         //response.append(inputLine);
         String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
+        int jump = 7 ;
         for ( int i= 0 ; i < splited.length-3; ) {
             String s =  splited[i] ;
-            if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
+            if (!s.equals("code")) {
                 i++;
                 continue;
             }
             //String[] splited_split = StringUtils.split(inputLine,"") ;
+            String currency = "" ;
+            if ( s.equals("code"))
+                currency= splited[i+1] ; // got cuurency
+            i++ ;
+            //now find state
+            String state = "" ;
+            int count_name = 0 ;
+            while( i < splited.length-3 &&  !inveted_city.containsKey(state)  ){
+                state = splited[i] ;
+                if (state.equals("name")){
+                    count_name++;
+                }
+                if ( count_name == 2) {// counted 2 names , should stop
+                    state = splited[i + 1];
+                    break;
+                }
+                i++ ;
+            }
 
-            String state = splited[i];
-            String city = splited[i+2];
             String first_part = "" ;
-            if ( city.contains(" ") ) // 2 word city
-                first_part = city.split(" ")[0];
-            if (cities.containsKey(city) || cities.containsKey(first_part)) {
-                City city_obj = cities.get(city);
-                if (city_obj == null )
-                    city_obj = cities.get(first_part) ;
-                city_obj.setState_name(state);
-                cities.put(s, city_obj);
+            if (inveted_city.containsKey(state) ) {
+                String city = inveted_city.get(state);
+
+                City city_obj = cities.get(city); // try 1 word city first
+                if (city_obj == null) {
+                    first_part = city.split(" ")[0];// try 2 words city
+                    city_obj = cities.get(first_part);
+                }
+                try {
+                    city_obj.setCurrency(currency);
+                    cities.put(s, city_obj);
+                }
+                catch (Exception e ){
+                    System.out.println(state + " : " + state);
+                }
 
             }
-            i=i+3;
+            i++;
         }
 
         // }
@@ -300,31 +428,6 @@ public class TextOperationsManager {
         in.close();
 
         return null ;
-    }
-    public  String getCitiesCurrencies() throws Exception {
-
-
-        URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");
-
-
-        //URLConnection connection = website.openConnection();
-        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
-        con.setRequestMethod("GET");
-
-
-        BufferedReader in = new BufferedReader(
-                new InputStreamReader(
-                        con.getInputStream()));
-
-        StringBuilder response = new StringBuilder();
-        String inputLine;
-
-        while ((inputLine = in.readLine()) != null)
-            response.append(inputLine);
-
-        in.close();
-
-        return response.toString();
     }
 
     //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");
