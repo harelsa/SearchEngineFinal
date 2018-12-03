@@ -1,5 +1,6 @@
 package Engine.Model;
 
+import org.apache.commons.lang3.StringUtils;
 import sun.reflect.generics.tree.Tree;
 
 import javax.print.Doc;
@@ -62,40 +63,52 @@ public class Indexer {
     private TreeMap<String, String> readDocsFromEachSegmentFile() {
         TreeMap<String, String> docTerms = new TreeMap<>(); // <DocID, list of strings in format: <Term>,<tf>"#"<Term>,<tf>"#"....
         TreeMap<String, String> termsDoc = new TreeMap<>(); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
+        int termPostingPointer = 0;
+        int docPostingPointers = 0;
 
         for (int i = 0; i < 7; i++) {
+            //docTerms.clear();
+            //termsDoc.clear();
             StringBuilder sb;
             String line;
-            String maxContentTermFreq;
             while ((line = segmentFilePartitions[i].readLine()) != null) {
                 if (line.contains("<D>")) {
                     sb = new StringBuilder();
+                    String parentFileName = "";
+                    String docCity= "";
+                    String maxTermFreq = "";
+                    String maxContentTermFreq = "";
+                    String docNo = "";
                     if (isRealDoc(line)) {
                         // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
                         line.replace("<D>", "");
-                        String[] splitedLine = line.split(",");
-                        String docNo = splitedLine[0];
+                        String[] splitedLine = StringUtils.split(line, ",");
+                        docNo = splitedLine[0];
                         if (splitedLine.length > 1){
-                            String parentFileName = splitedLine[1];
+                            parentFileName = splitedLine[1];
                             if (splitedLine.length > 2){
-                                String docCity = splitedLine[2];
+                                docCity = splitedLine[2];
                                 if (splitedLine.length > 3){
-                                    int maxTermFreq = Integer.parseInt(splitedLine[3]);
+                                    maxTermFreq = splitedLine[3];
                                     if (splitedLine.length > 4)
                                         maxContentTermFreq = splitedLine[4];
                                 }
                             }
-
                         }
+                        //Document d = new Document(docNo, parentFileName, docCity, maxTermFreq, maxContentTermFreq);
 
                         line = segmentFilePartitions[i].readLine();
 
                         while (line != null && !line.contains("<D>")) {
-                            String[] locsSplited = line.split("\\[");
-                            String[] splited = locsSplited[0].split(",");
+                            String tf = "";
+                            String[] locsSplited = StringUtils.split(line, "[");
+                            String[] splited = StringUtils.split(locsSplited[0], ",");
                             String term = splited[0];
-                            String tf = splited[1];
-                            String locs = "[" + locsSplited[1];
+                            if (splited.length > 1)
+                                tf = splited[1];
+                            String locs = "";
+                            if (locsSplited.length > 1)
+                                locs = "[" + locsSplited[1];
                             sb.append(term).append(",").append(tf).append('#');
                             if (termsDoc.containsKey(term)) {
                                 String tmp = termsDoc.get(term);
@@ -105,22 +118,15 @@ public class Indexer {
                             line = segmentFilePartitions[i].readLine();
                         }
                         // finished to read one doc from segment partition. sb = <Term>,<tf>"#"<Term>,<tf>"#"...
-                        docTerms.put(docNo, sb.toString());
+                        docTerms.put(docNo.toLowerCase(), sb.toString());
                     }
                 }
             }
         }
+
         termsPosting.writeToPosting(termsDoc);
+        docsPosting.writeToPosting(docTerms);
 
-
-        //System.out.println(docAndTerms0);
-        //System.out.println(docAndTerms1);
-        //System.out.println(docAndTerms2);
-        //System.out.println(docAndTerms3);
-        //System.out.println(docAndTerms4);
-        //System.out.println(docAndTerms5);
-        //System.out.println(docAndTerms6);
-        //return null;
         return null;
     }
 

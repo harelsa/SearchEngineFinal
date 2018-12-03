@@ -12,7 +12,24 @@ public class Document {
     private Term maxFreqTerm;
     private int maxFreqTermNumber;  // frequancy of the most common term in doc
 
+    public Document(String docNo, String parentFileName, String docCity, String maxTermFreq, String maxContentTermFreq) {
 
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Document document = (Document) o;
+
+        return docNo != null ? docNo.equals(document.docNo) : document.docNo == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return docNo != null ? docNo.hashCode() : 0;
+    }
 
     public Document(String docNo, String parentFileName, String docCity) {
         this.docNo = docNo;

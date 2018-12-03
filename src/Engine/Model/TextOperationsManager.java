@@ -2,9 +2,7 @@ package Engine.Model;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
@@ -140,10 +138,57 @@ public class TextOperationsManager {
             readAndParse();
         }
         catch (Exception e ){
-
+//
         }
         //end of parse
         buildInvertedIndex();
+//        try {
+//            //mergeDocsPosting();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+    }
+
+    private void mergeDocsPosting() throws IOException {
+        PrintWriter pw = new PrintWriter("src\\Engine\\resources\\Segment Files\\mergesDocsPostingFile.txt");
+
+        // BufferedReader object for file1.txt
+        BufferedReader br1 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/0_9.txt"));
+        BufferedReader br2 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/a_c.txt"));
+        BufferedReader br3 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/d_f.txt"));
+        BufferedReader br4 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/g_k.txt"));
+        BufferedReader br5 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/l_p.txt"));
+        BufferedReader br6 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/q_z.txt"));
+
+
+        String line1 = br1.readLine();
+        String line2 = br2.readLine();
+        String line3 = br3.readLine();
+        String line4 = br4.readLine();
+        String line5 = br5.readLine();
+        String line6 = br6.readLine();
+        // loop to copy lnes of
+        // file1.txt and file2.txt
+        // to  file3.txt alternatively
+        while (line1 != null)
+        {
+            pw.println(line1);
+            line1 = br1.readLine();
+            line2 = br2.readLine();
+            line3 = br3.readLine();
+            line4 = br4.readLine();
+            line5 = br5.readLine();
+            line6 = br6.readLine();
+            pw.print(line1 + line2 + line3 + line4 + line5 + line6);
+        }
+
+        pw.flush();
+
+        // closing resources
+        br1.close();
+        br2.close();
+        pw.close();
+
     }
 
     private void buildInvertedIndex() {
@@ -151,12 +196,14 @@ public class TextOperationsManager {
             int finalI = i;
             Thread buildInvertedIndex = new Thread(() ->  inverters[finalI%NUM_OF_INVERTERS].buildInvertedIndexes());
             invertedExecutor.execute(buildInvertedIndex) ;
+//            inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
             invertedExecutor.shutdown();
             while (!invertedExecutor.isTerminated()) {
         }
+        System.out.println("done");
     }
 
     private void readAndParse() throws InterruptedException {
