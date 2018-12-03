@@ -8,6 +8,9 @@ import java.util.SortedMap;
 public class SegmentFile implements Serializable {
     private SegmentFilePartition[] filePartitions;
     private final int NUM_OF_PARTITATIONS = 7;
+    private boolean STEMMING = false ; // tells if to do stemmig - will be changed from gui
+    //public static Stemmer stemmer = new Stemmer() ;
+
     // ('0', '9');
     // ('a', 'c');
     // ('d', 'f');
@@ -28,11 +31,23 @@ public class SegmentFile implements Serializable {
 
 /* Need to do it concurrent (new thread in parser which calls this method) */
     public void signToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
+
         Iterator it = allTerms.entrySet().iterator();
         signNewDocSection(currDoc);
         while (it.hasNext()) {
             HashMap.Entry pair = (HashMap.Entry)it.next();
             String term = (String) pair.getKey();
+            if ( STEMMING ) {
+               // String[] s = {"d:\\documents\\users\\harelsa\\Downloads\\corpus\\stem.txt"}  ;
+               // stemmer.main(s);
+                Stemmer stemmer = new Stemmer() ;
+                stemmer.add(term.toCharArray(), term.length());
+                String stemmed = "";
+                stemmer.stem();
+                term = stemmer.toString();
+
+            }
+
             int partitionNum = getPartitionDest(term); // 0-6
             switch (partitionNum){
                 case 0:

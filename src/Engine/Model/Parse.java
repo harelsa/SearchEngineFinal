@@ -2,9 +2,12 @@ package Engine.Model;
 
 
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.math.BigDecimal;
 import java.util.*;
 
 import java.util.regex.Matcher;
@@ -45,7 +48,7 @@ public class Parse {
     private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("[0-9]*" + " " + "[0-9]*" + "/" + "[0-9]*" + " " + "Dollars");
     private static Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
     private static Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
-    private static Pattern PRICE_SIMPLE = Pattern.compile( "\\$"+ "\\d+$");
+    private static Pattern PRICE_SIMPLE = Pattern.compile( "\\$"+ "\\d+");
     private static Pattern FRACTURE_SIMPLE = Pattern.compile("[0-9]*" + " " + "[0-9]*" + "/" + "[0-9]*$");
     private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2][0-9][0-9][0-9]|[0-9][0-9][0-9] )$"); /*"[0-9]{4}");*/
     private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
@@ -90,10 +93,10 @@ public class Parse {
         termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
-        tokens = text.split(" ");
+        tokens = StringUtils.split(text , " ");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+//        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -224,7 +227,7 @@ public class Parse {
 
 
             if (docTerms.containsKey(addTerm)) {
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -240,7 +243,7 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
             }
             i++;
         } //end for
@@ -381,19 +384,19 @@ public class Parse {
         Matcher priceDouMatcher$ = PRICE_SIMPLE.matcher(token1);
         if (priceDouMatcher$.find() && token2.equals("million") || token2.equals("billion")) {
             String temp = "";
-            double value = 0;
+            BigDecimal value = new BigDecimal(0);
             temp = token1.replace("$", "");
 
             if (token2.equals("billion")) {
                 temp = temp.replaceAll("," , "");
-                if (isNumber(temp)) value = Double.parseDouble(temp) * BILLION;
+                if (isNumber(temp)) value = new BigDecimal(Double.parseDouble(temp) * BILLION);
             }
             if (token2.equals("million")) {
                 temp = temp.replaceAll("," , "");
-                if (isNumber(temp)) value = Double.parseDouble(temp) * MILLION;
+                if (isNumber(temp)) value = new BigDecimal( Double.parseDouble(temp) * MILLION);
             }
 
-            term = get_term_from_simple_price(value + "", "");
+            term = get_term_from_simple_price(value+ "", "");
             //System.out.println("Term added: " + term);
             return term ;
         }
@@ -402,17 +405,17 @@ public class Parse {
         Matcher priceDouMatcher = PRICE_DOU.matcher(token1 + " " + token2);
         if (priceDouMatcher.find()) {
             String temp = "";
-            double value = 0;
+            BigDecimal value = new BigDecimal(0);
             if (token1.endsWith("bn")) {
                 temp = saved_original.replaceAll("bn", "");
                 Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
-                if (regularNUMmatcher.find()) value = Double.parseDouble(temp) * BILLION;
+                if (regularNUMmatcher.find()) value = new BigDecimal(Double.parseDouble(temp) * BILLION) ;
 
             }
             if (token1.endsWith("m")) {
                 temp = saved_original.replaceAll("m", "");
 
-                if (isNumber(temp)) value = Double.parseDouble(temp) * MILLION;
+                if (isNumber(temp)) value = new BigDecimal(Double.parseDouble(temp) * MILLION) ;
             }
 
             term = get_term_from_simple_price(value + "", "");

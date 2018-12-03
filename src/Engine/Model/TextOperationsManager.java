@@ -138,7 +138,7 @@ public class TextOperationsManager {
             readAndParse();
         }
         catch (Exception e ){
-//
+
         }
         //end of parse
         buildInvertedIndex();
