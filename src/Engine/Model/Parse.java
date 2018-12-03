@@ -53,6 +53,8 @@ public class Parse {
     private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2][0-9][0-9][0-9]|[0-9][0-9][0-9] )$"); /*"[0-9]{4}");*/
     private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
     private static Pattern DOUBLE_NUM = Pattern.compile("^[0-9]*$" + "." + "^[0-9]*$");
+    private static Pattern BETWEEN = Pattern.compile("\\d+" + "and" + "\\d+");
+
 
     private SegmentFile segmantFile;
     private int termPosition;
@@ -121,7 +123,7 @@ public class Parse {
                 tokensArray[i] = cleanToken(tokensArray[i]);
 
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
-            if (tokensArray[i].equals("")  || tokensArray[i].equals("")  ) {
+            if (tokensArray[i].equals("")  || tokensArray[i].equals("") || tokensArray[i].length() < 2  ) {
                 i += 1;
                 continue;
             }
@@ -138,7 +140,14 @@ public class Parse {
                 if ( addTerm.equals("")) addTerm = check1WordPattern(tokensArray[i]) ; //regular num
                 addTerm = "" ;
             }
-
+            // check between
+            if ( (tokensArray[i].equals("Between") || tokensArray[i].equals("between") ) && i < tokensArray.length-3  ){
+                Matcher bet = BETWEEN.matcher( tokensArray[i+1]+tokensArray[i+2]+tokensArray[i+3] ) ;
+                if ( bet.find()){
+                    addTerm = tokensArray[i] +" "+ tokensArray[i+1]+" " + tokensArray[i+2]+" "+ tokensArray[i+3] ;
+                    i= i+3 ;
+                }
+            }
 
             //  check if its date first ..
 
@@ -221,13 +230,16 @@ public class Parse {
 //            }
 
             //REGULAR WORD
-            if (addTerm.equals(""))
+            if (addTerm.equals("")){
+                if ( !tokensArray [i].equals( "F><F"))
                 addTerm = tokensArray[i] ;
-//            System.out.println(addTerm);
+            }
 
+//            System.out.println(addTerm);
+            if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -243,7 +255,7 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
             }
             i++;
         } //end for
@@ -742,7 +754,7 @@ public class Parse {
 
         StringBuilder res = new StringBuilder("");
 
-        String[] words = str.split(" ");
+        String[] words = StringUtils.split(str , " ");
         for (String s : words) {
             if (stopwords.contains(s) || s.equals(" ") || s.equals("")) {
                 // Do something with the stop words found in the sample input or discard them.

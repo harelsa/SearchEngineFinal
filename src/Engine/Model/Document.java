@@ -10,6 +10,7 @@ public class Document {
     private String city; // city of doc - appear in <F P=104> ...</F>
     private HashMap<Term, Integer> termFrequency;
     private Term maxFreqTerm;
+    private String date ;
     private int maxFreqTermNumber;  // frequancy of the most common term in doc
 
     public Document(String docNo, String parentFileName, String docCity, String maxTermFreq, String maxContentTermFreq) {
@@ -31,11 +32,12 @@ public class Document {
         return docNo != null ? docNo.hashCode() : 0;
     }
 
-    public Document(String docNo, String parentFileName, String docCity) {
+    public Document(String docNo, String parentFileName, String docCity ) {
         this.docNo = docNo;
         city = docCity;
         this.parentFileName = parentFileName;
         termFrequency = new HashMap<>();
+        this.date = date ;
     }
 
     public String getDocNo() {

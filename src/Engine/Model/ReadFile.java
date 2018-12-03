@@ -1,6 +1,7 @@
 package Engine.Model;
 
 import javafx.util.Pair;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.print.Doc;
 import java.io.*;
@@ -46,53 +47,59 @@ public class ReadFile {
             StringBuilder sb_text = new StringBuilder();
             String docNo = "" ;
             String docCity = "" ;
+            String doc_date = "" ;
             while ((line = br.readLine()) != null) {
                 while (line != null && !line.equals("</DOC>") && !line.equals("</TEXT>")) {
-                    if ( line.equals("<DOC>")) line = br.readLine() ;  // start doc
+                    if (line.equals("<DOC>")) {
+                        line=br.readLine() ;
+                        text_adding = false ;
+                        continue;
+                    }
+                    if (  line.startsWith("Language: <F P=105>") || line.equals("<P>") || line.equals("</ P>") ) {
+                        line = br.readLine() ;  // start doc
+                        continue;
+                    }
                     if ( line.equals("<TEXT>")) {
                         text_adding  = true ;
                         line = br.readLine();
                     }
+                    //clean
+                    if ( line.startsWith("<F P=106>" ) ){
+                       String[] temp =  StringUtils.split(line , "><");
+                       line = temp[1] ;
+                    }
+
                     if (! text_adding ) // add to doc info
                     sb_docInfo.append(line);
                     else sb_text.append(line) ; // add to text
-                    if (line.startsWith("<F P=104>")){ // CITY
-                       String[] arr =  line.split(" ");
+                    //doc date
+//                    if ( line.equals("<DATE1>")){     /// date has diff format in diff docs
+//                        doc_date = get_doc_date( line ) ;
+//                    }
+                    // CITY
+                    if (line.startsWith("<F P=104>")){
+                       String[] arr = StringUtils.split(line , " ");
                        if (arr.length < 4){
                            line = br.readLine();
                            continue;
                        }
                        int i = 4 ;
                         docCity = arr [3] ; // only the first word between tags
-//                       while(i < arr.length-1 && !testAllUpperCase(arr[i])){
-//                          docCity = docCity +" " + arr[i] ;
-//                          i++;
-//                       }
                        this.cities.put( docCity , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
-                    if (line.startsWith("<DOCNO>")){ // Doc num
-                        String[] arr =  line.split(" ");
+                    // Doc num
+                    if (line.startsWith("<DOCNO>")){
+                        String[] arr = StringUtils.split( line , " ");
                         if (arr.length >= 2)
                             docNo = arr [1] ;
                     }
                     line = br.readLine();
                 }
-                sb_docInfo.append(line);
+                //sb_docInfo.append(line);
                 String text = sb_text.toString();
-                //String doc_text = sb_docInfo.toString();
-                Document doc = new Document(docNo, parentFileName , docCity);
-//                parser.parse(text, doc);
-                //Thread parseThread = new Thread(() -> parser.parse(text,doc));
-//                readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+                Document doc = new Document(docNo, parentFileName , docCity );
 
-//                Thread parseThread = new Thread(){
-//                    public void run(){
-//                        parser.parse(text, doc);
-//                        text = null;
-//                        doc = null;
-//                    }
-//                };
 
                 sb_docInfo.delete(0, sb_docInfo.length());
                 sb_text.delete(0, sb_text.length());
@@ -117,8 +124,14 @@ public class ReadFile {
         }
     }
 
+    private String get_doc_date(String line) {
+        String[] arr = StringUtils.split(line , " ");
+
+        return "" ;
+    }
+
     private String getParentFileName(String filePathName) {
-        String[] split = filePathName.split("\\\\");
+        String[] split = StringUtils.split(filePathName , "\\\\");
         return split[split.length-1];
     }
 
