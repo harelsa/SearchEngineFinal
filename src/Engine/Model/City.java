@@ -7,6 +7,22 @@ import java.util.LinkedList;
  *
  */
 public class City {
+    public String getCity_name() {
+        return city_name;
+    }
+
+    public String getState_name() {
+        return state_name;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public String getPopulation() {
+        return population;
+    }
+
     private  String city_name  = "" ;
     private  String state_name = "" ;
     private  String currency = "" ;
