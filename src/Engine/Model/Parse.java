@@ -48,8 +48,7 @@ public class Parse {
     private static Pattern PRICE_FRACTION_DOLLARS = Pattern.compile("[0-9]*" + " " + "[0-9]*" + "/" + "[0-9]*" + " " + "Dollars");
     private static Pattern DATE_DD_MONTH = Pattern.compile(/*"(3[01]|[0-2][0-9])"*/"(3[0-1]|[0-2][0-9]|[0-9])" + " " + "(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)");
     private static Pattern DATE_MONTH_DD = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "(3[0-1]|[0-2][0-9]|[0-9])$" /*"[0-9]{1,2}" /*"(3[0-1]|[0-2][0-9])" */);
-    private static Pattern PRICE_SIMPLE = Pattern.compile( "\\$"+ "^[0-9]*$");
-    private static Pattern PRICE_SIMPLE_dec = Pattern.compile( "\\$"+ "^[0-9]*$" + "." + "^[0-9]*$");
+    private static Pattern PRICE_SIMPLE = Pattern.compile( "\\$"+ "\\d+");
     private static Pattern FRACTURE_SIMPLE = Pattern.compile("[0-9]*" + " " + "[0-9]*" + "/" + "[0-9]*$");
     private static Pattern DATE_MONTH_YYYY = Pattern.compile("(january|february|march|april|may|june|july|august|september|october|november|december|jan|fab|mar|apr|jun|jul|aug|sep|oct|nov|dec)" + " " + "([1-2][0-9][0-9][0-9]|[0-9][0-9][0-9] )$"); /*"[0-9]{4}");*/
     private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
@@ -383,8 +382,7 @@ public class Parse {
 
         // check < $ + Decimal + million|billion >
         Matcher priceDouMatcher$ = PRICE_SIMPLE.matcher(token1);
-        Matcher priceDouMatcher$dec = PRICE_SIMPLE_dec.matcher(token1);
-        if ((priceDouMatcher$.find()|| priceDouMatcher$dec.find() )&& token2.equals("million") || token2.equals("billion")) {
+        if (priceDouMatcher$.find() && token2.equals("million") || token2.equals("billion")) {
             String temp = "";
             BigDecimal value = new BigDecimal(0);
             temp = token1.replace("$", "");
