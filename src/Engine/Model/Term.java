@@ -6,9 +6,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class Term implements Comparable, Serializable {
-    private int tf = 0; // length of location docs
+    private int tf; // length of location docs
     private String content;
     private LinkedList<Integer> location_docs;// < doc obj , a list of locations(row num)
+    private boolean startsWithCapital;
     //private HashMap<Document, Integer > tf_docs ;
     // in doc (tr - number tomes the term appear in the doc , the length of the list ) >
 
@@ -16,7 +17,9 @@ public class Term implements Comparable, Serializable {
         location_docs = new LinkedList<>();
         location_docs.add(position);
         this.tf = tf;
-        this.content = content;
+        this.content = content.toLowerCase();
+        if (Character.isUpperCase(content.codePointAt(0)))
+            startsWithCapital = true;
         //tf_docs = new HashMap<>();
     }
 
@@ -52,8 +55,15 @@ public class Term implements Comparable, Serializable {
     }
 
     // The short format will be: <TermContent>,<df>,<tf>,"<LOCS>:"<location_docs>,
-    public String shortToString() {
-        return content+","+tf+","+"<LOCS:" + location_docs + ">" + "," +">";
+    public String lightToString() {
+        return indicateCapital() + content+ "," + tf + "," + location_docs;
+    }
+
+    private String indicateCapital() {
+        if (startsWithCapital)
+            return "*";
+        else
+            return "";
     }
 
     @Override

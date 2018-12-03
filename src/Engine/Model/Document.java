@@ -7,7 +7,7 @@ public class Document {
     private String docNo;
     private String parentFileName;
     private int unique_t; // quantity of unique terms in doc
-    private String city = "" ; // city of doc - appear in <F P=104> ...</F>
+    private String city; // city of doc - appear in <F P=104> ...</F>
     private HashMap<Term, Integer> termFrequency;
     private Term maxFreqTerm;
     private int maxFreqTermNumber;  // frequancy of the most common term in doc
@@ -65,10 +65,6 @@ public class Document {
                 ", maxFreqTermNumber=" + maxFreqTermNumber +
                 '}';
     }
-    // Format: <docNo>,<max_tf>,<unique_t>,<city>,<maxFreqTerm>,<maxFreqTermNumber>
-    public String shortToString(){
-        return docNo+","+maxFreqTermNumber+","+unique_t+","+city+","+maxFreqTermNumber; //+maxFreqTerm.shortToString()+","
-    }
 
     public void updateAfterParsing() {
         unique_t = termFrequency.size();
@@ -78,6 +74,15 @@ public class Document {
         if (maxFreqTerm != null)
             return maxFreqTerm.getContent();
         return null;
+    }
+
+    // Format: <docNo>,<parentFileName>,<city>,<max_tf>,<maxTerm>,<num_of_uniques>
+    public String lightToString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(docNo).append(",").append(parentFileName)
+                .append(",").append(city).append(",").append(maxFreqTermNumber).append(",")
+                    .append(getFreqTermContent()).append(",").append(unique_t);
+        return sb.toString();
     }
 
 

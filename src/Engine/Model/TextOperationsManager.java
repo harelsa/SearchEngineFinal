@@ -9,6 +9,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
+import java.sql.Array;
+import java.sql.Statement;
+import java.sql.Time;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
@@ -97,11 +102,7 @@ public class TextOperationsManager {
         catch (Exception e ){
 
         }
-
-
-    }
-    public void p () {
-        System.out.println("LAAAAAAAAAA");
+        //end of parse
     }
 
     private void readAndParse() throws InterruptedException {
@@ -110,7 +111,6 @@ public class TextOperationsManager {
             int finalI = i;
             Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
             parseExecutor.execute(readNParseThread) ;
-            calls.add(Executors.callable(readNParseThread));
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
@@ -240,8 +240,8 @@ public class TextOperationsManager {
                     String state = splited[i];
                     String city = splited[i+2];
                     String first_part = "" ;
-                    if ( city.contains(" ") ) // 2 word city 
-                        first_part = city.split(" ")[0];  
+                    if ( city.contains(" ") ) // 2 word city
+                        first_part = city.split(" ")[0];
                     if (cities.containsKey(city) || cities.containsKey(first_part)) {
                         City city_obj = cities.get(city);
                         if (city_obj == null )
