@@ -3,6 +3,7 @@ package Engine.Model;
 import javafx.util.Pair;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.Hashtable;
 
 public class SegmentFilePartition implements Serializable {
@@ -50,7 +51,7 @@ public class SegmentFilePartition implements Serializable {
     }
 
     synchronized public void signNewTerm(Term term) {
-        //Pair<Term, Document> object = new Pair<>(term, doc);
+        //System.out.println("aa");
         try {
             file_buffer_writer.write(term.lightToString() + "\n");
 
@@ -60,24 +61,36 @@ public class SegmentFilePartition implements Serializable {
 //        segmentTerms.put(term, doc);
     }
 
-    synchronized public String extractDocTermsFromSegmentFile() {
-        StringBuilder sb = new StringBuilder();
+    public String readLine(){
+        String line;
         try {
-            String line = "";
-            if ((line = file_buffer_reader.readLine()) != null)
-                sb.append(file_buffer_reader.readLine());
-            else
-                return null;
-            while ((line = file_buffer_reader.readLine()) != null && !(line = file_buffer_reader.readLine()).contains("<D>")) {
-                sb.append(file_buffer_reader.readLine());
+            if ((line = file_buffer_reader.readLine()) != null){
+                return line;
             }
-            file_buffer_reader.readLine();
-            return sb.toString();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return sb.toString();
+        return null;
     }
+
+//    synchronized public HashMap<String,String> extractDocsTermsFromSegmentFile() {
+//        StringBuilder sb = new StringBuilder();
+//        try {
+//            String line = "";
+//            if ((line = file_buffer_reader.readLine()) != null)
+//                sb.append(file_buffer_reader.readLine());
+//            else
+//                return null;
+//            while ((line = file_buffer_reader.readLine()) != null && !(line = file_buffer_reader.readLine()).contains("<D>")) {
+//                sb.append(file_buffer_reader.readLine());
+//            }
+//            file_buffer_reader.readLine();
+//            return sb.toString();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        return sb.toString();
+//    }
 
 
     public void signDocSection(Document currDoc) {
@@ -87,6 +100,19 @@ public class SegmentFilePartition implements Serializable {
             e.printStackTrace();
         }
     }
+
+   //public String readWholePartition() {
+   //    StringBuilder sb = new StringBuilder();
+   //    try {
+   //        String line = "";
+   //        while ((line = file_buffer_reader.readLine()) != null){
+   //            sb.append(line);
+   //            file_buffer_reader.readLine();
+   //        }
+   //    } catch (IOException e) {
+   //        e.printStackTrace();
+   //    }
+   //}
 
 //    Charset charset = Charset.forName("UTF-8");
 //    ArrayList<String> list = new ArrayList<String>();

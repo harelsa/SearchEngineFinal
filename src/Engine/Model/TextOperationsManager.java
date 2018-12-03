@@ -23,20 +23,21 @@ import java.util.concurrent.Executors;
 public class TextOperationsManager {
     final int NUM_OF_PARSERS = 8;
     final int NUM_OF_SEGMENT_FILES= 8;
-    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 5;
-    final int NUM_OF_INVERTERS = 5;
+    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 7;
+    final int NUM_OF_INVERTERS = 7;
     private static double MILLION = Math.pow(10, 6);
 
 
 
     ReadFile reader;
-    Parse parser;
     String curposPath;
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
     private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
+    private Posting[] postings = new Posting[NUM_OF_INVERTERS];
     public ArrayList<String> filesPathsList;
     public static ExecutorService parseExecutor;
+    public static ExecutorService invertedExecutor;
     static ConcurrentHashMap<String, City> cities ; // cities after parsing
 
 
@@ -54,36 +55,75 @@ public class TextOperationsManager {
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
+        invertedExecutor = Executors.newFixedThreadPool(NUM_OF_INVERTERS);
         cities = new ConcurrentHashMap<>();
         inveted_city = new HashMap<String , String >() ;
     }
 
     private void initInverters() {
-        SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-        SegmentFilePartition[] segmentFilesInverter2 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-        SegmentFilePartition[] segmentFilesInverter3 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-        SegmentFilePartition[] segmentFilesInverter4 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-        SegmentFilePartition[] segmentFilesInverter5 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-//        SegmentFilePartition[] segmentFilesInverter6 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-//        SegmentFilePartition[] segmentFilesInverter7 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-//        SegmentFilePartition[] segmentFilesInverter8 = new SegmentFilePartition[NUM_OF_SEGMENT_FILE_PARTITIONS];
-        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
-            for (int j = 0; j < NUM_OF_SEGMENT_FILES; j++) {
-                segmentFilesInverter1[i] = segmentFiles[j].getSegmentFilePartitions('0', '9');
-                segmentFilesInverter2[i] = segmentFiles[j].getSegmentFilePartitions('a', 'f');
-                segmentFilesInverter3[i] = segmentFiles[j].getSegmentFilePartitions('g', 'p');
-                segmentFilesInverter4[i] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
-                segmentFilesInverter5[i] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
-            }
+        String postingBaseFilePath = "src\\Engine\\resources\\Posting Files";
+
+        Posting termsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Terms\\" + "0_9");
+        Posting termsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Terms\\" + "a_c");
+        Posting termsPostingFile_d_f = new Posting(postingBaseFilePath + "\\Terms\\" + "d_f");
+        Posting termsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Terms\\" + "g_k");
+        Posting termsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Terms\\" + "l_p");
+        Posting termsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Terms\\" + "q_z");
+        Posting termsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Terms\\" + "z_z");
+
+        Posting docsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Docs\\" + "0_9");
+        Posting docsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Docs\\" + "a_c");
+        Posting docsPostingFile_d_f = new Posting(postingBaseFilePath + "\\Docs\\" + "d_f");
+        Posting docsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Docs\\" + "g_k");
+        Posting docsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Docs\\" + "l_p");
+        Posting docsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Docs\\" + "q_z");
+        Posting docsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Docs\\" + "z_z");
+
+        SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+        SegmentFilePartition[] segmentFilesInverter2 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+        SegmentFilePartition[] segmentFilesInverter3 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+        SegmentFilePartition[] segmentFilesInverter4 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+        SegmentFilePartition[] segmentFilesInverter5 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+        SegmentFilePartition[] segmentFilesInverter6 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+        SegmentFilePartition[] segmentFilesInverter7 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
+
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter1[i] = segmentFiles[i].getSegmentFilePartitions('0', '9');
         }
-        inverters[0] = new Indexer(segmentFilesInverter1);
-        inverters[1] = new Indexer(segmentFilesInverter2);
-        inverters[2] = new Indexer(segmentFilesInverter3);
-        inverters[3] = new Indexer(segmentFilesInverter4);
-        inverters[4] = new Indexer(segmentFilesInverter5);
-//        inverters[5] = new Indexer(segmentFilesInverter6);
-//        inverters[6] = new Indexer(segmentFilesInverter7);
-//        inverters[7] = new Indexer(segmentFilesInverter8);
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter2[i] = segmentFiles[i].getSegmentFilePartitions('a', 'c');
+        }
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter3[i] = segmentFiles[i].getSegmentFilePartitions('d', 'f');
+        }
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter4[i] = segmentFiles[i].getSegmentFilePartitions('g', 'k');
+        }
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter5[i] = segmentFiles[i].getSegmentFilePartitions('l', 'p');
+        }
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter6[i] = segmentFiles[i].getSegmentFilePartitions('q', 'z');
+        }
+        for (int i = 0; i < NUM_OF_SEGMENT_FILES; i++) {
+            segmentFilesInverter7[i] = segmentFiles[i].getSegmentFilePartitions('z', 'z');
+        }
+
+//                segmentFilesInverter2[i] = segmentFiles[j].getSegmentFilePartitions('a', 'c');
+//                segmentFilesInverter3[i] = segmentFiles[j].getSegmentFilePartitions('d', 'f');
+//                segmentFilesInverter4[i] = segmentFiles[j].getSegmentFilePartitions('g', 'k');
+//                segmentFilesInverter5[i] = segmentFiles[j].getSegmentFilePartitions('l', 'p');
+//                segmentFilesInverter6[i] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
+//                segmentFilesInverter7[i] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
+
+
+        inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9, docsPostingFile_0_9);
+        inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c, docsPostingFile_a_c);
+        inverters[2] = new Indexer(segmentFilesInverter3, termsPostingFile_d_f, docsPostingFile_d_f);
+        inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k, docsPostingFile_g_k);
+        inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p, docsPostingFile_l_p);
+        inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z, docsPostingFile_q_z);
+        inverters[6] = new Indexer(segmentFilesInverter7, termsPostingFile_z_z, docsPostingFile_z_z);
     }
 
 
@@ -103,10 +143,23 @@ public class TextOperationsManager {
 
         }
         //end of parse
+        buildInvertedIndex();
+    }
+
+    private void buildInvertedIndex() {
+        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
+            int finalI = i;
+            Thread buildInvertedIndex = new Thread(() ->  inverters[finalI%NUM_OF_INVERTERS].buildInvertedIndexes());
+            invertedExecutor.execute(buildInvertedIndex) ;
+//            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
+//            executor.execute(parseThread);
+        }
+            invertedExecutor.shutdown();
+            while (!invertedExecutor.isTerminated()) {
+        }
     }
 
     private void readAndParse() throws InterruptedException {
-        List<Callable<Object>> calls = new ArrayList<Callable<Object>>();
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
             Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
