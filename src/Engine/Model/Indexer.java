@@ -3,6 +3,7 @@ package Engine.Model;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Indexer {
@@ -50,39 +51,23 @@ public class Indexer {
     }
 
     private void readDocsFromEachSegmentFile() {
-        TreeMap<String, String> DocToTerms = new TreeMap<>(); // <DocID, list of strings in format: <Term>,<tf>"#"<Term>,<tf>"#"....
+        //TreeMap<String, String> DocToTerms = new TreeMap<>(); // <DocID, list of strings in format: <Term>,<tf>"#"<Term>,<tf>"#"....
         TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
         for (int i = 0; i < segmentFilePartitions.length; i++) {
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            System.out.println("Starting to handle: " + "Segment File " + i + " " + timeStamp);
             StringBuilder sb;
             String line;
             while ((line = segmentFilePartitions[i].readLine()) != null) {
                 if (line.contains("<D>")) {
                     sb = new StringBuilder();
-                    String parentFileName = "";
-                    String docCity = "";
-                    String maxTermFreq = "";
-                    String maxContentTermFreq = "";
                     String docNo = "";
                     if (isRealDoc(line)) {
                         // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
                         line.replace("<D>", "");
                         String[] splitedLine = StringUtils.split(line, ",");
                         docNo = splitedLine[0];
-                        if (splitedLine.length > 1) {
-                            parentFileName = splitedLine[1];
-                            if (splitedLine.length > 2) {
-                                docCity = splitedLine[2];
-                                if (splitedLine.length > 3) {
-                                    maxTermFreq = splitedLine[3];
-                                    if (splitedLine.length > 4)
-                                        maxContentTermFreq = splitedLine[4];
-                                }
-                            }
-                        }
-                        //Document d = new Document(docNo, parentFileName, docCity, maxTermFreq, maxContentTermFreq);
-
                         line = segmentFilePartitions[i].readLine();
-
                         while (line != null && !line.contains("<D>")) {
                             String tf = "";
                             String[] locsSplited = StringUtils.split(line, "[");
@@ -117,14 +102,13 @@ public class Indexer {
                             line = segmentFilePartitions[i].readLine();
                         }
                         // finished to read one doc from segment partition. sb = <Term>,<tf>"#"<Term>,<tf>"#"...
-                        DocToTerms.put(docNo.toLowerCase(), sb.toString());
+                        //DocToTerms.put(docNo.toLowerCase(), sb.toString());
                     }
                 }
             }
         }
 
         termsPosting.writeToTermsPosting(TermToDocs);
-        //docsPosting.writeToPosting(DocToTerms);
 
     }
 
@@ -156,7 +140,6 @@ public class Indexer {
         try {
             FileWriter termDictionary_fw = new FileWriter("src\\Engine\\resources\\Dictionaries\\termDictionary.txt");
             BufferedWriter termDictionary_bf = new BufferedWriter(termDictionary_fw);
-            //PrintWriter pw = new PrintWriter("src\\Engine\\resources\\Segment Files\\mergesDocsPostingFile.txt");
 
             Iterator termIt = terms_dictionary.entrySet().iterator();
             int counter = 0;
