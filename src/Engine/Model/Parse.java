@@ -27,14 +27,20 @@ public class Parse {
     private static HashSet<String> stopwords = new HashSet<>();
     private static HashSet<String> specialwords = new HashSet<>();
     private static HashSet<String> specialchars = new HashSet<>();
+    private static HashSet<String> months = new HashSet<>();
+
     private static FileReader stopwords_fr; // read stop words from the file
     private static FileReader specialwords_fr;
     private static FileReader specialchars_fr;
+    private static FileReader months_fr;
+
     static {
         try {
             stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt");
             specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
             specialchars_fr = new FileReader("src\\Engine\\resources\\special_chars.txt");
+            months_fr = new FileReader("src\\Engine\\resources\\months.txt");
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -69,6 +75,8 @@ public class Parse {
             BufferedReader stopwords_br = new BufferedReader(stopwords_fr);
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
+            BufferedReader months_br = new BufferedReader(months_fr);
+
             this.segmantFile = segmantFile;
             String curr_line;
 
@@ -80,6 +88,9 @@ public class Parse {
             }
             while ((curr_line = specialchars_br.readLine()) != null) {
                 specialchars.add(curr_line);
+            }
+            while ((curr_line = months_br.readLine()) != null) {
+                months.add(curr_line);
             }
             //SegmentFile parserSegmentFile = new SegmentFile();
             termPosition = 0;
@@ -98,7 +109,7 @@ public class Parse {
         tokens = StringUtils.split(text , " \\/");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+       // segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -118,6 +129,11 @@ public class Parse {
         for (int i = 0; i < tokensArray.length; ) {
 
             addTerm = "" ;
+
+            if (tokensArray[i].equals("")  || tokensArray[i].length() < 2  ) { // not a term
+                i += 1;
+                continue;
+            }
             //First law - save " phrase" - will be saved as phrase and single words
             if ( tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
                 int j = i ;
@@ -128,13 +144,14 @@ public class Parse {
                         phrase = phrase.append(" " + tokensArray[j]);
                         String phrase_temp  = phrase.toString();
                         phrase_temp = cleanToken(phrase_temp) ;
-                        //System.out.println(phrase_temp);
+                        System.out.println(phrase_temp);
                         if (docTerms.containsKey(phrase_temp)) {
                             Term tmp = docTerms.get(phrase_temp);
                             tmp.advanceTf();
                             tmp.addPosition(termPosition);
                             currDoc.addTerm(tmp);
                             termPosition++;
+                            break;
                         } else { // new term
                             Term obj_term = new Term(termPosition, 1, phrase_temp);
                             termPosition++;
@@ -149,23 +166,72 @@ public class Parse {
 
                 }
             }
+            // Second law  - save terms of capitals letters - Ashley Cummins Brittingham
+            String temp_token = cleanToken(tokensArray[i] ) ;
+            if ( temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
+                    && !specialchars.contains(tokensArray[i].charAt(tokensArray[i].length()-1)) //check Cummins,
+                    && !specialchars.contains(tokensArray[i+1].charAt(0)) // check ,Cummins
+                    && cleanToken(tokensArray[i+1]).length()>1
+                    &&Character.isUpperCase(cleanToken(tokensArray[i+1]).charAt(0)) // check capital of the second word
+            ){
+                int j = i ;
+                StringBuilder long_term = new StringBuilder();
+                //j++ ;
+                 boolean stop = false ;
+                 boolean insert_and_stop = false ;
+                 String what_to_add = "";
+                while ( j < tokensArray.length && ( j - i ) < 6 ) {
+                    temp_token = cleanToken(tokensArray[j] ) ;
+                    if (    !insert_and_stop
+                            && tokensArray[j].length() > 1
+                            &&!specialchars.contains(tokensArray[j].charAt(0))
+                            && temp_token.length() > 1
+                            &&Character.isUpperCase(temp_token.charAt(0))
+                            && ( j < tokensArray.length-1
+                            && !(months.contains(tokensArray[j]) && isNumber(tokensArray[j+1])))
+                    ){  // add one word term
+                        long_term = long_term.append(temp_token + " ");
+                        what_to_add = temp_token ;
+                        if ( specialchars.contains(tokensArray[j].charAt(tokensArray[j].length()-1))) // end
+                            insert_and_stop = true;
+                        j++;
 
+                    } else { // end of long term
+                        if ( long_term.length() < 2) {
+                            i=j ;
+                            break;
+                        }
+                        what_to_add  = long_term.toString();
+                       what_to_add = cleanToken(what_to_add) ;
+                        stop = true;
+                        i = j ;
+                    }
+                        System.out.println(what_to_add);
+                        if (docTerms.containsKey(what_to_add)) {
+                            Term tmp = docTerms.get(what_to_add);
+                            tmp.advanceTf();
+                            tmp.addPosition(termPosition);
+                            currDoc.addTerm(tmp);
+                            termPosition++;
+                           if ( stop) break;
+                        } else { // new term
+                            Term obj_term = new Term(termPosition, 1,what_to_add);
+                            termPosition++;
+                            currDoc.addTerm(obj_term);
+                            docTerms.put( what_to_add, obj_term);
+                           if ( stop ) break;
+                        } // ***** adding to doc terms ****
+                }
+            }
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
-
-
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
-            if (tokensArray[i].equals("")  || tokensArray[i].length() < 2  ) { // not a term
-                i += 1;
-                continue;
-            }
 
             // check stop word
             if (!tokensArray[i].equals( "may") && stopwords.contains(tokensArray[i])) {
                 i += 1;
                 continue;
             }
-
             // check number with no special term
             if (isNumber(tokensArray[i]) && ( i == tokensArray.length-1 ||(i < tokensArray.length - 1  && (!specialwords.contains(cleanToken(tokensArray[i + 1].toLowerCase())) || !tokensArray[i+1].contains("/"))))) {
 
@@ -181,21 +247,20 @@ public class Parse {
                 }
             }
             //  check if its date first ..
-
             if (addTerm.equals("")&& i < tokensArray.length - 1 && !isNumber(tokensArray[i])  ) {
-                tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
+                String temp_token1 = cleanToken(tokensArray[i + 1]);
                 //date - < Month + decimal >
-                Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
+                Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(tokensArray[i].toLowerCase() + " " + temp_token1.toLowerCase());
                 if (dateFormatMatcher2.find()) {
-                    String term = PairTokensIsDate2Format(tokensArray[i].toLowerCase(), tokensArray[i + 1].toLowerCase());
+                    String term = PairTokensIsDate2Format(tokensArray[i].toLowerCase(), temp_token1.toLowerCase());
                     //System.out.println("Term added: " + term);
                     addTerm = term ;
 
                 }
                 //date - < Month + YYYY >
-                Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
+                Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher(tokensArray[i].toLowerCase() + " " + temp_token.toLowerCase());
                 if (addTerm.equals("") && dateFormatMatcherYear.find()) {
-                    String term = PairTokensIsDate3Format(tokensArray[i].toLowerCase(), tokensArray[i + 1].toLowerCase());
+                    String term = PairTokensIsDate3Format(tokensArray[i].toLowerCase(), temp_token.toLowerCase());
                     //System.out.println("Term added: " + term);
                     addTerm = term ;
 
@@ -208,39 +273,37 @@ public class Parse {
                 }
             }
             //  check if its $ or % ..
-
             if (addTerm.equals("") && (tokensArray[i].startsWith("$") || tokensArray[i].startsWith("%")) && i < tokensArray.length) {
                 if (i < tokensArray.length - 1) {
-                    tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
-                    addTerm = check2WordsPattern(tokensArray[i], tokensArray[i + 1]) ;
+                    String temp_token1 = cleanToken(tokensArray[i + 1]);
+                    addTerm = check2WordsPattern(tokensArray[i], temp_token1) ;
                     if (!addTerm.equals("")) i += 1;
                 }
                 if (addTerm.equals(""))  addTerm = check1WordPattern(tokensArray[i]);
 
             }
-
             // check a term with  num
             // Matcher regularNUMmatcher = REGULAR_NUM.matcher(tokensArray[i]);
             Matcher regularNUMmatcher2 = REGULAR_NUM.matcher(cleanToken(tokensArray[i].replaceAll("[mbn]", "")));
             if (addTerm.equals("") && (isNumber(tokensArray[i]) || regularNUMmatcher2.find()|| isNumber(tokensArray[i].replaceAll("[mbn]", "")))) {  // change the term only if the first token is a number !!!!
 
                 if (i < tokensArray.length - 3) {
-                    tokensArray[i + 3] = cleanToken(tokensArray[i + 3]);
-                    tokensArray[i + 2] = cleanToken(tokensArray[i + 2]);
-                    tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
-                    addTerm = check4WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2], tokensArray[i + 3]) ;
+                    String temp_token3 = cleanToken(tokensArray[i + 3]);
+                    String temp_token2 = cleanToken(tokensArray[i + 2]);
+                    String temp_token1 = cleanToken(tokensArray[i + 1]);
+                    addTerm = check4WordsPattern(tokensArray[i], temp_token1, temp_token2, temp_token3) ;
                     if (!addTerm.equals("")) i += 3;
 
                 }
                 if (addTerm.equals("") && i < tokensArray.length - 2) {
-                    tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
-                    tokensArray[i + 2] = cleanToken(tokensArray[i + 2]);
-                    addTerm = check3WordsPattern(tokensArray[i], tokensArray[i + 1], tokensArray[i + 2]) ;
+                    String temp_token1 = cleanToken(tokensArray[i + 1]);
+                    String temp_token2 = cleanToken(tokensArray[i + 2]);
+                    addTerm = check3WordsPattern(tokensArray[i], temp_token1, temp_token2) ;
                     if (!addTerm.equals("")) i += 2;
                 }
                 if (addTerm.equals("") &&  i < tokensArray.length - 1) {
-                    tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
-                    addTerm = check2WordsPattern(tokensArray[i], tokensArray[i + 1]) ;
+                    String temp_token1= cleanToken(tokensArray[i + 1]);
+                    addTerm = check2WordsPattern(tokensArray[i], temp_token1) ;
                     if (!addTerm.equals("")) i += 1;
                 }
                 if (addTerm.equals("") && i < tokensArray.length) {
@@ -257,7 +320,7 @@ public class Parse {
             if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -273,7 +336,7 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
             }
                 i++;
         } //end for
