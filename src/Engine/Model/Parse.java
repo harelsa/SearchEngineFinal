@@ -109,7 +109,7 @@ public class Parse {
         tokens = StringUtils.split(text , " \\/");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-       // segmantFile.signToSpecificPartition(AllTerms , currDoc);
+        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -144,7 +144,7 @@ public class Parse {
                         phrase = phrase.append(" " + tokensArray[j]);
                         String phrase_temp  = phrase.toString();
                         phrase_temp = cleanToken(phrase_temp) ;
-                        System.out.println(phrase_temp);
+                        //System.out.println(phrase_temp);
                         if (docTerms.containsKey(phrase_temp)) {
                             Term tmp = docTerms.get(phrase_temp);
                             tmp.advanceTf();
@@ -206,7 +206,7 @@ public class Parse {
                         stop = true;
                         i = j ;
                     }
-                        System.out.println(what_to_add);
+                        //System.out.println(what_to_add);
                         if (docTerms.containsKey(what_to_add)) {
                             Term tmp = docTerms.get(what_to_add);
                             tmp.advanceTf();
@@ -226,7 +226,6 @@ public class Parse {
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
-
             // check stop word
             if (!tokensArray[i].equals( "may") && stopwords.contains(tokensArray[i])) {
                 i += 1;
@@ -320,7 +319,7 @@ public class Parse {
             if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -336,7 +335,7 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
             }
                 i++;
         } //end for
