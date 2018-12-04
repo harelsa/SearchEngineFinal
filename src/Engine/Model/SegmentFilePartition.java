@@ -10,6 +10,7 @@ import java.util.TreeMap;
 public class SegmentFilePartition implements Serializable {
     private BufferedWriter file_buffer_writer;
     private BufferedReader file_buffer_reader;
+    private int counter;
 
     public SegmentFilePartition(String path, char from, char to) {
         String segmantPartitionFilePath = path + "_" + from + "_" + "to" + "_" + to + ".txt";
@@ -28,6 +29,11 @@ public class SegmentFilePartition implements Serializable {
     synchronized public void signNewTerm(Term term) {
         try {
             file_buffer_writer.append(term.lightToString() + "\n");
+            counter++;
+            if (counter > 13000){
+                file_buffer_writer.flush();
+                counter = 0;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -48,6 +54,14 @@ public class SegmentFilePartition implements Serializable {
     public void signDocSection(Document currDoc) {
         try {
             file_buffer_writer.append("<D>" + currDoc.lightToString() +"</D>" + "\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void flushFile() {
+        try {
+            file_buffer_writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

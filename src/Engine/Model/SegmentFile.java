@@ -20,7 +20,7 @@ public class SegmentFile implements Serializable {
     // ('p', 'z');
     // ('z', 'z');
     public SegmentFile(String path) {
-        filePartitions = new SegmentFilePartition[NUM_OF_PARTITATIONS]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
+        filePartitions = new SegmentFilePartition[7]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
         filePartitions[0] = new SegmentFilePartition(path, '0', '9');
         filePartitions[1] = new SegmentFilePartition(path, 'a', 'c');
         filePartitions[2] = new SegmentFilePartition(path, 'd', 'f');
@@ -73,9 +73,17 @@ public class SegmentFile implements Serializable {
                     filePartitions[5].signNewTerm((Term)pair.getValue());
                     break;
                 case 6:
-                    //filePartitions[6].signNewTerm((Term)pair.getValue());
+                    filePartitions[6].signNewTerm((Term)pair.getValue());
                     break;
             }
+        }
+        flushAllPartitions();
+
+    }
+
+    private void flushAllPartitions() {
+        for (int i = 0; i < NUM_OF_PARTITATIONS; i++) {
+            filePartitions[i].flushFile();
         }
     }
 

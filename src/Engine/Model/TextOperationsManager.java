@@ -33,7 +33,6 @@ public class TextOperationsManager {
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
     private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
-    private Posting[] postings = new Posting[NUM_OF_INVERTERS];
     public ArrayList<String> filesPathsList;
     public static ExecutorService parseExecutor;
     public static ExecutorService invertedExecutor;
@@ -140,12 +139,13 @@ public class TextOperationsManager {
         catch (Exception e ){
         }
         //end of parse
-        System.out.println("Starting building Inverted Index");
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        System.out.println("Starting building Inverted Index: " + timeStamp);
         buildInvertedIndex();
         System.out.println("Finished building Inverted Index");
         Indexer.writeDictionariesToDisc();
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        System.out.println("Finish: " + timeStamp);
+        String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        System.out.println("Finish: " + timeStamp1);
 //        try {
 //            //mergeDocsPosting();
 //        } catch (IOException e) {
@@ -158,19 +158,19 @@ public class TextOperationsManager {
     private void buildInvertedIndex() {
         for (int i = 0; i < NUM_OF_INVERTERS; i++) {
 
-            //           inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
+            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
+
+            inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
-            int finalI = i;
-            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
-            invertedExecutor.execute(buildInvertedIndex);
+//            int finalI = i;
+//            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
+//            invertedExecutor.execute(buildInvertedIndex);
         }
         invertedExecutor.shutdown();
         while (!invertedExecutor.isTerminated());
-//       }
 
-//       }
-            System.out.println("done");
+        System.out.println("done");
 
     }
 
