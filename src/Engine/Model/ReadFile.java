@@ -55,7 +55,7 @@ public class ReadFile {
                         text_adding = false ;
                         continue;
                     }
-                    if (  line.startsWith("Language: <F P=105>") || line.equals("<P>") || line.equals("</ P>") ) {
+                    if (  line.equals("<P>") || line.equals("</ P>") ) {
                         line = br.readLine() ;  // start doc
                         continue;
                     }
@@ -72,6 +72,10 @@ public class ReadFile {
                     if (! text_adding ) // add to doc info
                     sb_docInfo.append(line);
                     else sb_text.append(line) ; // add to text
+
+                    if (  line.startsWith("Language: <F P=105>")) // not working
+                        System.out.println(" ???? ");
+                        //add to doc lang !!!
                     //doc date
 //                    if ( line.equals("<DATE1>")){     /// date has diff format in diff docs
 //                        doc_date = get_doc_date( line ) ;

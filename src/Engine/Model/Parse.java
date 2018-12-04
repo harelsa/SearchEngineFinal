@@ -95,7 +95,7 @@ public class Parse {
         termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
-        tokens = StringUtils.split(text , " ");
+        tokens = StringUtils.split(text , " \\/");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
         segmantFile.signToSpecificPartition(AllTerms , currDoc);
@@ -114,16 +114,48 @@ public class Parse {
             String s2 = ((String)(o2)).toLowerCase();
             return s1.compareTo(s2);
         });  // < str_term , obj_term >  // will store all the terms in curpos
-
-        String addTerm ;
+        String addTerm = "" ;
         for (int i = 0; i < tokensArray.length; ) {
 
             addTerm = "" ;
-            if (! tokensArray[i].equals("") && tokensArray[i] != null)
+            //First law - save " phrase" - will be saved as phrase and single words
+            if ( tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
+                int j = i ;
+                StringBuilder phrase = new StringBuilder(tokensArray[j]);
+                j++ ;
+                while ( j < tokensArray.length && ( j - i ) < 6 ) {
+                    if (tokensArray[j].endsWith("\"")) { // end of phrase
+                        phrase = phrase.append(" " + tokensArray[j]);
+                        String phrase_temp  = phrase.toString();
+                        phrase_temp = cleanToken(phrase_temp) ;
+                        System.out.println(phrase_temp);
+                        if (docTerms.containsKey(phrase_temp)) {
+                            Term tmp = docTerms.get(phrase_temp);
+                            tmp.advanceTf();
+                            tmp.addPosition(termPosition);
+                            currDoc.addTerm(tmp);
+                            termPosition++;
+                        } else { // new term
+                            Term obj_term = new Term(termPosition, 1, phrase_temp);
+                            termPosition++;
+                            currDoc.addTerm(obj_term);
+                            docTerms.put(phrase_temp, obj_term);
+                            break;
+                        } // ***** adding to doc terms ****
+                    } else {
+                        phrase = phrase.append(" "+ tokensArray[j]);
+                        j++ ;
+                    }
+
+                }
+            }
+
+            if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
 
+
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
-            if (tokensArray[i].equals("")  || tokensArray[i].equals("") || tokensArray[i].length() < 2  ) {
+            if (tokensArray[i].equals("")  || tokensArray[i].length() < 2  ) { // not a term
                 i += 1;
                 continue;
             }
@@ -141,17 +173,16 @@ public class Parse {
                 addTerm = "" ;
             }
             // check between
-            if ( (tokensArray[i].equals("Between") || tokensArray[i].equals("between") ) && i < tokensArray.length-3  ){
+            if (addTerm.equals("")&& (tokensArray[i].equals("Between") || tokensArray[i].equals("between") ) && i < tokensArray.length-3  ){
                 Matcher bet = BETWEEN.matcher( tokensArray[i+1]+tokensArray[i+2]+tokensArray[i+3] ) ;
                 if ( bet.find()){
                     addTerm = tokensArray[i] +" "+ tokensArray[i+1]+" " + tokensArray[i+2]+" "+ tokensArray[i+3] ;
                     i= i+3 ;
                 }
             }
-
             //  check if its date first ..
 
-            if (!isNumber(tokensArray[i]) && addTerm.equals("") && i < tokensArray.length - 1) {
+            if (addTerm.equals("")&& i < tokensArray.length - 1 && !isNumber(tokensArray[i])  ) {
                 tokensArray[i + 1] = cleanToken(tokensArray[i + 1]);
                 //date - < Month + decimal >
                 Matcher dateFormatMatcher2 = DATE_MONTH_DD.matcher(tokensArray[i].toLowerCase() + " " + tokensArray[i + 1].toLowerCase());
@@ -176,8 +207,6 @@ public class Parse {
                     continue;
                 }
             }
-
-
             //  check if its $ or % ..
 
             if (addTerm.equals("") && (tokensArray[i].startsWith("$") || tokensArray[i].startsWith("%")) && i < tokensArray.length) {
@@ -219,33 +248,21 @@ public class Parse {
                 }
 
             }
-            //System.out.println("Term added: " + cleanToken(tokensArray[i])  );
-
-
-//            // ADD TERM
-//            if (addTerm.equals("")){
-//                System.out.println(" NON MATCH TERM ");
-//                i++ ;
-//                continue;
-//            }
-
             //REGULAR WORD
             if (addTerm.equals("")){
                 if ( !tokensArray [i].equals( "F><F"))
-                addTerm = tokensArray[i] ;
+                    addTerm = tokensArray[i] ;
             }
 
-//            System.out.println(addTerm);
             if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
                 currDoc.addTerm(tmp);
                 termPosition++;
-
             } else { // new term
 
                 // mutex
@@ -256,11 +273,10 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
             }
-            i++;
+                i++;
         } //end for
-
         return docTerms ;
     }
 
@@ -294,7 +310,7 @@ public class Parse {
         boolean changed = true  ;
         while (  token != null  && token.length() >0  &&!token.equals("") && changed ) {
             changed = false;
-             s = new StringBuilder(token);
+            s = new StringBuilder(token);
             if (specialchars.contains(""+s.charAt(0))) {
                 s.deleteCharAt(0);
                 token = s.toString() ;
@@ -321,7 +337,7 @@ public class Parse {
 
         String term;
         String originalToken = token;
-         token = cleanToken(token);
+        token = cleanToken(token);
         // < $number >
 
         if (token.startsWith("$")) {
