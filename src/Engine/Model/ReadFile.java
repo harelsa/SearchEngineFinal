@@ -74,7 +74,7 @@ public class ReadFile {
                     else sb_text.append(line) ; // add to text
 
                     if (  line.startsWith("Language: <F P=105>")) // not working
-                        System.out.println(" ???? ");
+                        //System.out.println(" ???? ");
                         //add to doc lang !!!
                     //doc date
 //                    if ( line.equals("<DATE1>")){     /// date has diff format in diff docs

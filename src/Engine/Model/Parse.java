@@ -128,7 +128,7 @@ public class Parse {
                         phrase = phrase.append(" " + tokensArray[j]);
                         String phrase_temp  = phrase.toString();
                         phrase_temp = cleanToken(phrase_temp) ;
-                        System.out.println(phrase_temp);
+                        //System.out.println(phrase_temp);
                         if (docTerms.containsKey(phrase_temp)) {
                             Term tmp = docTerms.get(phrase_temp);
                             tmp.advanceTf();
@@ -257,7 +257,7 @@ public class Parse {
             if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -273,7 +273,7 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
             }
                 i++;
         } //end for

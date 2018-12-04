@@ -11,6 +11,7 @@ import java.net.URLConnection;
 import java.sql.Array;
 import java.sql.Statement;
 import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -143,6 +144,8 @@ public class TextOperationsManager {
         buildInvertedIndex();
         System.out.println("Finished building Inverted Index");
         Indexer.writeDictionariesToDisc();
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        System.out.println("Finish: " + timeStamp);
 //        try {
 //            //mergeDocsPosting();
 //        } catch (IOException e) {
