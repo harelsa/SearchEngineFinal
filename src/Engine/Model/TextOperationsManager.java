@@ -49,7 +49,7 @@ public class TextOperationsManager {
     public TextOperationsManager(String curposPath) {
         this.reader = new ReadFile();
         initParsers();
-        initInverters();
+        //initInverters();
         this.curposPath = curposPath;
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
@@ -141,7 +141,7 @@ public class TextOperationsManager {
 
         }
         //end of parse
-        buildInvertedIndex();
+       // buildInvertedIndex();
 //        try {
 //            //mergeDocsPosting();
 //        } catch (IOException e) {
