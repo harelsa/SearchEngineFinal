@@ -87,13 +87,13 @@ public class Main extends Application {
 //        HashMap<String, Term> allTerms, Document currDoc
 
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Downloads\\corpus-split");
-        // TextOperationsManager textOperationsManager = new TextOperationsManager("C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus");
+         //TextOperationsManager textOperationsManager = new TextOperationsManager("C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus");
         //TextOperationsManager textOperationsManager = new TextOperationsManager("D:\\documents\\users\\bardanad\\corpus\\test");
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
-         //textOperationsManager.StartTextOperations();
+        // textOperationsManager.StartTextOperations();
         //System.out.println("lalal");
         //textOperationsManager.p();
-        //  textOperationsManager.BuildCitiesPosting();
+       //   textOperationsManager.BuildCitiesPosting();
 
 
 

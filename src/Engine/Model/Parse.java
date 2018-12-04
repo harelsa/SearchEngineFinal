@@ -129,6 +129,11 @@ public class Parse {
         for (int i = 0; i < tokensArray.length; ) {
 
             addTerm = "" ;
+
+            if (tokensArray[i].equals("")  || tokensArray[i].length() < 2  ) { // not a term
+                i += 1;
+                continue;
+            }
             //First law - save " phrase" - will be saved as phrase and single words
             if ( tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
                 int j = i ;
@@ -163,26 +168,34 @@ public class Parse {
             }
             // Second law  - save terms of capitals letters - Ashley Cummins Brittingham
             String temp_token = cleanToken(tokensArray[i] ) ;
-            if ( i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
+            if ( temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
                     && !specialchars.contains(tokensArray[i].charAt(tokensArray[i].length()-1)) //check Cummins,
                     && !specialchars.contains(tokensArray[i+1].charAt(0)) // check ,Cummins
-                    && Character.isUpperCase(cleanToken(tokensArray[i+1]).charAt(0)) // check capital of the second word
+                    && cleanToken(tokensArray[i+1]).length()>1
+                    &&Character.isUpperCase(cleanToken(tokensArray[i+1]).charAt(0)) // check capital of the second word
             ){
                 int j = i ;
                 StringBuilder long_term = new StringBuilder();
                 //j++ ;
                  boolean stop = false ;
+                 boolean insert_and_stop = false ;
                  String what_to_add = "";
                 while ( j < tokensArray.length && ( j - i ) < 6 ) {
                     temp_token = cleanToken(tokensArray[j] ) ;
-                    if ( !specialchars.contains(tokensArray[j+1].charAt(0))
-                            && Character.isUpperCase(temp_token.charAt(0))
+                    if (    !insert_and_stop
+                            && tokensArray[j].length() > 1
+                            &&!specialchars.contains(tokensArray[j].charAt(0))
+                            && temp_token.length() > 1
+                            &&Character.isUpperCase(temp_token.charAt(0))
                             && ( j < tokensArray.length-1
                             && !(months.contains(tokensArray[j]) && isNumber(tokensArray[j+1])))
                     ){  // add one word term
                         long_term = long_term.append(temp_token + " ");
                         what_to_add = temp_token ;
+                        if ( specialchars.contains(tokensArray[j].charAt(tokensArray[j].length()-1))) // end
+                            insert_and_stop = true;
                         j++;
+
                     } else { // end of long term
                         if ( long_term.length() < 2) {
                             i=j ;
@@ -213,10 +226,7 @@ public class Parse {
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
-            if (tokensArray[i].equals("")  || tokensArray[i].length() < 2  ) { // not a term
-                i += 1;
-                continue;
-            }
+
             // check stop word
             if (!tokensArray[i].equals( "may") && stopwords.contains(tokensArray[i])) {
                 i += 1;
