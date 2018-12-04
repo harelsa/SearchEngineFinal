@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.SortedMap;
+import java.util.TreeSet;
 
 public class SegmentFile implements Serializable {
     private SegmentFilePartition[] filePartitions;
@@ -31,7 +32,10 @@ public class SegmentFile implements Serializable {
 
 /* Need to do it concurrent (new thread in parser which calls this method) */
     public void signToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
-
+        if (allTerms.size() == 0)
+            return;
+        Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
+        writeToDocumentPosting.start();
         Iterator it = allTerms.entrySet().iterator();
         signNewDocSection(currDoc);
         while (it.hasNext()) {
@@ -69,7 +73,7 @@ public class SegmentFile implements Serializable {
                     filePartitions[5].signNewTerm((Term)pair.getValue());
                     break;
                 case 6:
-                    filePartitions[6].signNewTerm((Term)pair.getValue());
+                    //filePartitions[6].signNewTerm((Term)pair.getValue());
                     break;
             }
         }

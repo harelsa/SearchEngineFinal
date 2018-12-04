@@ -21,14 +21,14 @@ import java.util.concurrent.Executors;
 public class TextOperationsManager {
     final int NUM_OF_PARSERS = 8;
     final int NUM_OF_SEGMENT_FILES= 8;
-    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 7;
-    final int NUM_OF_INVERTERS = 7;
+    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 6;
+    final int NUM_OF_INVERTERS = 6;
     private static double MILLION = Math.pow(10, 6);
 
 
 
-    ReadFile reader;
-    String curposPath;
+    private ReadFile reader;
+    private String curposPath;
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
     private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
@@ -40,9 +40,6 @@ public class TextOperationsManager {
 
 
 
-    /* FOR TEST ONLY */
-    public static int filesCounter;
-    public static int docsCounter;
     private HashMap<String,String > inveted_city;
 
 
@@ -67,7 +64,7 @@ public class TextOperationsManager {
         Posting termsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Terms\\" + "g_k");
         Posting termsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Terms\\" + "l_p");
         Posting termsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Terms\\" + "q_z");
-        Posting termsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Terms\\" + "z_z");
+        //Posting termsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Terms\\" + "z_z");
 
         Posting docsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Docs\\" + "0_9");
         Posting docsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Docs\\" + "a_c");
@@ -75,7 +72,7 @@ public class TextOperationsManager {
         Posting docsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Docs\\" + "g_k");
         Posting docsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Docs\\" + "l_p");
         Posting docsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Docs\\" + "q_z");
-        Posting docsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Docs\\" + "z_z");
+        //Posting docsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Docs\\" + "z_z");
 
         SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
         SegmentFilePartition[] segmentFilesInverter2 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
@@ -121,7 +118,7 @@ public class TextOperationsManager {
         inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k, docsPostingFile_g_k);
         inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p, docsPostingFile_l_p);
         inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z, docsPostingFile_q_z);
-        inverters[6] = new Indexer(segmentFilesInverter7, termsPostingFile_z_z, docsPostingFile_z_z);
+        //inverters[6] = new Indexer(segmentFilesInverter7, termsPostingFile_z_z, docsPostingFile_z_z);
     }
 
 
@@ -134,14 +131,18 @@ public class TextOperationsManager {
 
     public void StartTextOperations() {
         initFilesPathList(curposPath);
+        Indexer.initIndexer();
+
         try {
             readAndParse();
         }
         catch (Exception e ){
-
         }
         //end of parse
+        System.out.println("Starting building Inverted Index");
         buildInvertedIndex();
+        System.out.println("Finished building Inverted Index");
+        Indexer.writeDictionariesToDisc();
 //        try {
 //            //mergeDocsPosting();
 //        } catch (IOException e) {
@@ -149,68 +150,32 @@ public class TextOperationsManager {
 //        }
     }
 
-    private void mergeDocsPosting() throws IOException {
-        PrintWriter pw = new PrintWriter("src\\Engine\\resources\\Segment Files\\mergesDocsPostingFile.txt");
 
-        // BufferedReader object for file1.txt
-        BufferedReader br1 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/0_9.txt"));
-        BufferedReader br2 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/a_c.txt"));
-        BufferedReader br3 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/d_f.txt"));
-        BufferedReader br4 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/g_k.txt"));
-        BufferedReader br5 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/l_p.txt"));
-        BufferedReader br6 = new BufferedReader(new FileReader("src/Engine/resources/Posting Files/Docs/q_z.txt"));
-
-
-        String line1 = br1.readLine();
-        String line2 = br2.readLine();
-        String line3 = br3.readLine();
-        String line4 = br4.readLine();
-        String line5 = br5.readLine();
-        String line6 = br6.readLine();
-        // loop to copy lnes of
-        // file1.txt and file2.txt
-        // to  file3.txt alternatively
-        while (line1 != null)
-        {
-            pw.println(line1);
-            line1 = br1.readLine();
-            line2 = br2.readLine();
-            line3 = br3.readLine();
-            line4 = br4.readLine();
-            line5 = br5.readLine();
-            line6 = br6.readLine();
-            pw.print(line1 + line2 + line3 + line4 + line5 + line6);
-        }
-
-        pw.flush();
-
-        // closing resources
-        br1.close();
-        br2.close();
-        pw.close();
-
-    }
 
     private void buildInvertedIndex() {
         for (int i = 0; i < NUM_OF_INVERTERS; i++) {
-            int finalI = i;
-            Thread buildInvertedIndex = new Thread(() ->  inverters[finalI%NUM_OF_INVERTERS].buildInvertedIndexes());
-            invertedExecutor.execute(buildInvertedIndex) ;
-//            inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
+
+            //           inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
+            int finalI = i;
+            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
+            invertedExecutor.execute(buildInvertedIndex);
         }
-            invertedExecutor.shutdown();
-            while (!invertedExecutor.isTerminated()) {
-        }
-        System.out.println("done");
+        invertedExecutor.shutdown();
+        while (!invertedExecutor.isTerminated());
+//       }
+
+//       }
+            System.out.println("done");
+
     }
 
     private void readAndParse() throws InterruptedException {
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
             Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
-            parseExecutor.execute(readNParseThread) ;
+            parseExecutor.execute(readNParseThread);
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
         }
@@ -218,9 +183,6 @@ public class TextOperationsManager {
         while (!parseExecutor.isTerminated()) {
 
         }
-
-
-
 
 
     }

@@ -104,6 +104,14 @@ public class Document {
         return sb.toString();
     }
 
+    public int getMaxTF() {
+        return maxFreqTermNumber;
+    }
+
+    public int getNumOfUniqueTerms() {
+        return unique_t;
+    }
+
 
     //private byte[]
 }

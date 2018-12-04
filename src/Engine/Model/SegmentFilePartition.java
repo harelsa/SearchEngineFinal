@@ -8,13 +8,11 @@ import java.util.Hashtable;
 import java.util.TreeMap;
 
 public class SegmentFilePartition implements Serializable {
-    Hashtable<Character, Integer> prefixCharLastWordPositionInFile;
-    BufferedWriter file_buffer_writer;
-    BufferedReader file_buffer_reader;
-    private String segmantPartitionFilePath;
+    private BufferedWriter file_buffer_writer;
+    private BufferedReader file_buffer_reader;
 
     public SegmentFilePartition(String path, char from, char to) {
-        segmantPartitionFilePath = path + "_" + from + "_" + "to" + "_" + to + ".txt";
+        String segmantPartitionFilePath = path + "_" + from + "_" + "to" + "_" + to + ".txt";
         try {
 
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
@@ -29,7 +27,7 @@ public class SegmentFilePartition implements Serializable {
 
     synchronized public void signNewTerm(Term term) {
         try {
-            file_buffer_writer.write(term.lightToString() + "\n");
+            file_buffer_writer.append(term.lightToString() + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -98,7 +98,7 @@ public class Parse {
         tokens = StringUtils.split(text , " ");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-//        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -249,6 +249,7 @@ public class Parse {
             } else { // new term
 
                 // mutex
+                //StringUtils.replaceAll(addTerm, "/'?,", "");
                 Term obj_term = new Term(termPosition, 1, addTerm);
                 termPosition++;
                 currDoc.addTerm(obj_term);

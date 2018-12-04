@@ -59,6 +59,10 @@ public class Term implements Comparable, Serializable {
         return indicateCapital() + content+ "," + tf + "," + location_docs;
     }
 
+    public String postingToString(){
+        return indicateCapital() + content+ "," + tf;
+    }
+
     private String indicateCapital() {
         if (startsWithCapital)
             return "*";
