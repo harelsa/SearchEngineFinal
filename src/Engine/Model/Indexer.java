@@ -53,6 +53,10 @@ public class Indexer {
     private void readDocsFromEachSegmentFile() {
         //TreeMap<String, String> DocToTerms = new TreeMap<>(); // <DocID, list of strings in format: <Term>,<tf>"#"<Term>,<tf>"#"....
         TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
+        TreeMap[] termToDocsArr = new TreeMap[segmentFilePartitions.length];
+        for (int i = 0; i < segmentFilePartitions.length; i++) {
+            termToDocsArr[i] = new TreeMap<>(new TermComparator());
+        }
         for (int i = 0; i < segmentFilePartitions.length; i++) {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Starting to handle: " + "Segment File " + i + " " + timeStamp);
@@ -92,11 +96,11 @@ public class Indexer {
                             sb.append(term).append(",").append(tf).append('#');
                             if (TermToDocs.containsKey(term)) {
                                 String tmp = TermToDocs.get(term);
-                                TermToDocs.put(term, tmp + docNo + "," + tf + "," + locs + "#");
+                                termToDocsArr[i].put(term, tmp + docNo + "," + tf + "," + locs + "#");
                                 checkTermTfFromAnotherDoc(term, docNo, tf);
                             }
                             else {
-                                TermToDocs.put(term, docNo + "," + tf + "," + locs + "#");
+                                termToDocsArr[i].put(term, docNo + "," + tf + "," + locs + "#");
                                 addNewTermToDictionary(term, docNo, tf);
                             }
                             line = segmentFilePartitions[i].readLine();
@@ -108,7 +112,7 @@ public class Indexer {
             }
         }
 
-        termsPosting.writeToTermsPosting(TermToDocs);
+        termsPosting.writeToTermsPosting(termToDocsArr);
 
     }
 
