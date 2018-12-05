@@ -106,10 +106,10 @@ public class Parse {
         termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
-        tokens = StringUtils.split(text , " \\/");
+        tokens = StringUtils.split(text , " ");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+        //segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -129,13 +129,34 @@ public class Parse {
         for (int i = 0; i < tokensArray.length; ) {
 
             addTerm = "" ;
-
-            if (tokensArray[i].equals("")  || tokensArray[i].length() < 2  ) { // not a term
+            boolean is_joint_term = false;
+            if (    !isNumber(cleanToken(tokensArray[i]))
+                    && (tokensArray[i].equals("")  || tokensArray[i].length() < 2 || cleanToken(tokensArray[i]).length() < 2 )) { // not a term
                 i += 1;
                 continue;
             }
+
+            // catch point joint terms
+            String temp_char = cleanToken(tokensArray[i]);
+            if ( (tokensArray[i].length() > 5 && Character.isUpperCase(temp_char.charAt(0)) || Character.isLowerCase(temp_char.charAt(0)))
+                && StringUtils.containsAny( temp_char , "?/\"\\':)([}{=;],.") ) {
+                // break it to single words
+                String[] arr = StringUtils.split(temp_char , "/\"\\:)?([],'.") ;
+
+                tokensArray[i] = StringUtils.join(arr , "." , 1 , arr.length);
+                if ( arr[0].length() > 2 )
+                    addTerm = cleanToken(arr[0]) ;
+                else continue;
+                is_joint_term = true ;
+
+            }
+
+
+
+
+
             //First law - save " phrase" - will be saved as phrase and single words
-            if ( tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
+            if ( addTerm.equals("") &&tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
                 int j = i ;
                 StringBuilder phrase = new StringBuilder(tokensArray[j]);
                 j++ ;
@@ -168,7 +189,7 @@ public class Parse {
             }
             // Second law  - save terms of capitals letters - Ashley Cummins Brittingham
             String temp_token = cleanToken(tokensArray[i] ) ;
-            if ( temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
+            if ( addTerm.equals("") &&temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
                     && !specialchars.contains(tokensArray[i].charAt(tokensArray[i].length()-1)) //check Cummins,
                     && !specialchars.contains(tokensArray[i+1].charAt(0)) // check ,Cummins
                     && cleanToken(tokensArray[i+1]).length()>1
@@ -222,12 +243,12 @@ public class Parse {
                            if ( stop ) break;
                         } // ***** adding to doc terms ****
                 }
-            }
+            }// second law
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
             // check stop word
-            if (!tokensArray[i].equals( "may") && stopwords.contains(tokensArray[i])) {
+            if (addTerm.equals("")&& !tokensArray[i].equals( "may") && stopwords.contains(tokensArray[i])) {
                 i += 1;
                 continue;
             }
@@ -257,9 +278,9 @@ public class Parse {
 
                 }
                 //date - < Month + YYYY >
-                Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher(tokensArray[i].toLowerCase() + " " + temp_token.toLowerCase());
+                Matcher dateFormatMatcherYear = DATE_MONTH_YYYY.matcher(tokensArray[i].toLowerCase() + " " + temp_token1.toLowerCase());
                 if (addTerm.equals("") && dateFormatMatcherYear.find()) {
-                    String term = PairTokensIsDate3Format(tokensArray[i].toLowerCase(), temp_token.toLowerCase());
+                    String term = PairTokensIsDate3Format(tokensArray[i].toLowerCase(), temp_token1.toLowerCase());
                     //System.out.println("Term added: " + term);
                     addTerm = term ;
 
@@ -319,7 +340,7 @@ public class Parse {
             if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -335,8 +356,9 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                //System.out.println(addTerm);
+                System.out.println(addTerm);
             }
+            if ( !is_joint_term)
                 i++;
         } //end for
         return docTerms ;
@@ -523,7 +545,7 @@ public class Parse {
         }
         //date < decimal + Month >
         Matcher dateFormatMatcher = DATE_DD_MONTH.matcher(token1 + " " + token2.toLowerCase());
-        if (dateFormatMatcher.find()) {
+        if (!saved_original.startsWith("$")&& ! saved_original.endsWith("%") && dateFormatMatcher.find()) {
             term = PairTokensIsDateFormat(token1, token2.toLowerCase());
             //System.out.println("Term added: " + term);
             return  term ;
