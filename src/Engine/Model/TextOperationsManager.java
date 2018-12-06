@@ -104,13 +104,6 @@ public class TextOperationsManager {
             segmentFilesInverter7[i] = segmentFiles[i].getSegmentFilePartitions('z', 'z');
         }
 
-//                segmentFilesInverter2[i] = segmentFiles[j].getSegmentFilePartitions('a', 'c');
-//                segmentFilesInverter3[i] = segmentFiles[j].getSegmentFilePartitions('d', 'f');
-//                segmentFilesInverter4[i] = segmentFiles[j].getSegmentFilePartitions('g', 'k');
-//                segmentFilesInverter5[i] = segmentFiles[j].getSegmentFilePartitions('l', 'p');
-//                segmentFilesInverter6[i] = segmentFiles[j].getSegmentFilePartitions('q', 'z');
-//                segmentFilesInverter7[i] = segmentFiles[j].getSegmentFilePartitions('z', 'z');
-
 
         inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9, docsPostingFile_0_9);
         inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c, docsPostingFile_a_c);
@@ -118,7 +111,6 @@ public class TextOperationsManager {
         inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k, docsPostingFile_g_k);
         inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p, docsPostingFile_l_p);
         inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z, docsPostingFile_q_z);
-        //inverters[6] = new Indexer(segmentFilesInverter7, termsPostingFile_z_z, docsPostingFile_z_z);
     }
 
 
@@ -151,12 +143,6 @@ public class TextOperationsManager {
         System.out.println("Finished building Inverted Index");
         Indexer.writeDictionariesToDisc();
         String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-        System.out.println("Finish: " + timeStamp1);
-//        try {
-//            //mergeDocsPosting();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
 
@@ -166,12 +152,13 @@ public class TextOperationsManager {
 
             System.out.println("inverter : " + i%NUM_OF_INVERTERS);
 
-            inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
+            //inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
 //            int finalI = i;
-//            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
-//            invertedExecutor.execute(buildInvertedIndex);
+            int finalI = i;
+            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
+            invertedExecutor.execute(buildInvertedIndex);
         }
         invertedExecutor.shutdown();
         while (!invertedExecutor.isTerminated());

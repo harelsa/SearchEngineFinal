@@ -139,9 +139,9 @@ public class Parse {
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
             if ( (tokensArray[i].length() > 5 && Character.isUpperCase(temp_char.charAt(0)) || Character.isLowerCase(temp_char.charAt(0)))
-                    && StringUtils.containsAny( temp_char , "?/\"\\':)([}{=;],.") ) {
+                    && StringUtils.containsAny( temp_char , "?/\"\\':)([}|{=;]!,.<>") ) {
                 // break it to single words
-                String[] arr = StringUtils.split(temp_char , "/\"\\:)?([],'.") ;
+                String[] arr = StringUtils.split(temp_char , "/\"\\:)?(|;!=}{[],'.<>") ;
 
                 tokensArray[i] = StringUtils.join(arr , "." , 1 , arr.length);
                 if ( arr[0].length() > 2 )
