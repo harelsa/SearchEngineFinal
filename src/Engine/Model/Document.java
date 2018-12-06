@@ -1,5 +1,7 @@
 package Engine.Model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -100,7 +102,7 @@ public class Document {
         StringBuilder sb = new StringBuilder();
         sb.append(docNo).append(",").append(parentFileName)
                 .append(",").append(city).append(",").append(maxFreqTermNumber).append(",")
-                    .append(getFreqTermContent()).append(",").append(unique_t);
+                .append(getFreqTermContent()).append(",").append(unique_t);
         return sb.toString();
     }
 
@@ -110,6 +112,17 @@ public class Document {
 
     public int getNumOfUniqueTerms() {
         return unique_t;
+    }
+
+    public String getCity() {
+        if (city != null){
+            String[] splitedCity = StringUtils.split(city, " ");
+            if (splitedCity.length > 0)
+                return splitedCity[0].toUpperCase();
+            else
+                return city.toUpperCase();
+        }
+        return "";
     }
 
 

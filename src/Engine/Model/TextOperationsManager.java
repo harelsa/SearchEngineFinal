@@ -134,7 +134,13 @@ public class TextOperationsManager {
         Indexer.initIndexer();
 
         try {
+            String startParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            System.out.println("Starting parsing: " + startParseTimeStamp);
             readAndParse();
+            String finishParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            System.out.println("Finish parsing: " + finishParseTimeStamp);
+
+
         }
         catch (Exception e ){
         }
@@ -251,17 +257,17 @@ public class TextOperationsManager {
     public void getCitiesInfo (){
 //        for (Map.Entry<String, City> entry : cities.entrySet())
 //        {
-            //System.out.println(entry.getKey() + "/" + entry.getValue());
-            try {
-               // System.out.println(getText(entry.getKey()));
-                //get hash maps
-                getCitiesState();
-                getCitiesPopulation() ;
-                getCitiesCurrencies() ;
-            }
-            catch (Exception e ){
-                System.out.println(e.getCause());
-            }
+        //System.out.println(entry.getKey() + "/" + entry.getValue());
+        try {
+            // System.out.println(getText(entry.getKey()));
+            //get hash maps
+            getCitiesState();
+            getCitiesPopulation() ;
+            getCitiesCurrencies() ;
+        }
+        catch (Exception e ){
+            System.out.println(e.getCause());
+        }
 //        }
 
 
@@ -292,43 +298,43 @@ public class TextOperationsManager {
         String inputLine;
         inputLine = in.readLine() ;
         //while (() != null) {
-            //response.append(inputLine);
-            String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
-                for ( int i= 0 ; i < splited.length-3; ) {
-                    String s =  splited[i] ;
-                    if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
-                        i++;
-                        continue;
-                    }
-                    //String[] splited_split = StringUtils.split(inputLine,"") ;
+        //response.append(inputLine);
+        String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
+        for ( int i= 0 ; i < splited.length-3; ) {
+            String s =  splited[i] ;
+            if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
+                i++;
+                continue;
+            }
+            //String[] splited_split = StringUtils.split(inputLine,"") ;
 
-                    String state = splited[i];
-                    String city = splited[i+2];
-                    String first_part = "" ;
-                    if ( city.contains(" ") ) // 2 word city
-                        first_part = city.split(" ")[0];
-                    if (cities.containsKey(city) || cities.containsKey(first_part)) {
-                        City city_obj = cities.get(city);
-                        if (city_obj == null )
-                            city_obj = cities.get(first_part) ;
-                        if ( city_obj == null ) {
-                            i=i+3 ;
-                            continue;
-                        }
-                        try {
-                            city_obj.setState_name(state);
-                            inveted_city.put(state, city);
-                            cities.put(s, city_obj);
-                        }
-                        catch (Exception e ){
-                            System.out.println(city + " : " + state);
-                        }
-
-                    }
-                    i=i+3;
+            String state = splited[i];
+            String city = splited[i+2];
+            String first_part = "" ;
+            if ( city.contains(" ") ) // 2 word city
+                first_part = city.split(" ")[0];
+            if (cities.containsKey(city) || cities.containsKey(first_part)) {
+                City city_obj = cities.get(city);
+                if (city_obj == null )
+                    city_obj = cities.get(first_part) ;
+                if ( city_obj == null ) {
+                    i=i+3 ;
+                    continue;
+                }
+                try {
+                    city_obj.setState_name(state);
+                    inveted_city.put(state, city);
+                    cities.put(s, city_obj);
+                }
+                catch (Exception e ){
+                    System.out.println(city + " : " + state);
                 }
 
-           // }
+            }
+            i=i+3;
+        }
+
+        // }
 
         in.close();
 
@@ -349,7 +355,7 @@ public class TextOperationsManager {
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(
                         con.getInputStream()));
-       //StringBuilder response = new StringBuilder();
+        //StringBuilder response = new StringBuilder();
         String inputLine;
         inputLine = in.readLine() ;
         String[] splited = StringUtils.split(inputLine,"[]}{:\"") ;
@@ -365,21 +371,21 @@ public class TextOperationsManager {
             String first_part = "" ;
 
             if (inveted_city.containsKey(state) ) {
-               String city = inveted_city.get(state);
+                String city = inveted_city.get(state);
 
-                    City city_obj = cities.get(city); // try 1 word city first
-                    if (city_obj == null) {
-                        first_part = city.split(" ")[0];// try 2 words city
-                        city_obj = cities.get(first_part);
-                    }
+                City city_obj = cities.get(city); // try 1 word city first
+                if (city_obj == null) {
+                    first_part = city.split(" ")[0];// try 2 words city
+                    city_obj = cities.get(first_part);
+                }
                 //round num
                 int num = Integer.parseInt(population);
                 try {
-                if ( Parse.isNumber( population ) && num > MILLION ){
+                    if ( Parse.isNumber( population ) && num > MILLION ){
 
-                    double num_d = round_num ( num ) ;
-                    population =  "M" + Double.toString(num_d) ;
-                }
+                        double num_d = round_num ( num ) ;
+                        population =  "M" + Double.toString(num_d) ;
+                    }
                     city_obj.setPopulation(population);
                     cities.put(s, city_obj);
                 }

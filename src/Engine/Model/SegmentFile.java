@@ -30,7 +30,7 @@ public class SegmentFile implements Serializable {
         filePartitions[6] = new SegmentFilePartition(path, 'z', 'z');
     }
 
-/* Need to do it concurrent (new thread in parser which calls this method) */
+    /* Need to do it concurrent (new thread in parser which calls this method) */
     public void signToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
         if (allTerms.size() == 0)
             return;
@@ -42,8 +42,8 @@ public class SegmentFile implements Serializable {
             HashMap.Entry pair = (HashMap.Entry)it.next();
             String term = (String) pair.getKey();
             if ( STEMMING ) {
-               // String[] s = {"d:\\documents\\users\\harelsa\\Downloads\\corpus\\stem.txt"}  ;
-               // stemmer.main(s);
+                // String[] s = {"d:\\documents\\users\\harelsa\\Downloads\\corpus\\stem.txt"}  ;
+                // stemmer.main(s);
                 Stemmer stemmer = new Stemmer() ;
                 stemmer.add(term.toCharArray(), term.length());
                 String stemmed = "";

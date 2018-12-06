@@ -109,7 +109,7 @@ public class Parse {
         tokens = StringUtils.split(text , " ");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        //segmantFile.signToSpecificPartition(AllTerms , currDoc);
+        segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -139,9 +139,9 @@ public class Parse {
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
             if ( (tokensArray[i].length() > 5 && Character.isUpperCase(temp_char.charAt(0)) || Character.isLowerCase(temp_char.charAt(0)))
-                && StringUtils.containsAny( temp_char , "?/\"\\':)([}|{=;]!,.") ) {
+                    && StringUtils.containsAny( temp_char , "?/\"\\':)([}{=;],.") ) {
                 // break it to single words
-                String[] arr = StringUtils.split(temp_char , "/\"\\:)?(|;!=}{[],'.") ;
+                String[] arr = StringUtils.split(temp_char , "/\"\\:)?([],'.") ;
 
                 tokensArray[i] = StringUtils.join(arr , "." , 1 , arr.length);
                 if ( arr[0].length() > 2 )
@@ -194,13 +194,13 @@ public class Parse {
                     && !specialchars.contains(tokensArray[i+1].charAt(0)) // check ,Cummins
                     && cleanToken(tokensArray[i+1]).length()>1
                     &&Character.isUpperCase(cleanToken(tokensArray[i+1]).charAt(0)) // check capital of the second word
-            ){
+                    ){
                 int j = i ;
                 StringBuilder long_term = new StringBuilder();
                 //j++ ;
-                 boolean stop = false ;
-                 boolean insert_and_stop = false ;
-                 String what_to_add = "";
+                boolean stop = false ;
+                boolean insert_and_stop = false ;
+                String what_to_add = "";
                 while ( j < tokensArray.length && ( j - i ) < 6 ) {
                     temp_token = cleanToken(tokensArray[j] ) ;
                     if (    !insert_and_stop
@@ -210,7 +210,7 @@ public class Parse {
                             &&Character.isUpperCase(temp_token.charAt(0))
                             && ( j < tokensArray.length-1
                             && !(months.contains(tokensArray[j]) && isNumber(tokensArray[j+1])))
-                    ){  // add one word term
+                            ){  // add one word term
                         long_term = long_term.append(temp_token + " ");
                         what_to_add = temp_token ;
                         if ( specialchars.contains(tokensArray[j].charAt(tokensArray[j].length()-1))) // end
@@ -223,25 +223,25 @@ public class Parse {
                             break;
                         }
                         what_to_add  = long_term.toString();
-                       what_to_add = cleanToken(what_to_add) ;
+                        what_to_add = cleanToken(what_to_add) ;
                         stop = true;
                         i = j ;
                     }
-                        //System.out.println(what_to_add);
-                        if (docTerms.containsKey(what_to_add)) {
-                            Term tmp = docTerms.get(what_to_add);
-                            tmp.advanceTf();
-                            tmp.addPosition(termPosition);
-                            currDoc.addTerm(tmp);
-                            termPosition++;
-                           if ( stop) break;
-                        } else { // new term
-                            Term obj_term = new Term(termPosition, 1,what_to_add);
-                            termPosition++;
-                            currDoc.addTerm(obj_term);
-                            docTerms.put( what_to_add, obj_term);
-                           if ( stop ) break;
-                        } // ***** adding to doc terms ****
+                    //System.out.println(what_to_add);
+                    if (docTerms.containsKey(what_to_add)) {
+                        Term tmp = docTerms.get(what_to_add);
+                        tmp.advanceTf();
+                        tmp.addPosition(termPosition);
+                        currDoc.addTerm(tmp);
+                        termPosition++;
+                        if ( stop) break;
+                    } else { // new term
+                        Term obj_term = new Term(termPosition, 1,what_to_add);
+                        termPosition++;
+                        currDoc.addTerm(obj_term);
+                        docTerms.put( what_to_add, obj_term);
+                        if ( stop ) break;
+                    } // ***** adding to doc terms ****
                 }
             }// second law
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
@@ -340,7 +340,7 @@ public class Parse {
             if ( addTerm.equals("")){ i++; continue;}
 
             if (docTerms.containsKey(addTerm)) {
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -356,7 +356,7 @@ public class Parse {
                 docTerms.put(addTerm, obj_term);
                 //obj_term.addDoc(currDoc);
                 //obj_term.addDoc(currDoc);
-                System.out.println(addTerm);
+                //System.out.println(addTerm);
             }
             if ( !is_joint_term)
                 i++;

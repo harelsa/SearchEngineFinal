@@ -91,7 +91,7 @@ public class ReadFile {
                            continue;
                        }
                        int i = 4 ;
-                        docCity = arr [3] ; // only the first word between tags
+                        docCity = arr [2] ; // only the first word between tags
                        this.cities.put( docCity , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
