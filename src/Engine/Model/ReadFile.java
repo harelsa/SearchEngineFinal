@@ -48,6 +48,7 @@ public class ReadFile {
             String docNo = "" ;
             String docCity = "" ;
             String doc_date = "" ;
+            String doc_Headline = "";
             while ((line = br.readLine()) != null) {
                 while (line != null && !line.equals("</DOC>") && !line.equals("</TEXT>")) {
                     if (line.equals("<DOC>")) {
@@ -73,9 +74,11 @@ public class ReadFile {
                     sb_docInfo.append(line);
                     else sb_text.append(line) ; // add to text
 
-                    if (  line.startsWith("Language: <F P=105>")) // not working
-                        //System.out.println(" ???? ");
-                        //add to doc lang !!!
+//                    if ( !text_adding && (line.startsWith("<HEADLINE>") || StringUtils.starline.startsWith("<H3>")))
+//                        while ( (line = br.readLine()) != null )
+//                            if ( !line.startsWith("<"))
+//                                doc_Headline = line.toString() ;
+
                     //doc date
 //                    if ( line.equals("<DATE1>")){     /// date has diff format in diff docs
 //                        doc_date = get_doc_date( line ) ;
