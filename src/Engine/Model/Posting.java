@@ -91,10 +91,8 @@ public class Posting {
                     if (key.charAt(0) == '*' && key.length() > 1) {
                         key = StringUtils.substring(key, 1);
                         if (!ifTermStartsWithCapital.containsKey(key))
-                            ifTermStartsWithCapital.put(StringUtils.substring(key, 1), true);
-                    }
-
-                    else if (key.charAt(0) != '*'){
+                            ifTermStartsWithCapital.put(key, true);
+                    } else if (key.charAt(0) != '*') {
                         ifTermStartsWithCapital.put(key, false);
                     }
 
@@ -104,20 +102,18 @@ public class Posting {
                     } else {
                         tmp.put(key, value);
                     }
-                    if (it.hasNext()){
-                        pair = (Map.Entry)it.next();
+                    if (it.hasNext()) {
+                        pair = (Map.Entry) it.next();
                         key = pair.getKey().toString();
                         value = pair.getValue().toString();
-                    }
-                    else
+                    } else
                         break;
                 }
                 //termDocs[j] = termDocs[j].subMap(key, true, termDocs[j].lastKey(), true);
             }
 
-            Iterator it = tmp.entrySet().iterator();
-            while (it.hasNext()) {
-                Map.Entry pair = (Map.Entry) it.next();
+            for (Object o : tmp.entrySet()) {
+                Map.Entry pair = (Map.Entry) o;
                 String listOfTermDocs = pair.getValue().toString();
                 String docMostTermFreq = getMostFreqDoc(listOfTermDocs);
                 String[] splitedValue = StringUtils.split(docMostTermFreq, ",");
@@ -125,25 +121,18 @@ public class Posting {
                 int df = getDf(listOfTermDocs);
                 String key = pair.getKey().toString();
 
-                //String currDicValue = Indexer.terms_dictionary.get(key);
 
                 // Filtering low tf & df terms
-                if ((df == 1 && tf < 3) || (key.length() == 1 && !Character.isDigit(key.charAt(i)))){
+                if ((df == 1 && tf < 3) || (key.length() == 1 && !Character.isDigit(key.charAt(i)))) {
                     continue;
                 }
 
-                if (key.charAt(0) == '*' && key.length() > 1){
-                    key = StringUtils.substring(key, 1);
-                    if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key)){
-                        key = key.toUpperCase();
-                        Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
-                    }
-                }
-                else
-                    Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
+                if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key))
+                    key = key.toUpperCase();
+                Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
+                pointer += 2;
 
                 //Indexer.terms_dictionary.put(key, currDicValue + df + "," + pointer);
-                pointer += 2;
                 try {
                     terms_buffer_writer.append(key).append(String.valueOf('\n'));
                     counter++;
@@ -171,8 +160,8 @@ public class Posting {
         String docNoOfMax = "";
         for (int i = 0; i < docs.length; i++) {
             String[] splited = StringUtils.split(docs[i], ",");
-            int tmp =  Integer.parseInt(splited[1]);
-            if (tmp > maxTf){
+            int tmp = Integer.parseInt(splited[1]);
+            if (tmp > maxTf) {
                 maxTf = tmp;
                 docNoOfMax = splited[0];
             }
