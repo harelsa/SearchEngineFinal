@@ -499,7 +499,7 @@ public class Parse {
             String temp = "";
             BigDecimal value = new BigDecimal(0);
             temp = token1.replace("$", "");
-
+            temp = cleanToken(temp) ;
             if (token2.equals("billion")) {
                 temp = temp.replaceAll("," , "");
                 if (isNumber(temp)) value = new BigDecimal(Double.parseDouble(temp) * BILLION);
@@ -538,7 +538,7 @@ public class Parse {
 
         // check <decimal + NumberSize >
         Matcher numberSizeMatcher = NUMBER_ADDS.matcher(token1 + " " + token2);
-        if (numberSizeMatcher.find()) {
+        if (isNumber(token1) && numberSizeMatcher.find()) {
             term = PairTokensIsNumberFormat(token1, token2);
             //System.out.println("Term added: " +term);
             return  term ;

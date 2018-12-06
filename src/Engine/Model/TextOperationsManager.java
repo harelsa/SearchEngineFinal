@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TextOperationsManager {
+public class TextOperationsManager extends  Observable{
     final int NUM_OF_PARSERS = 8;
     final int NUM_OF_SEGMENT_FILES= 8;
     final int NUM_OF_SEGMENT_FILE_PARTITIONS= 6;
@@ -121,7 +121,9 @@ public class TextOperationsManager {
         }
     }
 
-    public void StartTextOperations() {
+    public void StartTextOperations(String user_curposPath , String user_PostingPath , boolean use_stemming) {
+        //System.out.println(user_curposPath);
+        //System.out.println(user_PostingPath);
         initFilesPathList(curposPath);
         Indexer.initIndexer();
 
@@ -486,6 +488,12 @@ public class TextOperationsManager {
         in.close();
 
         return null ;
+    }
+
+    public void showDic() {
+    }
+
+    public void laodDicToMemory() {
     }
 
     //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");

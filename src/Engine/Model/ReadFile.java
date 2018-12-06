@@ -56,7 +56,7 @@ public class ReadFile {
                         text_adding = false ;
                         continue;
                     }
-                    if (  line.equals("<P>") || line.equals("</ P>") ) {
+                    if (  line.equals("<P>") || line.equals("</ P>") || line.equals("<TP>") || line.equals("</ TP>") || line.equals("</P>")) {
                         line = br.readLine() ;  // start doc
                         continue;
                     }
@@ -69,6 +69,14 @@ public class ReadFile {
                        String[] temp =  StringUtils.split(line , "><");
                        line = temp[1] ;
                     }
+
+                    if (line.contains("P>")){
+                        String[] temp = StringUtils.split(line , ">") ;
+                        if ( temp.length > 1)
+                        line = temp [1] ;
+                    }
+
+
 
                     if (! text_adding ) // add to doc info
                     sb_docInfo.append(line);
