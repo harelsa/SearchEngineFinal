@@ -13,9 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
@@ -25,6 +23,7 @@ public class ReadFile {
     ExecutorService executor;
 
     ConcurrentHashMap< String ,City> cities = new ConcurrentHashMap<>() ; // save all the doc info cities
+    ConcurrentSkipListSet< String  > languages = new ConcurrentSkipListSet<>(); // save all docs lang
 
     public ReadFile() {
         executor = Executors.newFixedThreadPool(8);
@@ -47,6 +46,7 @@ public class ReadFile {
             StringBuilder sb_text = new StringBuilder();
             String docNo = "" ;
             String docCity = "" ;
+            String doc_language = "" ;
             String doc_date = "" ;
             String doc_Headline = "";
             while ((line = br.readLine()) != null) {
@@ -82,15 +82,7 @@ public class ReadFile {
                     sb_docInfo.append(line);
                     else sb_text.append(line) ; // add to text
 
-//                    if ( !text_adding && (line.startsWith("<HEADLINE>") || StringUtils.starline.startsWith("<H3>")))
-//                        while ( (line = br.readLine()) != null )
-//                            if ( !line.startsWith("<"))
-//                                doc_Headline = line.toString() ;
 
-                    //doc date
-//                    if ( line.equals("<DATE1>")){     /// date has diff format in diff docs
-//                        doc_date = get_doc_date( line ) ;
-//                    }
                     // CITY
                     if (line.startsWith("<F P=104>")){
                        String[] arr = StringUtils.split(line , " ");
@@ -103,6 +95,15 @@ public class ReadFile {
                        this.cities.put( docCity , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
+                    // Doc Language
+                    if (line.contains("<F P=105>")) {
+                        int k = 0;
+                        String[] arr = StringUtils.split(line, "> <");
+                        while (k < arr.length && !arr[k].equals("P=105")) k++;
+                        doc_language = arr[k + 1];
+                        doc_language = doc_language.toUpperCase();
+                        languages.add(doc_language) ;
+                    }
                     // Doc num
                     if (line.startsWith("<DOCNO>")){
                         String[] arr = StringUtils.split( line , " ");
@@ -113,7 +114,7 @@ public class ReadFile {
                 }
                 //sb_docInfo.append(line);
                 String text = sb_text.toString();
-                Document doc = new Document(docNo, parentFileName , docCity );
+                Document doc = new Document(docNo, parentFileName , docCity , doc_language );
 
 
                 sb_docInfo.delete(0, sb_docInfo.length());
@@ -170,7 +171,13 @@ public class ReadFile {
         return cities;
     }
 
-
+    /**
+     * get all doc lang
+     * @return
+     */
+    public  String[] getLanguagesList() {
+        return (String[])languages.toArray();
+    }
 //    private ArrayList<Pair<String, String>> splitDocumentsFromFile(String fileContent) {
 //        ArrayList<Pair<String, String>> doNODocument = new ArrayList<>();
 //        String[] fileDocuments = fileContent.split("</DOC>");
