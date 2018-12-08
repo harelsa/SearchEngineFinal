@@ -3,15 +3,21 @@ package Engine.View;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Observable;
+import java.util.Optional;
 
 public class View extends Observable  {
     @FXML
@@ -19,6 +25,10 @@ public class View extends Observable  {
     public javafx.scene.control.TextField posting_txt_field;
     public javafx.scene.control.CheckBox check_stemming;
     public javafx.scene.control.ChoiceBox lang_list;
+    public javafx.scene.control.Button show_dic_btn;
+    public javafx.scene.control.Button load_dic_btn;
+    public javafx.scene.control.Button reset_btn;
+    public javafx.scene.layout.AnchorPane anchore_pane;
 
 
     private Scene scene;
@@ -58,7 +68,10 @@ public class View extends Observable  {
         else {
             setChanged();
             notifyObservers("run");
-        }
+            load_dic_btn.setDisable(false );
+            show_dic_btn.setDisable(false );
+            reset_btn.setDisable(false);
+            }
 
     }
 
@@ -74,5 +87,36 @@ public class View extends Observable  {
         ArrayList<String> lang = new ArrayList<String>(Arrays.asList(list_lang));
         ObservableList<String> list = FXCollections.observableArrayList(lang);
         lang_list.setItems(list);
+    }
+
+
+    public  void show_dic_pressed() throws Exception{
+        Stage secondaryStage = new Stage();
+        ScrollPane  sp =  new ScrollPane();
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("dic_view.fxml"));
+        Parent root = fxmlLoader.load();
+        secondaryStage.setTitle("Dic view");
+        Scene scene = new Scene(root, 600, 600) ;
+        secondaryStage.setScene(scene);
+        //need to load dic
+        secondaryStage.show();
+
+
+    }
+
+    public void reset_btn_pressed() {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Reset");
+        alert.setHeaderText("Are you sure ? ");
+        alert.setContentText (" This will reset all the posting files and Dictionaries that saved . ");
+        Optional<ButtonType> option = alert.showAndWait();
+        if ( ButtonType.OK.equals(option.get())){
+            //System.out.println("dsad");
+            notifyObservers("reset");
+        }else {
+
+        }
+
+
     }
 }

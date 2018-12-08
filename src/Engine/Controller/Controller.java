@@ -25,6 +25,9 @@ public class Controller extends Observable implements Observer {
                 case "load_to_memory":
                     model.loadDicToMemory();
                     break;
+                    case "reset":
+                    model.resetAll();
+                    break;
 
                 default:
                     System.out.println("no match");
