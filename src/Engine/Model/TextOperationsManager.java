@@ -36,6 +36,8 @@ public class TextOperationsManager {
 
 
 
+
+
     private HashMap<String,String > inverted_city;
 
 
@@ -125,7 +127,7 @@ public class TextOperationsManager {
         }
     }
 
-    public  String[] StartTextOperations() {
+    public void StartTextOperations() {
         initFilesPathList(curposPath);
         Indexer.initIndexer(postingPath);
 
@@ -154,7 +156,7 @@ public class TextOperationsManager {
         }
         //String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
-        return null ; //return info
+        //return null ; //return info
     }
 
     private void closeAllSegmentFiles() {

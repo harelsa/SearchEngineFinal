@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Engine.View.View">
+<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Engine.View.View">
     <children>
         <Pane layoutY="1.0" prefHeight="435.0" prefWidth="600.0">
             <children>
@@ -34,7 +34,7 @@
                 </GridPane>
                 <Label layoutX="20.0" layoutY="51.0" text="Corpus Path:" />
                 <Label layoutX="20.0" layoutY="103.0" text="Posting Path : " />
-                <CheckBox fx:id="check_stemming" layoutX="282.0" layoutY="252.0" mnemonicParsing="false" text="Use Stemming" />
+                <CheckBox fx:id="check_stemming" layoutX="282.0" layoutY="252.0" mnemonicParsing="false" onAction="#updatePaths" text="Use Stemming" />
                 <Button fx:id="run_btn" layoutX="172.0" layoutY="244.0" mnemonicParsing="false" onAction="#run_btn_pressed" prefHeight="41.0" prefWidth="86.0" text="Run" />
                 <ChoiceBox fx:id="lang_list" disable="true" layoutX="150.0" layoutY="194.0" prefWidth="150.0" />
                 <Label layoutX="44.0" layoutY="199.0" text="Languege:" />

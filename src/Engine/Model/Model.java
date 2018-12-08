@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -11,33 +12,43 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.io.IOException;
 import java.util.Observable;
+import java.util.concurrent.TimeUnit;
 
 public class Model extends Observable {
-    String corpusPath;
-    String postingPath ;
-    boolean is_stemming ;
+    private String corpusPath;
+    private String postingPath ;
+    private boolean is_stemming ;
     public String [] list_lang ;
-    //String postingPath = "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources";
     HashMap < String , String[] > termDictionary = new HashMap<>();
 
     public void run(String corpusPath, String postingPath, boolean stemming) {
+        long startTime = System.currentTimeMillis();
         this.corpusPath = corpusPath;
         this.postingPath = postingPath;
         this.is_stemming = stemming ;
-        //System.out.println("posting: " + postingPath);
         TextOperationsManager textOperationsManager = new TextOperationsManager(corpusPath, postingPath, stemming);
-        String[] buildInfo = textOperationsManager.StartTextOperations(); // will start build & return info : num of doc , num of terms , runtime
+        textOperationsManager.StartTextOperations(); // will start build & return info : num of doc , num of terms , runtime
         textOperationsManager.BuildCitiesPosting();
+        int uniqueTerms = Indexer.terms_dictionary.size();
+        int docsGenerate = Indexer.docs_dictionary.size();
         Indexer.writeDictionariesToDisc();
-
-
+        long estimatedTime = System.currentTimeMillis() - startTime;
+        String summery = getSummary(estimatedTime, uniqueTerms, docsGenerate);
         list_lang = textOperationsManager.getDocLang();
         setChanged();
         notifyObservers("finished");
-        if (buildInfo != null)
-            JOptionPane.showMessageDialog(null, buildInfo.toString(), "Build Info", JOptionPane.INFORMATION_MESSAGE);
+        JOptionPane.showMessageDialog(null, summery, "Build Info", JOptionPane.INFORMATION_MESSAGE);
 
     }
+
+    private String getSummary(long estimatedTime, int uniqueTerms, int docsGenerate) {
+        long runTime = TimeUnit.MILLISECONDS.toSeconds(estimatedTime);
+        String ans = uniqueTerms + " Unique Terms" + "\n";
+        ans += docsGenerate + " Docs Indexed" + "\n";
+        ans += "Total Runtime: " + runTime + "\n";
+        return ans;
+    }
+
 
     public void showDic() {
     }
