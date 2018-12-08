@@ -154,6 +154,19 @@ public class View extends Observable {
     public void updatePaths(){
         setChanged();
         notifyObservers("update_path");
+        if ( posting_txt_field.getText().length() > 0  ) {
+            load_dic_btn.setDisable(false );
+            show_dic_btn.setDisable(false );
+            reset_btn.setDisable (false);
+            lang_list.setDisable(false);
+        }else {
+            load_dic_btn.setDisable(true );
+            show_dic_btn.setDisable(true );
+            reset_btn.setDisable (true);
+            lang_list.setDisable(true);
+        }
+
+
     }
 
     public void load_dic_mem(){

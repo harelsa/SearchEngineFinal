@@ -66,7 +66,7 @@ public class Model extends Observable {
 
         }
         else {
-            JOptionPane.showMessageDialog(null, "Directoy not Exists", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "Posting Directory does not Exists", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -79,6 +79,9 @@ public class Model extends Observable {
                 return deleteDirectory(dir);
             } catch (Exception e) {
             }
+        }else {
+
+            JOptionPane.showMessageDialog(null, "Posting Directory does not Exists", "Error", JOptionPane.ERROR_MESSAGE);
         }
         return false;
     }
