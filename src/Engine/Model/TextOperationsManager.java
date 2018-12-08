@@ -48,11 +48,11 @@ public class TextOperationsManager {
 
     public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
         this.curposPath = curposPath;
-        this.postingPath =  postingPath + "\\Postings";
+        this.postingPath =  postingPath + "\\Postings" + ifStemming(stemming);
         this.stemming = stemming ;
         this.reader = new ReadFile();
-        createDirs(postingPath);
-        Posting.initPosting(postingPath + "\\Postings\\Docs");
+        createDirs(this.postingPath);
+        Posting.initPosting(this.postingPath + "\\Docs");
         initParsers();
         initInverters();
 
@@ -63,11 +63,21 @@ public class TextOperationsManager {
         inveted_city = new HashMap<String , String >() ;
     }
 
+    private String ifStemming(boolean stemming) {
+        if (stemming)
+            return "withStemming";
+        return "";
+    }
+
     private void createDirs(String postingPath) {
-        new File(postingPath + "\\Postings").mkdirs();
-        new File(postingPath + "\\Postings\\Terms").mkdirs();
-        new File(postingPath + "\\Postings\\Docs").mkdirs();
-        new File(postingPath + "\\Postings\\Segment Files").mkdirs();
+//        new File(postingPath + "\\Postings").mkdirs();
+//        new File(postingPath + "\\Postings\\Terms").mkdirs();
+//        new File(postingPath + "\\Postings\\Docs").mkdirs();
+//        new File(postingPath + "\\Postings\\Segment Files").mkdirs();
+        //new File(postingPath + "\\Postings").mkdirs();
+        new File(postingPath + "\\Terms").mkdirs();
+        new File(postingPath + "\\Docs").mkdirs();
+        new File(postingPath + "\\Segment Files").mkdirs();
     }
 
     private void initInverters() {
@@ -226,7 +236,7 @@ public class TextOperationsManager {
     }
 
     private String getSegmentFilePath(int i) {
-        String segmantBaseFilePath = postingPath+ "\\Segment Files";
+        String segmantBaseFilePath = this.postingPath + "\\Segment Files";
         String segmantFilePath = "";
         switch (i) {
             case 0:

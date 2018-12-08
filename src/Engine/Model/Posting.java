@@ -8,27 +8,16 @@ import java.util.*;
 
 public class Posting {
     private String termsPostingPath;
-    private String documentsPostingPath;
     private BufferedWriter terms_buffer_writer;
-    private BufferedReader terms_buffer_reader;
     private static int docsPointer = 1;
     private static int docsCounter = 0;
-    private static FileWriter docPosting_fw;
-    private static FileReader docPosting_fr;
     private static BufferedWriter documents_buffer_writer;
-    private static BufferedReader documents_buffer_reader;
 
     public Posting(String postingsPath) {
         this.termsPostingPath = postingsPath + ".txt";
         //this.documentsPostingPath = documentsPostingPath + ".txt";
         try {
             terms_buffer_writer = new BufferedWriter(new FileWriter(this.termsPostingPath));
-            terms_buffer_reader = new BufferedReader(new FileReader(this.termsPostingPath));
-            //docPosting_fw = new FileWriter(postingsPath + "\\DocsPosting.txt");
-            //docPosting_fr = new FileReader(postingsPath + "\\DocsPosting.txt");
-            //documents_buffer_writer = new BufferedWriter(docPosting_fw);
-//            documents_buffer_writer = new BufferedWriter(docDictionary_fw);
-//            documents_buffer_reader = new BufferedReader(docDictionary_fr);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -161,6 +150,11 @@ public class Posting {
                 e.printStackTrace();
             }
         }
+        try {
+            terms_buffer_writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private String getMostFreqDocAndTotalTf(String listOfTermDocs) { // return "<D>"<DOC-NO>","<MaxTf>","<TotalTf>
@@ -265,6 +259,13 @@ public class Posting {
         return count;
     }
 
+    public static void closeIO() {
+        try {
+            documents_buffer_writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
 
 

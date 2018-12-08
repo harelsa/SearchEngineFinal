@@ -173,6 +173,7 @@ public class Indexer {
         }
         try {
             docDictionary_bf.flush();
+            docDictionary_bf.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -183,6 +184,14 @@ public class Indexer {
 
     synchronized public static void addNewDocToDocDictionary(String docNo, String docValue) {
         docs_dictionary.put(docNo, docValue);
+    }
+
+    public static void closeIO() {
+        try {
+            termDictionary_bf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static class TermComparator implements Comparator<Object> {

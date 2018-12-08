@@ -20,7 +20,7 @@ public class Controller extends Observable implements Observer {
                     /* The next two lines in comment only for test 8/12/18 10:45*/
 //                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
 ////                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
-                    model.run("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus-10files", "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources\\Postings", false);
+                    model.run("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus-10files", "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources", view.check_stemming.isSelected());
                     break;
                 case "show_dic":
                     model.showDic();
