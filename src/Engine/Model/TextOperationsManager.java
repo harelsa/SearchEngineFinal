@@ -150,7 +150,6 @@ public class TextOperationsManager {
             String startParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Starting parsing: " + startParseTimeStamp);
             readAndParse();
-            //SegmentFile.closeAllBuffers();
             String finishParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Finish parsing: " + finishParseTimeStamp);
         }
@@ -161,17 +160,23 @@ public class TextOperationsManager {
         System.out.println("Starting building Inverted Index: " + timeStamp);
         buildInvertedIndex();
         System.out.println("Finished building Inverted Index");
-//        try {
-//            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        closeAllSegmentFiles();
+        try {
+            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Indexer.writeDictionariesToDisc();
         String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
         return null ; //return info
     }
 
+    private void closeAllSegmentFiles() {
+        for (int i = 0; i < segmentFiles.length; i++) {
+            segmentFiles[i].closeBuffers();
+        }
+    }
 
 
     private void buildInvertedIndex() {

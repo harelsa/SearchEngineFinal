@@ -144,4 +144,10 @@ public class SegmentFile implements Serializable {
             return filePartitions[6];
         return null;
     }
+
+    public void closeBuffers() {
+        for (int i = 0; i < filePartitions.length; i++) {
+            filePartitions[i].closeBuffers();
+        }
+    }
 }
