@@ -125,6 +125,7 @@ public class Posting {
                 String key = pair.getKey().toString();
 
 
+
                 // Filtering low tf & df terms
                 if ((df == 1 && tf < 3) || (key.length() == 1 && !Character.isDigit(key.charAt(i)))) {
                     continue;
@@ -133,6 +134,11 @@ public class Posting {
                 if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key))
                     key = key.toUpperCase();
                 Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
+                if (TextOperationsManager.cities.containsKey(key)){
+                    Indexer.cites_dictionary.put(key, listOfTermDocs);
+                }
+
+
                 pointer += 2;
 
                 //Indexer.terms_dictionary.put(key, currDicValue + df + "," + pointer);

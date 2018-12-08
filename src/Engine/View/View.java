@@ -65,27 +65,26 @@ public class View extends Observable {
     }
 
     public void  run_btn_pressed () {
-        System.out.println("pressed");
-        /* The next two lines in comment only for test 8/12/18 10:45*/
-//        if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty())
-//            JOptionPane.showMessageDialog(null, "One or  more Paths is missing", "Error", JOptionPane.ERROR_MESSAGE);
-//        else {
+        //System.out.println("pressed");
+        if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty())
+            JOptionPane.showMessageDialog(null, "One or  more Paths is missing", "Error", JOptionPane.ERROR_MESSAGE);
+        else {
             setChanged();
             notifyObservers("run");
             load_dic_btn.setDisable(false );
             show_dic_btn.setDisable(false );
             reset_btn.setDisable(false);
-            }
- //       }
+            lang_list.setDisable(false);
+        }
 
-
+    }
 
     public void setScene(Scene scene) {
         this.scene = scene ;
     }
 
     public void setParent(Stage primaryStage) {
-        this.parent = primaryStage ; 
+        this.parent = primaryStage ;
     }
 
     public void updateLangLIst(String[] list_lang) {
@@ -156,8 +155,12 @@ public class View extends Observable {
         alert.setContentText (" This will reset all the posting files and Dictionaries that saved . ");
         Optional<ButtonType> option = alert.showAndWait();
         if ( ButtonType.OK.equals(option.get())){
-            //System.out.println("dsad");
+            setChanged();
             notifyObservers("reset");
+            load_dic_btn.setDisable(true );
+            show_dic_btn.setDisable(true );
+            reset_btn.setDisable (true);
+            lang_list.setDisable(true);
         }else {
 
         }

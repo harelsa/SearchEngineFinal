@@ -36,7 +36,7 @@
                 <Label layoutX="20.0" layoutY="103.0" text="Posting Path : " />
                 <CheckBox fx:id="check_stemming" layoutX="282.0" layoutY="252.0" mnemonicParsing="false" text="Use Stemming" />
                 <Button fx:id="run_btn" layoutX="172.0" layoutY="244.0" mnemonicParsing="false" onAction="#run_btn_pressed" prefHeight="41.0" prefWidth="86.0" text="Run" />
-                <ChoiceBox fx:id="lang_list" layoutX="150.0" layoutY="194.0" prefWidth="150.0" />
+                <ChoiceBox fx:id="lang_list" disable="true" layoutX="150.0" layoutY="194.0" prefWidth="150.0" />
                 <Label layoutX="44.0" layoutY="199.0" text="Languege:" />
                 <Button fx:id="reset_btn" disable="true" layoutX="63.0" layoutY="244.0" mnemonicParsing="false" onAction="#reset_btn_pressed" prefHeight="41.0" prefWidth="86.0" text="Reset" />
                 <Button fx:id="show_dic_btn" disable="true" layoutX="37.0" layoutY="338.0" mnemonicParsing="false" onAction="#show_dic_pressed" prefHeight="30.0" prefWidth="117.0" text="Show Dictionary " />

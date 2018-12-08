@@ -66,12 +66,11 @@ public class TextOperationsManager {
     private void createDirs(String postingPath) {
         new File(postingPath + "\\Postings").mkdirs();
         new File(postingPath + "\\Postings\\Terms").mkdirs();
-        new File(postingPath + "\\Postings").mkdirs();
+        new File(postingPath + "\\Postings\\Docs").mkdirs();
         new File(postingPath + "\\Postings\\Segment Files").mkdirs();
     }
 
     private void initInverters() {
-        // postingBaseFilePath = postingPath + "\\Posting Files";
         String postingBaseFilePath = postingPath;
 
         Posting termsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Terms\\" + "0_9");
@@ -153,6 +152,8 @@ public class TextOperationsManager {
             readAndParse();
             String finishParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Finish parsing: " + finishParseTimeStamp);
+
+
         }
         catch (Exception e ){
         }
