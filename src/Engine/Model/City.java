@@ -30,20 +30,17 @@ public class City {
 
 
 
-    private HashMap < String , LinkedList> docs_appearences;
 
 
     public City(String state_name, String currency, String population) {
         this.state_name = state_name;
         this.currency = currency;
         this.population = population;
-        docs_appearences = new HashMap<>( ) ;
     }
 
 
 
     public City(String docCity) {
-        docs_appearences = new HashMap<>( ) ;
         city_name = docCity ;
     }
 
@@ -58,9 +55,6 @@ public class City {
 
     public void setPopulation(String population) {
         this.population = population;
-    }
-    public void setDocs_appearences(HashMap<String, LinkedList> docs_appearences) {
-        this.docs_appearences = docs_appearences;
     }
 
     public String getCityName() {

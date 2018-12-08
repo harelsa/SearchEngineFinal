@@ -92,7 +92,7 @@ public class ReadFile {
                        }
                        int i = 4 ;
                         docCity = arr [2] ; // only the first word between tags
-                       this.cities.put( docCity , new City(docCity) ) ;
+                       this.cities.put( docCity.toLowerCase() , new City(docCity) ) ;
                        docCity = docCity.toUpperCase();
                     }
                     // Doc Language
