@@ -20,7 +20,7 @@ public class Controller extends Observable implements Observer {
                     /* The next two lines in comment only for test 8/12/18 10:45*/
 //                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
 ////                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
-                    model.run("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus-10files", "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources", false);
+                    model.run("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus-10files", "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources\\Postings", false);
                     break;
                 case "show_dic":
                     model.showDic();
@@ -28,7 +28,7 @@ public class Controller extends Observable implements Observer {
                 case "load_to_memory":
                     model.loadDicToMemory();
                     break;
-                    case "reset":
+                case "reset":
                     model.resetAll();
                     break;
 

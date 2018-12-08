@@ -128,7 +128,7 @@ public class Document {
     }
 
     public String getLang() {
-        return this.docLang;
+        return  this.docLang ;
     }
 
 

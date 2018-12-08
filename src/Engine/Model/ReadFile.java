@@ -176,7 +176,8 @@ public class ReadFile {
      * @return
      */
     public  String[] getLanguagesList() {
-        return (String[])languages.toArray();
+        //String[] str = map1.keySet().toArray(new String[map1.size()]);
+        return  languages.toArray(new String[languages.size()]);
     }
 //    private ArrayList<Pair<String, String>> splitDocumentsFromFile(String fileContent) {
 //        ArrayList<Pair<String, String>> doNODocument = new ArrayList<>();
