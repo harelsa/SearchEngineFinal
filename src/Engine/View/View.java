@@ -1,25 +1,26 @@
 package Engine.View;
 
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Observable;
-import java.util.Optional;
+import java.io.*;
+import java.net.URL;
+import java.util.*;
 
-public class View extends Observable  {
+public class View extends Observable {
     @FXML
     public javafx.scene.control.TextField corpus_txt_field ;
     public javafx.scene.control.TextField posting_txt_field;
@@ -28,8 +29,10 @@ public class View extends Observable  {
     public javafx.scene.control.Button show_dic_btn;
     public javafx.scene.control.Button load_dic_btn;
     public javafx.scene.control.Button reset_btn;
-    public javafx.scene.layout.AnchorPane anchore_pane;
-
+    //public javafx.scene.layout.AnchorPane anchore_pane;
+    public javafx.scene.control.TextArea txtArea_dictionary;
+    public javafx.scene.control.Button btn_test;
+    @FXML
 
     private Scene scene;
     private Stage parent;
@@ -93,17 +96,57 @@ public class View extends Observable  {
 
 
     public  void show_dic_pressed() throws Exception{
-        Stage secondaryStage = new Stage();
-        ScrollPane  sp =  new ScrollPane();
+
+//        FXMLLoader fxmlLoader = new FXMLLoader();
+//        Parent root = fxmlLoader.load(getClass().getClassLoader().getResource("dic_view.fxml").openStream());
+//        //pagesApp.add("sellVacation");
+//        Scene scene = new Scene(root, 600, 500);
+//        Stage secondaryStage = new Stage();
+//        //secondaryStage.setTitle(title);
+//        secondaryStage.setScene(scene);
+//        secondaryStage.show();
+//        txtArea_dictionary = (TextArea)scene.lookup("#txtArea_dictionary");
+
+
+        String postingPath = posting_txt_field.getText();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("dic_view.fxml"));
         Parent root = fxmlLoader.load();
-        secondaryStage.setTitle("Dic view");
+        Stage secondryStage = new Stage();
+        secondryStage.setTitle("Dic View");
         Scene scene = new Scene(root, 600, 600) ;
-        secondaryStage.setScene(scene);
-        //need to load dic
-        secondaryStage.show();
+        secondryStage.setScene(scene);
+        txtArea_dictionary = (javafx.scene.control.TextArea) scene.lookup("#txtArea_dictionary");
+        try {
+            txtArea_dictionary.setText(getDicDisplay(postingPath));
+        }
+        catch(IOException ioe){
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("File not found");
+            alert.setContentText("Please check your posting path and try again");
+            alert.showAndWait();
+            return;
+        }
+        //txtArea_dictionary.setText(getDicDisplay("C:\\Users\\Nadav\\Desktop\\Engine Project\\resources"));
+        secondryStage.show();
+    }
 
-
+    private String getDicDisplay(String text) throws IOException {
+        StringBuilder sb = new StringBuilder();
+            BufferedReader br_dic = new BufferedReader(new FileReader(text + "\\Postings\\termDictionary.txt"));
+            String line = null;
+            while ((line = br_dic.readLine()) != null){
+                String term = "";
+                String tf = "";
+                String[] splited = StringUtils.split(line,",");
+                String[] termSplited = StringUtils.split(splited[0], "<D>");
+                term = termSplited[0];
+                if (splited.length > 4){
+                    tf = splited[splited.length-3];
+                }
+                sb.append(term).append(",").append(tf).append("\n");
+            }
+        return sb.toString();
     }
 
     public void reset_btn_pressed() {
