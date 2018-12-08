@@ -2,14 +2,14 @@ package Engine.Model;
 
 import org.apache.commons.lang3.StringUtils;
 
+import javax.xml.soap.Text;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Indexer {
     public static TreeMap<String, String> terms_dictionary;
-    public static TreeMap<String, String> cites_dictionary;
+    public static TreeMap<String, String> cities_dictionary;
     public static TreeMap<String, String> docs_dictionary;
     private static FileWriter termDictionary_fw;
     public static String staticPostingsPath;
@@ -26,12 +26,13 @@ public class Indexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        cities_dictionary = new TreeMap<>();
 
-        cites_dictionary = new TreeMap<>((Comparator) (o1, o2) -> {
-            String s1 = ((City) (o1)).getCityName();
-            String s2 = ((City) (o2)).getCityName();
-            return s1.compareTo(s2);
-        });
+//        cities_dictionary = new TreeMap<>((Comparator) (o1, o2) -> {
+//            String s1 = ((City) (o1)).getCityName();
+//            String s2 = ((City) (o2)).getCityName();
+//            return s1.compareTo(s2);
+//        });
 
         docs_dictionary = new TreeMap<>(new DocComparator());
         staticPostingsPath = postingPath;
@@ -148,8 +149,8 @@ public class Indexer {
             e.printStackTrace();
         }
         FileWriter docDictionary_fw = null;
+
         try {
-            //docDictionary_fw = new FileWriter("src\\Engine\\resources\\Dictionaries\\docDictionary.txt");
             docDictionary_fw = new FileWriter(staticPostingsPath + "\\docDictionary.txt");
         } catch (IOException e) {
             e.printStackTrace();
@@ -178,7 +179,48 @@ public class Indexer {
             e.printStackTrace();
         }
         terms_dictionary.clear();
+
+        try {
+            Iterator termIt = cities_dictionary.entrySet().iterator();
+            BufferedWriter citiesDictionary_bf = new BufferedWriter(new FileWriter(staticPostingsPath + "\\citiesDictionary.txt"));
+            counter = 0;
+            while (termIt.hasNext()) {
+                Map.Entry pair = (Map.Entry) termIt.next();
+                try {
+                    String key = pair.getKey().toString();
+                    String cityDetailsFromApi = getCityDetailsFromApi(key);
+                    citiesDictionary_bf.append(key).append(",").append(cityDetailsFromApi).append(",").append(pair.getValue().toString() + "\n");
+                    counter++;
+                    if (counter > 10000) {
+                        citiesDictionary_bf.flush();
+                        counter = 0;
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                termIt.remove(); // avoids a ConcurrentModificationException
+            }
+            citiesDictionary_bf.flush();
+            citiesDictionary_bf.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         System.out.println("writeDictionariesToDisc Done");
+    }
+
+    private static String getCityDetailsFromApi(String s) {
+        StringBuilder sb = new StringBuilder();
+        s= s.toLowerCase() ;
+        boolean test = TextOperationsManager.cities.containsKey(s) ;
+        if (test){
+            City city = TextOperationsManager.cities.get(s.toLowerCase());
+            String currency = city.getCurrency();
+            String pop = city.getPopulation();
+            sb.append(currency).append(",").append(pop);
+            return sb.toString();
+        }
+        return sb.toString();
     }
 
 

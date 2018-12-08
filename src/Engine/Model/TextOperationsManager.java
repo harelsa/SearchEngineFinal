@@ -8,23 +8,16 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
-import java.sql.Array;
-import java.sql.Statement;
-import java.sql.Time;
 import java.text.SimpleDateFormat;
-import java.time.LocalTime;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class TextOperationsManager {
-    final int NUM_OF_PARSERS = 8;
-    final int NUM_OF_SEGMENT_FILES= 8;
-    final int NUM_OF_SEGMENT_FILE_PARTITIONS= 6;
-    final int NUM_OF_INVERTERS = 6;
+    private final int NUM_OF_PARSERS = 8;
+    private final int NUM_OF_SEGMENT_FILES= 8;
+    private final int NUM_OF_INVERTERS = 6;
     private static double MILLION = Math.pow(10, 6);
 
 
@@ -36,14 +29,14 @@ public class TextOperationsManager {
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
     private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
-    public ArrayList<String> filesPathsList;
-    public static ExecutorService parseExecutor;
-    public static ExecutorService invertedExecutor;
+    private ArrayList<String> filesPathsList;
+    private static ExecutorService parseExecutor;
+    private static ExecutorService invertedExecutor;
     static ConcurrentHashMap<String, City> cities ; // cities after parsing
 
 
 
-    private HashMap<String,String > inveted_city;
+    private HashMap<String,String > inverted_city;
 
 
     public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
@@ -60,7 +53,7 @@ public class TextOperationsManager {
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
         invertedExecutor = Executors.newFixedThreadPool(NUM_OF_INVERTERS);
         cities = new ConcurrentHashMap<>();
-        inveted_city = new HashMap<String , String >() ;
+        inverted_city = new HashMap<>() ;
     }
 
     private String ifStemming(boolean stemming) {
@@ -70,11 +63,6 @@ public class TextOperationsManager {
     }
 
     private void createDirs(String postingPath) {
-//        new File(postingPath + "\\Postings").mkdirs();
-//        new File(postingPath + "\\Postings\\Terms").mkdirs();
-//        new File(postingPath + "\\Postings\\Docs").mkdirs();
-//        new File(postingPath + "\\Postings\\Segment Files").mkdirs();
-        //new File(postingPath + "\\Postings").mkdirs();
         new File(postingPath + "\\Terms").mkdirs();
         new File(postingPath + "\\Docs").mkdirs();
         new File(postingPath + "\\Segment Files").mkdirs();
@@ -89,15 +77,7 @@ public class TextOperationsManager {
         Posting termsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Terms\\" + "g_k");
         Posting termsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Terms\\" + "l_p");
         Posting termsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Terms\\" + "q_z");
-        //Posting termsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Terms\\" + "z_z");
 
-//        Posting docsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Docs\\" + "0_9");
-//        Posting docsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Docs\\" + "a_c");
-//        Posting docsPostingFile_d_f = new Posting(postingBaseFilePath + "\\Docs\\" + "d_f");
-//        Posting docsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Docs\\" + "g_k");
-//        Posting docsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Docs\\" + "l_p");
-//        Posting docsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Docs\\" + "q_z");
-        //Posting docsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Docs\\" + "z_z");
 
         SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
         SegmentFilePartition[] segmentFilesInverter2 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
@@ -129,13 +109,6 @@ public class TextOperationsManager {
             segmentFilesInverter7[i] = segmentFiles[i].getSegmentFilePartitions('z', 'z');
         }
 
-
-//        inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9, docsPostingFile_0_9);
-//        inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c, docsPostingFile_a_c);
-//        inverters[2] = new Indexer(segmentFilesInverter3, termsPostingFile_d_f, docsPostingFile_d_f);
-//        inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k, docsPostingFile_g_k);
-//        inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p, docsPostingFile_l_p);
-//        inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z, docsPostingFile_q_z);
         inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9);
         inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c);
         inverters[2] = new Indexer(segmentFilesInverter3, termsPostingFile_d_f);
@@ -169,6 +142,7 @@ public class TextOperationsManager {
         }
         //end of parse
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        cities = reader.cities;
         System.out.println("Starting building Inverted Index: " + timeStamp);
         buildInvertedIndex();
         System.out.println("Finished building Inverted Index");
@@ -178,8 +152,7 @@ public class TextOperationsManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Indexer.writeDictionariesToDisc();
-        String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+        //String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
         return null ; //return info
     }
@@ -193,23 +166,10 @@ public class TextOperationsManager {
 
     private void buildInvertedIndex() {
         for (int i = 0; i < NUM_OF_INVERTERS; i++) {
-
             System.out.println("inverter : " + i%NUM_OF_INVERTERS);
-
             inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
-//            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
-//            executor.execute(parseThread);
-//            int finalI = i;
-
-//            int finalI = i;
-//            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
-//            invertedExecutor.execute(buildInvertedIndex);
        }
-//        invertedExecutor.shutdown();
-//        while (!invertedExecutor.isTerminated());
-
         System.out.println("done");
-
     }
 
     private void readAndParse() throws InterruptedException {
@@ -217,22 +177,16 @@ public class TextOperationsManager {
             int finalI = i;
             Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
             parseExecutor.execute(readNParseThread);
-//            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
-//            executor.execute(parseThread);
         }
         parseExecutor.shutdown();
         while (!parseExecutor.isTerminated()) {
-
         }
-
-
     }
 
     public void BuildCitiesPosting(){
         cities = reader.getCities() ;
         getCitiesInfo () ;
         //end of parse
-
     }
 
     private String getSegmentFilePath(int i) {
@@ -340,11 +294,11 @@ public class TextOperationsManager {
             }
             //String[] splited_split = StringUtils.split(inputLine,"") ;
 
-            String state = splited[i];
-            String city = splited[i+2];
+            String state = splited[i].toLowerCase();
+            String city = splited[i+2].toLowerCase();
             String first_part = "" ;
             if ( city.contains(" ") ) // 2 word city
-                first_part = city.split(" ")[0];
+                first_part = city.split(" ")[0].toLowerCase();
             if (cities.containsKey(city) || cities.containsKey(first_part)) {
                 City city_obj = cities.get(city);
                 if (city_obj == null )
@@ -355,7 +309,7 @@ public class TextOperationsManager {
                 }
                 try {
                     city_obj.setState_name(state);
-                    inveted_city.put(state, city);
+                    inverted_city.put(state, city);
                     cities.put(s, city_obj);
                 }
                 catch (Exception e ){
@@ -398,12 +352,12 @@ public class TextOperationsManager {
                 continue;
             }
             //String[] splited_split = StringUtils.split(inputLine,"") ;
-            String state = splited[i];
+            String state = splited[i].toLowerCase();
             String population = splited[i+3];
             String first_part = "" ;
 
-            if (inveted_city.containsKey(state) ) {
-                String city = inveted_city.get(state);
+            if (inverted_city.containsKey(state) ) {
+                String city = inverted_city.get(state);
 
                 City city_obj = cities.get(city); // try 1 word city first
                 if (city_obj == null) {
@@ -493,21 +447,21 @@ public class TextOperationsManager {
             //now find state
             String state = "" ;
             int count_name = 0 ;
-            while( i < splited.length-3 &&  !inveted_city.containsKey(state)  ){
-                state = splited[i] ;
+            while( i < splited.length-3 &&  !inverted_city.containsKey(state)  ){
+                state = splited[i].toLowerCase() ;
                 if (state.equals("name")){
                     count_name++;
                 }
                 if ( count_name == 2) {// counted 2 names , should stop
-                    state = splited[i + 1];
+                    state = splited[i + 1].toLowerCase();
                     break;
                 }
                 i++ ;
             }
 
             String first_part = "" ;
-            if (inveted_city.containsKey(state) ) {
-                String city = inveted_city.get(state);
+            if (inverted_city.containsKey(state) ) {
+                String city = inverted_city.get(state);
 
                 City city_obj = cities.get(city); // try 1 word city first
                 if (city_obj == null) {

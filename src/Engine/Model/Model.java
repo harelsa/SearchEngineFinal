@@ -26,9 +26,10 @@ public class Model extends Observable {
         this.is_stemming = stemming ;
         //System.out.println("posting: " + postingPath);
         TextOperationsManager textOperationsManager = new TextOperationsManager(corpusPath, postingPath, stemming);
-
         String[] buildInfo = textOperationsManager.StartTextOperations(); // will start build & return info : num of doc , num of terms , runtime
         textOperationsManager.BuildCitiesPosting();
+        Indexer.writeDictionariesToDisc();
+
 
         list_lang = textOperationsManager.getDocLang();
         setChanged();
