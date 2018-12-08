@@ -66,7 +66,7 @@ public class TextOperationsManager {
     private void createDirs(String postingPath) {
         new File(postingPath + "\\Postings").mkdirs();
         new File(postingPath + "\\Postings\\Terms").mkdirs();
-        new File(postingPath + "\\Postings").mkdirs();
+        new File(postingPath + "\\Postings\\Docs").mkdirs();
         new File(postingPath + "\\Postings\\Segment Files").mkdirs();
     }
 

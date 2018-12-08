@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.AnchorPane?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.paint.*?>
 
-<AnchorPane fx:id="anchore_pane" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Engine.View.View">
-   <children>
-      <ScrollPane layoutX="-1.0" layoutY="-3.0" prefHeight="406.0" prefWidth="600.0">
-        <content>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="404.0" prefWidth="600.0">
-               <children>
-                  <ListView layoutY="2.0" prefHeight="386.0" prefWidth="581.0" />
-               </children></AnchorPane>
-        </content>
-      </ScrollPane>
-   </children>
-</AnchorPane>
+<BorderPane prefHeight="341.0" prefWidth="426.0" xmlns:fx="http://javafx.com/fxml" fx:controller="Engine.View.View" >
+    <center>
+        <Button fx:id="btn_test" ></Button>
+        <TextArea fx:id="txtArea_dictionary" prefWidth="200.0" wrapText="true">
+            <BorderPane.margin>
+                <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+            </BorderPane.margin>
+        </TextArea>
+    </center>
+</BorderPane>

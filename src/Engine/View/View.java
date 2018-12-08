@@ -5,19 +5,15 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.*;
-import java.net.URL;
 import java.util.*;
 
 public class View extends Observable {
@@ -29,7 +25,6 @@ public class View extends Observable {
     public javafx.scene.control.Button show_dic_btn;
     public javafx.scene.control.Button load_dic_btn;
     public javafx.scene.control.Button reset_btn;
-    //public javafx.scene.layout.AnchorPane anchore_pane;
     public javafx.scene.control.TextArea txtArea_dictionary;
     public javafx.scene.control.Button btn_test;
     @FXML
@@ -96,18 +91,6 @@ public class View extends Observable {
 
 
     public  void show_dic_pressed() throws Exception{
-
-//        FXMLLoader fxmlLoader = new FXMLLoader();
-//        Parent root = fxmlLoader.load(getClass().getClassLoader().getResource("dic_view.fxml").openStream());
-//        //pagesApp.add("sellVacation");
-//        Scene scene = new Scene(root, 600, 500);
-//        Stage secondaryStage = new Stage();
-//        //secondaryStage.setTitle(title);
-//        secondaryStage.setScene(scene);
-//        secondaryStage.show();
-//        txtArea_dictionary = (TextArea)scene.lookup("#txtArea_dictionary");
-
-
         String postingPath = posting_txt_field.getText();
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("dic_view.fxml"));
         Parent root = fxmlLoader.load();
