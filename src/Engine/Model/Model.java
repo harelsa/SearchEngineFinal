@@ -15,6 +15,7 @@ import java.util.Observable;
 public class Model extends Observable {
     String corpusPath;
     String postingPath ;
+    boolean is_stemming ;
     public String [] list_lang ;
     //String postingPath = "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources";
     HashMap < String , String[] > termDictionary = new HashMap<>();
@@ -22,7 +23,8 @@ public class Model extends Observable {
     public void run(String corpusPath, String postingPath, boolean stemming) {
         this.corpusPath = corpusPath;
         this.postingPath = postingPath;
-        System.out.println("posting: " + postingPath);
+        this.is_stemming = stemming ;
+        //System.out.println("posting: " + postingPath);
         TextOperationsManager textOperationsManager = new TextOperationsManager(corpusPath, postingPath, stemming);
 
         String[] buildInfo = textOperationsManager.StartTextOperations(); // will start build & return info : num of doc , num of terms , runtime
@@ -40,11 +42,11 @@ public class Model extends Observable {
     }
 
     public void loadDicToMemory(String stemming) {
-        File dir = new File(postingPath + "\\Postings"+ stemming) ;
+        File dir = new File(postingPath + "\\Postings"+ ifStemming() );
         if ( dir!= null && dir.exists()){
             StringBuilder sb = new StringBuilder();
             try {
-                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + stemming + "\\termDictionary.txt"));
+                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming()+ "\\termDictionary.txt"));
                 String line = "" ;
                 while ((line = br_dic.readLine()) != null){
 
@@ -69,8 +71,8 @@ public class Model extends Observable {
     }
 
     public boolean resetAll() {
-        File dir = new File(postingPath + "\\Postings");
-        System.out.println("Deletes :" + postingPath + "\\Postings");
+        File dir = new File(postingPath + "\\Postings" + ifStemming());
+        System.out.println("Deletes :" + postingPath + "\\Postings"+ifStemming());
         if (dir.exists()) {
 
             try {
@@ -103,5 +105,12 @@ public class Model extends Observable {
     public void pathUpdate ( String corpusPath , String postingPath , boolean stemming ) {
         this.corpusPath = corpusPath;
         this.postingPath = postingPath;
+        this.is_stemming = stemming ;
+    }
+
+    private String ifStemming() {
+        if (is_stemming)
+            return "withStemming";
+        return "";
     }
 }
