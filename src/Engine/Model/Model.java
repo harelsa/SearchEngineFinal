@@ -11,6 +11,7 @@ public class Model extends Observable {
 
         String[] buildInfo  =textOperationsManager.StartTextOperations(); // will start build & return info : num of doc , num of terms , runtime
         textOperationsManager.BuildCitiesPosting();
+
          list_lang = textOperationsManager.getDocLang() ;
         setChanged();
         notifyObservers("finished");
@@ -23,5 +24,9 @@ public class Model extends Observable {
     }
 
     public void loadDicToMemory() {
+    }
+
+    public void resetAll() {
+
     }
 }
