@@ -115,10 +115,11 @@ public class Posting {
             for (Object o : tmp.entrySet()) {
                 Map.Entry pair = (Map.Entry) o;
                 String listOfTermDocs = pair.getValue().toString();
-                String docMostTermFreq = getMostFreqDoc(listOfTermDocs);
+                String docMostTermFreq = getMostFreqDocAndTotalTf(listOfTermDocs);
                 String[] splitedValue = StringUtils.split(docMostTermFreq, ",");
                 int tf = Integer.parseInt(splitedValue[1]);
                 int df = getDf(listOfTermDocs);
+
                 String key = pair.getKey().toString();
 
 
@@ -154,19 +155,21 @@ public class Posting {
         }
     }
 
-    private String getMostFreqDoc(String listOfTermDocs) {
+    private String getMostFreqDocAndTotalTf(String listOfTermDocs) { // return "<D>"<DOC-NO>","<MaxTf>","<TotalTf>
         String[] docs = StringUtils.split(listOfTermDocs, "#");
         int maxTf = 0;
+        int totalTf = 0;
         String docNoOfMax = "";
         for (int i = 0; i < docs.length; i++) {
             String[] splited = StringUtils.split(docs[i], ",");
             int tmp = Integer.parseInt(splited[1]);
+            totalTf += tmp;
             if (tmp > maxTf) {
                 maxTf = tmp;
                 docNoOfMax = splited[0];
             }
         }
-        return docNoOfMax + "," + maxTf;
+        return docNoOfMax + "," + maxTf + "," + totalTf;
     }
 
 
