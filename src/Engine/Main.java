@@ -77,8 +77,8 @@ public class Main extends Application {
 
 
 //        // move to TExt operationg !!!
-       Parse parser = new Parse(null);
-        Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020", " JERUSALEM" , "ENGLISH") ;
+      // Parse parser = new Parse(null);
+       // Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020", " JERUSALEM" , "ENGLISH") ;
       // parser.parse(str2 , doc );
 //        Term term = new Term(0,0, "Nadav");
 //        SegmentFilePartition sfp = new SegmentFilePartition("d:\\documents\\users\\bardanad\\Downloads\\Segment Files", 'a', 'd');
@@ -106,7 +106,7 @@ public class Main extends Application {
 //        HashMap<String, Term> allTerms, Document currDoc
 
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Downloads\\corpus-split");
-        TextOperationsManager textOperationsManager = new TextOperationsManager("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus");
+        //TextOperationsManager textOperationsManager = new TextOperationsManager("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus");
         //TextOperationsManager textOperationsManager = new TextOperationsManager("D:\\documents\\users\\bardanad\\corpus\\test");
 //        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
         //textOperationsManager.StartTextOperations();

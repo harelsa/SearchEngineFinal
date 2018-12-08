@@ -63,17 +63,19 @@ public class View extends Observable  {
 
     public void  run_btn_pressed () {
         System.out.println("pressed");
-        if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty())
-            JOptionPane.showMessageDialog(null, "One or  more Paths is missing", "Error", JOptionPane.ERROR_MESSAGE);
-        else {
+        /* The next two lines in comment only for test 8/12/18 10:45*/
+//        if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty())
+//            JOptionPane.showMessageDialog(null, "One or  more Paths is missing", "Error", JOptionPane.ERROR_MESSAGE);
+//        else {
             setChanged();
             notifyObservers("run");
             load_dic_btn.setDisable(false );
             show_dic_btn.setDisable(false );
             reset_btn.setDisable(false);
             }
+ //       }
 
-    }
+
 
     public void setScene(Scene scene) {
         this.scene = scene ;

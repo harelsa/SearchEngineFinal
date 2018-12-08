@@ -127,6 +127,10 @@ public class Document {
         return "";
     }
 
+    public String getLang() {
+        return this.docLang;
+    }
+
 
     //private byte[]
 }

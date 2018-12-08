@@ -1,5 +1,6 @@
 package Engine.Model;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
@@ -50,6 +51,8 @@ public class TextOperationsManager {
         this.postingPath = postingPath ;
         this.stemming = stemming ;
         this.reader = new ReadFile();
+        createDirs(postingPath);
+        Posting.initPosting(postingPath + "\\Docs");
         initParsers();
         initInverters();
 
@@ -60,8 +63,15 @@ public class TextOperationsManager {
         inveted_city = new HashMap<String , String >() ;
     }
 
+    private void createDirs(String postingPath) {
+        new File(postingPath + "\\Terms").mkdirs();
+        new File(postingPath + "\\Docs").mkdirs();
+        new File(postingPath + "\\Segment Files").mkdirs();
+    }
+
     private void initInverters() {
-        String postingBaseFilePath = postingPath + "\\Posting Files";
+        // postingBaseFilePath = postingPath + "\\Posting Files";
+        String postingBaseFilePath = postingPath;
 
         Posting termsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Terms\\" + "0_9");
         Posting termsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Terms\\" + "a_c");
@@ -71,12 +81,12 @@ public class TextOperationsManager {
         Posting termsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Terms\\" + "q_z");
         //Posting termsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Terms\\" + "z_z");
 
-        Posting docsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Docs\\" + "0_9");
-        Posting docsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Docs\\" + "a_c");
-        Posting docsPostingFile_d_f = new Posting(postingBaseFilePath + "\\Docs\\" + "d_f");
-        Posting docsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Docs\\" + "g_k");
-        Posting docsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Docs\\" + "l_p");
-        Posting docsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Docs\\" + "q_z");
+//        Posting docsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Docs\\" + "0_9");
+//        Posting docsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Docs\\" + "a_c");
+//        Posting docsPostingFile_d_f = new Posting(postingBaseFilePath + "\\Docs\\" + "d_f");
+//        Posting docsPostingFile_g_k = new Posting(postingBaseFilePath + "\\Docs\\" + "g_k");
+//        Posting docsPostingFile_l_p = new Posting(postingBaseFilePath + "\\Docs\\" + "l_p");
+//        Posting docsPostingFile_q_z = new Posting(postingBaseFilePath + "\\Docs\\" + "q_z");
         //Posting docsPostingFile_z_z = new Posting(postingBaseFilePath + "\\Docs\\" + "z_z");
 
         SegmentFilePartition[] segmentFilesInverter1 = new SegmentFilePartition[NUM_OF_SEGMENT_FILES];
@@ -110,12 +120,18 @@ public class TextOperationsManager {
         }
 
 
-        inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9, docsPostingFile_0_9);
-        inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c, docsPostingFile_a_c);
-        inverters[2] = new Indexer(segmentFilesInverter3, termsPostingFile_d_f, docsPostingFile_d_f);
-        inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k, docsPostingFile_g_k);
-        inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p, docsPostingFile_l_p);
-        inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z, docsPostingFile_q_z);
+//        inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9, docsPostingFile_0_9);
+//        inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c, docsPostingFile_a_c);
+//        inverters[2] = new Indexer(segmentFilesInverter3, termsPostingFile_d_f, docsPostingFile_d_f);
+//        inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k, docsPostingFile_g_k);
+//        inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p, docsPostingFile_l_p);
+//        inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z, docsPostingFile_q_z);
+        inverters[0] = new Indexer(segmentFilesInverter1, termsPostingFile_0_9);
+        inverters[1] = new Indexer(segmentFilesInverter2, termsPostingFile_a_c);
+        inverters[2] = new Indexer(segmentFilesInverter3, termsPostingFile_d_f);
+        inverters[3] = new Indexer(segmentFilesInverter4, termsPostingFile_g_k);
+        inverters[4] = new Indexer(segmentFilesInverter5, termsPostingFile_l_p);
+        inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z);
     }
 
 
@@ -127,19 +143,16 @@ public class TextOperationsManager {
     }
 
     public  String[] StartTextOperations() {
-        //System.out.println(user_curposPath);
-        //System.out.println(user_PostingPath);
         initFilesPathList(curposPath);
-        Indexer.initIndexer();
+        Indexer.initIndexer(postingPath);
 
         try {
             String startParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Starting parsing: " + startParseTimeStamp);
             readAndParse();
+            //SegmentFile.closeAllBuffers();
             String finishParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Finish parsing: " + finishParseTimeStamp);
-
-
         }
         catch (Exception e ){
         }
@@ -148,6 +161,11 @@ public class TextOperationsManager {
         System.out.println("Starting building Inverted Index: " + timeStamp);
         buildInvertedIndex();
         System.out.println("Finished building Inverted Index");
+//        try {
+//            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         Indexer.writeDictionariesToDisc();
         String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 

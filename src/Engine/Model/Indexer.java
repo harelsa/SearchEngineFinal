@@ -12,21 +12,20 @@ public class Indexer {
     public static TreeMap<String, String> cites_dictionary;
     public static TreeMap<String, String> docs_dictionary;
     private static FileWriter termDictionary_fw;
+    public static String staticPostingsPath;
 
-    static {
+
+    private static BufferedWriter termDictionary_bf;
+
+
+    public static void initIndexer(String postingPath) {
+        terms_dictionary = new TreeMap<>(new TermComparator());
         try {
-            termDictionary_fw = new FileWriter("src\\Engine\\resources\\Dictionaries\\termDictionary.txt");
+            termDictionary_fw = new FileWriter(postingPath + "\\termDictionary.txt");
+            termDictionary_bf = new BufferedWriter(termDictionary_fw);
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    static BufferedWriter termDictionary_bf = new BufferedWriter(termDictionary_fw);
-
-    public static ConcurrentHashMap<String, Boolean> termStartsWithCapitalLetter;
-
-    public static void initIndexer() {
-        terms_dictionary = new TreeMap<>(new TermComparator());
 
         cites_dictionary = new TreeMap<>((Comparator) (o1, o2) -> {
             String s1 = ((City) (o1)).getCityName();
@@ -35,7 +34,7 @@ public class Indexer {
         });
 
         docs_dictionary = new TreeMap<>(new DocComparator());
-
+        staticPostingsPath = postingPath;
     }
 
     private SegmentFilePartition[] segmentFilePartitions;
@@ -46,9 +45,9 @@ public class Indexer {
         this.segmentFilePartitions = segmentFilePartitions;
     }
 
-    public Indexer(SegmentFilePartition[] segmentFilesInverter, Posting termsPostingFile, Posting docsPostingFile) {
+    public Indexer(SegmentFilePartition[] segmentFilesInverter, Posting termsPostingFile) {
         termsPosting = termsPostingFile;
-        docsPosting = docsPostingFile;
+        //docsPosting = docsPostingFile;
         this.segmentFilePartitions = segmentFilesInverter;
     }
 
@@ -126,24 +125,6 @@ public class Indexer {
         return true;
     }
 
-//    synchronized private void addNewTermToDictionary(String term, String docNo, String tf) {
-//        terms_dictionary.put(term, docNo + "," + tf + ",");
-//    }
-//
-//    synchronized private void checkTermTfFromAnotherDoc(String term, String docNo, String tf) {
-//        String value = terms_dictionary.get(term);
-//        if (value == null)
-//            return;
-//        String[] splitedValue = StringUtils.split(value, ",");
-//        try {
-//            if (Integer.parseInt(tf) > Integer.parseInt(splitedValue[1])) {
-//                terms_dictionary.put(term, docNo + "," + tf + ",");
-//            }
-//        } catch (java.lang.NumberFormatException nfe) {
-//            nfe.printStackTrace();
-//        }
-//    }
-
     public static void writeDictionariesToDisc() {
         try {
             Iterator termIt = terms_dictionary.entrySet().iterator();
@@ -168,7 +149,8 @@ public class Indexer {
         }
         FileWriter docDictionary_fw = null;
         try {
-            docDictionary_fw = new FileWriter("src\\Engine\\resources\\Dictionaries\\docDictionary.txt");
+            //docDictionary_fw = new FileWriter("src\\Engine\\resources\\Dictionaries\\docDictionary.txt");
+            docDictionary_fw = new FileWriter(staticPostingsPath + "\\docDictionary.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }
