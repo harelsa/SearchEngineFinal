@@ -154,9 +154,7 @@ public class TextOperationsManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        //String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
 
-        //return null ; //return info
     }
 
     private void closeAllSegmentFiles() {

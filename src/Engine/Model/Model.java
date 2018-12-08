@@ -27,7 +27,7 @@ public class Model extends Observable {
         this.postingPath = postingPath;
         this.is_stemming = stemming ;
         TextOperationsManager textOperationsManager = new TextOperationsManager(corpusPath, postingPath, stemming);
-        textOperationsManager.StartTextOperations(); // will start build & return info : num of doc , num of terms , runtime
+        textOperationsManager.StartTextOperations();
         textOperationsManager.BuildCitiesPosting();
         int uniqueTerms = Indexer.terms_dictionary.size();
         int docsGenerate = Indexer.docs_dictionary.size();
