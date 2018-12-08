@@ -18,18 +18,22 @@ public class Controller extends Observable implements Observer {
                 case "run":
                     System.out.println("good");
                     /* The next two lines in comment only for test 8/12/18 10:45*/
-//                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
-////                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
-                    model.run("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus-10files", "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources", view.check_stemming.isSelected());
+                    model.run(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
                     break;
                 case "show_dic":
                     model.showDic();
                     break;
                 case "load_to_memory":
-                    model.loadDicToMemory();
+                    String stemming = "";
+                    if ( view.check_stemming.isSelected())
+                        stemming = "Stemming" ;
+                    model.loadDicToMemory(stemming);
                     break;
                 case "reset":
                     model.resetAll();
+                    break;
+                case "update_path":
+                    model.pathUpdate(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
                     break;
 
                 default:

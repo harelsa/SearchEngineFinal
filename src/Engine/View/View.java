@@ -150,4 +150,14 @@ public class View extends Observable {
 
 
     }
+
+    public void updatePaths(){
+        setChanged();
+        notifyObservers("update_path");
+    }
+
+    public void load_dic_mem(){
+        setChanged();
+        notifyObservers("load_to_memory");
+    }
 }
