@@ -19,7 +19,8 @@ public class SegmentFile implements Serializable {
     // ('l', 'p');
     // ('p', 'z');
     // ('z', 'z');
-    public SegmentFile(String path) {
+    public SegmentFile(String path , boolean stemming ) {
+        STEMMING = stemming ;
         filePartitions = new SegmentFilePartition[7]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
         filePartitions[0] = new SegmentFilePartition(path, '0', '9');
         filePartitions[1] = new SegmentFilePartition(path, 'a', 'c');

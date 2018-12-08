@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 public class Document {
+    private  String docLang = "";
     private String docNo;
     private String parentFileName;
     private int unique_t; // quantity of unique terms in doc
@@ -34,9 +35,10 @@ public class Document {
         return docNo != null ? docNo.hashCode() : 0;
     }
 
-    public Document(String docNo, String parentFileName, String docCity ) {
+    public Document(String docNo, String parentFileName, String docCity  , String docLang) {
         this.docNo = docNo;
-        city = docCity;
+        this.city = docCity;
+        this.docLang = docLang ;
         this.parentFileName = parentFileName;
         termFrequency = new HashMap<>();
         this.date = date ;
@@ -101,7 +103,7 @@ public class Document {
     public String lightToString() {
         StringBuilder sb = new StringBuilder();
         sb.append(docNo).append(",").append(parentFileName)
-                .append(",").append(city).append(",").append(maxFreqTermNumber).append(",")
+                .append(",").append(city).append(",").append(docLang).append(",").append(maxFreqTermNumber).append(",")
                 .append(getFreqTermContent()).append(",").append(unique_t);
         return sb.toString();
     }

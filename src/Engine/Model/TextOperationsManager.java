@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TextOperationsManager extends  Observable{
+public class TextOperationsManager {
     final int NUM_OF_PARSERS = 8;
     final int NUM_OF_SEGMENT_FILES= 8;
     final int NUM_OF_SEGMENT_FILE_PARTITIONS= 6;
@@ -30,6 +30,8 @@ public class TextOperationsManager extends  Observable{
 
     private ReadFile reader;
     private String curposPath;
+    private String postingPath ;
+    private final boolean stemming;
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
     private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
@@ -43,11 +45,14 @@ public class TextOperationsManager extends  Observable{
     private HashMap<String,String > inveted_city;
 
 
-    public TextOperationsManager(String curposPath) {
+    public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
+        this.curposPath = curposPath;
+        this.postingPath = postingPath ;
+        this.stemming = stemming ;
         this.reader = new ReadFile();
         initParsers();
         initInverters();
-        this.curposPath = curposPath;
+
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
         invertedExecutor = Executors.newFixedThreadPool(NUM_OF_INVERTERS);
@@ -56,7 +61,7 @@ public class TextOperationsManager extends  Observable{
     }
 
     private void initInverters() {
-        String postingBaseFilePath = "src\\Engine\\resources\\Posting Files";
+        String postingBaseFilePath = postingPath + "\\Posting Files";
 
         Posting termsPostingFile_0_9 = new Posting(postingBaseFilePath + "\\Terms\\" + "0_9");
         Posting termsPostingFile_a_c = new Posting(postingBaseFilePath + "\\Terms\\" + "a_c");
@@ -116,12 +121,12 @@ public class TextOperationsManager extends  Observable{
 
     private void initParsers() {
         for (int i = 0; i < NUM_OF_PARSERS; i++) {
-            segmentFiles[i] = new SegmentFile(getSegmentFilePath(i));
+            segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
             parsers[i] = new Parse(segmentFiles[i]);
         }
     }
 
-    public void StartTextOperations(String user_curposPath , String user_PostingPath , boolean use_stemming) {
+    public  String[] StartTextOperations() {
         //System.out.println(user_curposPath);
         //System.out.println(user_PostingPath);
         initFilesPathList(curposPath);
@@ -145,6 +150,8 @@ public class TextOperationsManager extends  Observable{
         System.out.println("Finished building Inverted Index");
         Indexer.writeDictionariesToDisc();
         String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+
+        return null ; //return info
     }
 
 
@@ -154,16 +161,17 @@ public class TextOperationsManager extends  Observable{
 
             System.out.println("inverter : " + i%NUM_OF_INVERTERS);
 
-            //inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
+            inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
 //            Thread parseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%4]));
 //            executor.execute(parseThread);
 //            int finalI = i;
-            int finalI = i;
-            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
-            invertedExecutor.execute(buildInvertedIndex);
-        }
-        invertedExecutor.shutdown();
-        while (!invertedExecutor.isTerminated());
+
+//            int finalI = i;
+//            Thread buildInvertedIndex = new Thread(() -> inverters[finalI % NUM_OF_INVERTERS].buildInvertedIndexes());
+//            invertedExecutor.execute(buildInvertedIndex);
+       }
+//        invertedExecutor.shutdown();
+//        while (!invertedExecutor.isTerminated());
 
         System.out.println("done");
 
@@ -193,7 +201,7 @@ public class TextOperationsManager extends  Observable{
     }
 
     private String getSegmentFilePath(int i) {
-        String segmantBaseFilePath = "src\\Engine\\resources\\Segment Files";
+        String segmantBaseFilePath = postingPath+ "\\Segment Files";
         String segmantFilePath = "";
         switch (i) {
             case 0:
@@ -490,12 +498,10 @@ public class TextOperationsManager extends  Observable{
         return null ;
     }
 
-    public void showDic() {
+    public String[] getDocLang ()
+    {
+        return reader.getLanguagesList();
     }
-
-    public void laodDicToMemory() {
-    }
-
     //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");
     //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;population");
 

@@ -1,5 +1,7 @@
 package Engine.View;
 
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.stage.FileChooser;
@@ -7,6 +9,8 @@ import javafx.stage.Stage;
 
 import javax.swing.*;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Observable;
 
 public class View extends Observable  {
@@ -14,6 +18,8 @@ public class View extends Observable  {
     public javafx.scene.control.TextField corpus_txt_field ;
     public javafx.scene.control.TextField posting_txt_field;
     public javafx.scene.control.CheckBox check_stemming;
+    public javafx.scene.control.ChoiceBox lang_list;
+
 
     private Scene scene;
     private Stage parent;
@@ -49,7 +55,11 @@ public class View extends Observable  {
         System.out.println("pressed");
         if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty())
             JOptionPane.showMessageDialog(null, "One or  more Paths is missing", "Error", JOptionPane.ERROR_MESSAGE);
-        else notifyObservers("run");
+        else {
+            setChanged();
+            notifyObservers("run");
+        }
+
     }
 
     public void setScene(Scene scene) {
@@ -58,5 +68,11 @@ public class View extends Observable  {
 
     public void setParent(Stage primaryStage) {
         this.parent = primaryStage ; 
+    }
+
+    public void updateLangLIst(String[] list_lang) {
+        ArrayList<String> lang = new ArrayList<String>(Arrays.asList(list_lang));
+        ObservableList<String> list = FXCollections.observableArrayList(lang);
+        lang_list.setItems(list);
     }
 }
