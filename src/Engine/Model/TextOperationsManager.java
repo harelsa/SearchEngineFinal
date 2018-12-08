@@ -48,11 +48,11 @@ public class TextOperationsManager {
 
     public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
         this.curposPath = curposPath;
-        this.postingPath = postingPath ;
+        this.postingPath =  postingPath + "\\Postings";
         this.stemming = stemming ;
         this.reader = new ReadFile();
         createDirs(postingPath);
-        Posting.initPosting(postingPath + "\\Docs");
+        Posting.initPosting(postingPath + "\\Postings\\Docs");
         initParsers();
         initInverters();
 
@@ -64,9 +64,10 @@ public class TextOperationsManager {
     }
 
     private void createDirs(String postingPath) {
-        new File(postingPath + "\\Terms").mkdirs();
-        new File(postingPath + "\\Docs").mkdirs();
-        new File(postingPath + "\\Segment Files").mkdirs();
+        new File(postingPath + "\\Postings").mkdirs();
+        new File(postingPath + "\\Postings\\Terms").mkdirs();
+        new File(postingPath + "\\Postings").mkdirs();
+        new File(postingPath + "\\Postings\\Segment Files").mkdirs();
     }
 
     private void initInverters() {
