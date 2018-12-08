@@ -15,33 +15,31 @@ public class Posting {
     private static int docsCounter = 0;
     private static FileWriter docPosting_fw;
     private static FileReader docPosting_fr;
+    private static BufferedWriter documents_buffer_writer;
+    private static BufferedReader documents_buffer_reader;
 
-    static {
-        try {
-            docPosting_fw = new FileWriter("src\\Engine\\resources\\Posting Files\\Docs\\Merged.txt");
-            docPosting_fr = new FileReader("src\\Engine\\resources\\Posting Files\\Docs\\Merged.txt");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static BufferedWriter documents_buffer_writer = new BufferedWriter(docPosting_fw);
-    //private static BufferedReader documents_buffer_reader = new BufferedReader(docPosting_fr);
-
-
-    public Posting(String termsPostingPath) {
-        this.termsPostingPath = termsPostingPath + ".txt";
-        this.documentsPostingPath = documentsPostingPath + ".txt";
+    public Posting(String postingsPath) {
+        this.termsPostingPath = postingsPath + ".txt";
+        //this.documentsPostingPath = documentsPostingPath + ".txt";
         try {
             terms_buffer_writer = new BufferedWriter(new FileWriter(this.termsPostingPath));
             terms_buffer_reader = new BufferedReader(new FileReader(this.termsPostingPath));
+            //docPosting_fw = new FileWriter(postingsPath + "\\DocsPosting.txt");
+            //docPosting_fr = new FileReader(postingsPath + "\\DocsPosting.txt");
+            //documents_buffer_writer = new BufferedWriter(docPosting_fw);
 //            documents_buffer_writer = new BufferedWriter(docDictionary_fw);
 //            documents_buffer_reader = new BufferedReader(docDictionary_fr);
         } catch (IOException e1) {
             e1.printStackTrace();
         }
+    }
 
-
+    public static void initPosting(String postingPath){
+        try {
+            documents_buffer_writer = new BufferedWriter(new FileWriter(postingPath + "\\docsPosting.txt"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     synchronized public static void writeToDocumentsPosting(Document doc, SortedMap<String, Term> sm) {
@@ -51,7 +49,7 @@ public class Posting {
             listOfTerms.append(sm.get(term).postingToString()).append("#");
         }
         StringBuilder docValueInDictionary = new StringBuilder();
-        docValueInDictionary.append(doc.getParentFileName()).append(",").append(doc.getCity()).append(",").append(doc.getFreqTermContent()).
+        docValueInDictionary.append(doc.getParentFileName()).append(",").append(doc.getLang()).append(",").append(doc.getCity()).append(",").append(doc.getFreqTermContent()).
                 append(",").append(doc.getMaxTF()).append(",").append(doc.getNumOfUniqueTerms()).append(",").append(docsPointer);
         docsPointer += 2;
         Indexer.addNewDocToDocDictionary(doc.getDocNo(), docValueInDictionary.toString());
@@ -70,6 +68,8 @@ public class Posting {
     public void writeToTermsPosting(TreeMap[] termDocs) {
         Iterator[] iterators = new Iterator[termDocs.length];
         for (int i = 0; i < termDocs.length; i++) {
+            if (termDocs[i].size() == 0)
+                break;
             iterators[i] = termDocs[i].entrySet().iterator();
         }
 
@@ -82,6 +82,8 @@ public class Posting {
             tmp = new TreeMap<>(new Indexer.TermComparator());
 
             for (int j = 0; j < termDocs.length; j++) {
+                if (termDocs[j].size() == 0)
+                    break;
                 Iterator it = iterators[j];
                 Map.Entry pair = (Map.Entry) it.next();
                 String key = pair.getKey().toString();
