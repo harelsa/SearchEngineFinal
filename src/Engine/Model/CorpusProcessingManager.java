@@ -30,6 +30,7 @@ public class CorpusProcessingManager {
     private ReadFile reader;
     private String corpusPath;
     private String postingPath ;
+    private String originalPath;
     private final boolean stemming; // If the current processing should be used in the stemming
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
@@ -43,6 +44,7 @@ public class CorpusProcessingManager {
 
     public CorpusProcessingManager(String corpusPath, String postingPath , boolean stemming) {
         this.corpusPath = corpusPath;
+        this.originalPath = postingPath;
         this.postingPath =  postingPath + "\\Postings" + ifStemming(stemming);
         this.stemming = stemming ;
         this.reader = new ReadFile();
@@ -136,7 +138,7 @@ public class CorpusProcessingManager {
     private void initParsers() {
         for (int i = 0; i < NUM_OF_PARSERS; i++) {
             segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
-            parsers[i] = new Parse(segmentFiles[i], postingPath);
+            parsers[i] = new Parse(segmentFiles[i], originalPath);
         }
     }
 
