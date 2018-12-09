@@ -1,38 +1,47 @@
 package Engine.Model;
+/**
+ * This class represents Segment File according to the Map Reduce model.
+ * The class is responsible for managing the writing the resulting output from parse into the appropriate partitions in the Segment file.
+ * It should be noted that in practice, this class does not represent a physical file but rather links to the instances of the SegmentFilePartition class that are contained in it.
+ * Each instance of SegmentFilePartition is a physical file.
+ */
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.SortedMap;
-import java.util.TreeSet;
 
 public class SegmentFile implements Serializable {
     private SegmentFilePartition[] filePartitions;
     private final int NUM_OF_PARTITATIONS = 7;
-    private boolean STEMMING = false ; // tells if to do stemmig - will be changed from gui
-    //public static Stemmer stemmer = new Stemmer() ;
+    private boolean STEMMING; // tells if to do stemming - will be changed from gui
 
-    // ('0', '9');
-    // ('a', 'c');
-    // ('d', 'f');
-    // ('g', 'k');
-    // ('l', 'p');
-    // ('p', 'z');
-    // ('z', 'z');
+
+    /**
+     * Constructor: Initializes Partitions as the number of categories we have chosen to divide each Segment File.
+     * @param path: The path in which the SegmentFilePartition files are created
+     * @param stemming:  If the current processing should be used in the stemming
+     */
     public SegmentFile(String path , boolean stemming ) {
         STEMMING = stemming ;
-        filePartitions = new SegmentFilePartition[7]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
+        filePartitions = new SegmentFilePartition[7];
         filePartitions[0] = new SegmentFilePartition(path, '0', '9');
         filePartitions[1] = new SegmentFilePartition(path, 'a', 'c');
         filePartitions[2] = new SegmentFilePartition(path, 'd', 'f');
         filePartitions[3] = new SegmentFilePartition(path, 'g', 'k');
         filePartitions[4] = new SegmentFilePartition(path, 'l', 'p');
         filePartitions[5] = new SegmentFilePartition(path, 'q', 'z');
-        filePartitions[6] = new SegmentFilePartition(path, 'z', 'z');
+        filePartitions[6] = new SegmentFilePartition(path, 'z', 'z'); // This Partition will actually catch "strange creatures" that will not enter inverted index / posting files
     }
 
-    /* Need to do it concurrent (new thread in parser which calls this method) */
-    public void signToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
+    /**
+     * The method sorts the terms received from the parse for a specific document and inserts them into the appropriate SegmentFilePartition.
+     * In addition, the raw information contained in the parameters obtained is also useful for a more advanced stage, the documents posting create phase.
+     * Therefore, during this method, we will send the parameters to another thread in order for it to start writing the posting.
+     * @param allTerms The terms received from parse
+     * @param currDoc The document from which the terms were received
+     */
+    public void sortDocTermsToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
         if (allTerms.size() == 0)
             return;
         Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
@@ -43,14 +52,11 @@ public class SegmentFile implements Serializable {
             HashMap.Entry pair = (HashMap.Entry)it.next();
             String term = (String) pair.getKey();
             if ( STEMMING ) {
-                // String[] s = {"d:\\documents\\users\\harelsa\\Downloads\\corpus\\stem.txt"}  ;
-                // stemmer.main(s);
                 Stemmer stemmer = new Stemmer() ;
                 stemmer.add(term.toCharArray(), term.length());
                 String stemmed = "";
                 stemmer.stem();
                 term = stemmer.toString();
-
             }
 
             int partitionNum = getPartitionDest(term); // 0-6
@@ -88,19 +94,24 @@ public class SegmentFile implements Serializable {
         }
     }
 
+    /**
+     * In order for us to know which term came from each document
+     * we will first write the document details in each FilePartition
+     * and only then will we begin to insert the terms associated with this document.
+     * @param currDoc The document from which the terms were received
+     */
     private void signNewDocSection(Document currDoc) {
         for (int i = 0; i < NUM_OF_PARTITATIONS; i++) {
             filePartitions[i].signDocSection(currDoc);
         }
     }
-    // ('0', '9');
-    // ('a', 'c');
-    // ('d', 'f');
-    // ('g', 'k');
-    // ('l', 'p');
-    // ('q', 'z');
-    // ('z', 'z');
 
+    /**
+     * This function returns the number of the appropriate Partition for the received term.
+     * The number is determined by the first character of the term.
+     * @param term The term should be inserted into the partition
+     * @return number of the appropriate Partition
+     */
     private int getPartitionDest(String term) {
         char termFirstChar = term.toLowerCase().charAt(0);
         if (Character.isDigit(termFirstChar))
@@ -119,13 +130,6 @@ public class SegmentFile implements Serializable {
             return 6;
     }
 
-    // ('0', '9');
-    // ('a', 'c');
-    // ('d', 'f');
-    // ('g', 'k');
-    // ('l', 'p');
-    // ('q', 'z');
-    // ('z', 'z');
 
     public SegmentFilePartition getSegmentFilePartitions(char from, char to){
         if (from == '0' && to == '9')

@@ -263,8 +263,8 @@ public class CorpusProcessingManager {
     }
 
     /**
-     * 
-     * @param curposPath
+     * This method, along with the following method, is responsible for adding the paths of all corpus files into the filePathsList data structure.
+     * @param curposPath The path of the corpus given by the user.
      */
     private void initFilesPathList(String curposPath) {
         final File folder = new File(curposPath);
@@ -280,6 +280,7 @@ public class CorpusProcessingManager {
             }
         }
     }
+
 
     /**
      * save city in a global hash map

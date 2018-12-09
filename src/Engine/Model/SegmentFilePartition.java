@@ -1,11 +1,12 @@
 package Engine.Model;
-
-import javafx.util.Pair;
+/**
+ * This class represents a Segment File Partition.
+ * In fact, this department manages the writing and reading from an exclusive text file intended to hold information in the following format: DocDetails, Term1, Term2, Term3, ...
+ * The terms that are held are terms within the alphabetic range defined for the specific partition instance.
+ */
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.TreeMap;
+
 
 public class SegmentFilePartition implements Serializable {
     private BufferedWriter file_buffer_writer;
@@ -19,8 +20,6 @@ public class SegmentFilePartition implements Serializable {
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
             file_buffer_reader = new BufferedReader(new FileReader(segmantPartitionFilePath));
 
-        } catch (FileNotFoundException e1) {
-            e1.printStackTrace();
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -28,9 +27,9 @@ public class SegmentFilePartition implements Serializable {
 
     synchronized public void signNewTerm(Term term) {
         try {
-            file_buffer_writer.append(term.lightToString() + "\n");
+            file_buffer_writer.append(term.lightToString()).append("\n");
             counter++;
-            if (counter > 13000){
+            if (counter > 13000) {
                 file_buffer_writer.flush();
                 counter = 0;
             }
@@ -39,10 +38,10 @@ public class SegmentFilePartition implements Serializable {
         }
     }
 
-    public String readLine(){
+    public String readLine() {
         String line;
         try {
-            if ((line = file_buffer_reader.readLine()) != null){
+            if ((line = file_buffer_reader.readLine()) != null) {
                 return line;
             }
         } catch (IOException e) {
@@ -53,7 +52,7 @@ public class SegmentFilePartition implements Serializable {
 
     public void signDocSection(Document currDoc) {
         try {
-            file_buffer_writer.append("<D>" + currDoc.lightToString() +"</D>" + "\n");
+            file_buffer_writer.append("<D>").append(currDoc.lightToString()).append("</D>").append("\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -75,8 +74,4 @@ public class SegmentFilePartition implements Serializable {
             e.printStackTrace();
         }
     }
-
-//
-//}
-
 }

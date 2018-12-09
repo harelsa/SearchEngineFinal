@@ -104,7 +104,7 @@ public class Parse {
         tokens = StringUtils.split(text , " ");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+        segmantFile.sortDocTermsToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
