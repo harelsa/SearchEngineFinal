@@ -25,8 +25,8 @@ public class Main extends Application {
         Controller controller = new Controller();
         //view notify controller
         View view = fxmlLoader.getController();
-        view.posting_txt_field.appendText( "C:\\Users\\harel_000\\Desktop\\test" );
-        view.corpus_txt_field.appendText("C:\\Users\\harel_000\\Desktop\\gg");
+        view.posting_txt_field.appendText( "C:\\Users\\Nadav\\Desktop\\Engine Project\\resources-10files" );
+        view.corpus_txt_field.appendText("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus-10files");
         view.setParent(primaryStage) ;
         view.setScene(scene) ;
         view.addObserver(controller);
@@ -106,16 +106,16 @@ public class Main extends Application {
 
 //        HashMap<String, Term> allTerms, Document currDoc
 
-//        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\bardanad\\Downloads\\corpus-split");
-        //TextOperationsManager textOperationsManager = new TextOperationsManager("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus");
-        //TextOperationsManager textOperationsManager = new TextOperationsManager("D:\\documents\\users\\bardanad\\corpus\\test");
-//        TextOperationsManager textOperationsManager = new TextOperationsManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
-        //textOperationsManager.StartTextOperations();
+//        CorpusProcessingManager textOperationsManager = new CorpusProcessingManager("d:\\documents\\users\\bardanad\\Downloads\\corpus-split");
+        //CorpusProcessingManager textOperationsManager = new CorpusProcessingManager("C:\\Users\\Nadav\\Desktop\\Engine Project\\corpus\\corpus");
+        //CorpusProcessingManager textOperationsManager = new CorpusProcessingManager("D:\\documents\\users\\bardanad\\corpus\\test");
+//        CorpusProcessingManager textOperationsManager = new CorpusProcessingManager("d:\\documents\\users\\harelsa\\Downloads\\corpus");
+        //textOperationsManager.StartCorpusProcessing();
         //String[] list_lang = textOperationsManager.getDocLang() ;
         //System.out.println(list_lang.toString());
         //System.out.println("lalal");
         //textOperationsManager.p();
-        // textOperationsManager.BuildCitiesPosting();
+        // textOperationsManager.buildCitiesPosting();
 
 
 

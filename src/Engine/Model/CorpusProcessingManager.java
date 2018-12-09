@@ -136,7 +136,7 @@ public class CorpusProcessingManager {
     private void initParsers() {
         for (int i = 0; i < NUM_OF_PARSERS; i++) {
             segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
-            parsers[i] = new Parse(segmentFiles[i]);
+            parsers[i] = new Parse(segmentFiles[i], postingPath);
         }
     }
 
@@ -263,7 +263,7 @@ public class CorpusProcessingManager {
     }
 
     /**
-     *
+     * 
      * @param curposPath
      */
     private void initFilesPathList(String curposPath) {
