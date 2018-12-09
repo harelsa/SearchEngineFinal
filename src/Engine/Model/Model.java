@@ -36,8 +36,8 @@ public class Model extends Observable {
         this.corpusPath = corpusPath;
         this.postingPath = postingPath;
         this.is_stemming = stemming ;
-        CorpusProcessingManager corpusProcessingManager = new CorpusProcessingManager(corpusPath, postingPath, stemming);
-        corpusProcessingManager.StartCorpusProcessing();
+        TextOperationsManager corpusProcessingManager = new TextOperationsManager(corpusPath, postingPath, stemming);
+        corpusProcessingManager.StartTextOperations();
         int uniqueTerms = Indexer.terms_dictionary.size();
         int docsGenerate = Indexer.docs_dictionary.size();
         Indexer.writeDictionariesToDisc();

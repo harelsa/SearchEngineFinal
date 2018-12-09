@@ -1,12 +1,4 @@
 package Engine.Model;
-/**
- * This class represents a Posting File.
- * The amount of Term Posting that we create as the number of Partitions we divided from each Segment File.
- * The Posting File contains additional information we need to save for keys that are in a particular index.
- * We save this information in a text file and link the relevant information to the keys by adding a pointer in the dictionary,
- * in our case the pointer will be represented by a line number of the relevant information in posting file.
- */
-
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -131,7 +123,7 @@ public class Posting {
                 if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key))
                     key = key.toUpperCase();
                 Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
-                if (CorpusProcessingManager.cities.containsKey(key.toLowerCase())){
+                if (TextOperationsManager.cities.containsKey(key.toLowerCase())){
                     Indexer.cities_dictionary.put(key, listOfTermDocs);
                 }
 
@@ -193,68 +185,63 @@ public class Posting {
     private String[] getRange(TreeMap termDoc) {
         String[] ans = null;
         Iterator it = termDoc.entrySet().iterator();
-        while (ans == null){
-            if (it.hasNext()) {
-                Map.Entry pair = (Map.Entry) it.next();
-                String key = pair.getKey().toString();
-                if (CorpusProcessingManager.testMode)
-                    System.out.println("first: " + key);
-                if (key.charAt(0) == '*' || key.charAt(0) == ' ' || key.charAt(0) == '|') {
-                    if (CorpusProcessingManager.testMode && key.charAt(0) != '*')
-                        System.out.println(key);
-                    key = key.substring(1);
-                }
-                char firstChar = key.charAt(0);
-                if (firstChar == '0') {
-                    ans = new String[10];
-                    ans[0] = "0";
-                    ans[1] = "1";
-                    ans[2] = "2";
-                    ans[3] = "3";
-                    ans[4] = "4";
-                    ans[5] = "5";
-                    ans[6] = "6";
-                    ans[7] = "7";
-                    ans[8] = "8";
-                    ans[9] = "9";
-                } else if (firstChar == 'a') {
-                    ans = new String[3];
-                    ans[0] = "a";
-                    ans[1] = "b";
-                    ans[2] = "c";
-                } else if (firstChar == 'd') {
-                    ans = new String[3];
-                    ans[0] = "d";
-                    ans[1] = "e";
-                    ans[2] = "f";
-                } else if (firstChar == 'g') {
-                    ans = new String[5];
-                    ans[0] = "g";
-                    ans[1] = "h";
-                    ans[2] = "i";
-                    ans[3] = "j";
-                    ans[4] = "k";
-                } else if (firstChar == 'l') {
-                    ans = new String[5];
-                    ans[0] = "l";
-                    ans[1] = "m";
-                    ans[2] = "n";
-                    ans[3] = "o";
-                    ans[4] = "p";
-                } else if (firstChar == 'q') {
-                    ans = new String[10];
-                    ans[0] = "q";
-                    ans[1] = "r";
-                    ans[2] = "s";
-                    ans[3] = "t";
-                    ans[4] = "u";
-                    ans[5] = "v";
-                    ans[6] = "w";
-                    ans[7] = "x";
-                    ans[8] = "y";
-                    ans[9] = "z";
-                }
+        if (it.hasNext()) {
+            Map.Entry pair = (Map.Entry) it.next();
+            String key = pair.getKey().toString();
+            if (key.charAt(0) == '*') {
+                key = key.substring(1);
             }
+            char firstChar = key.charAt(0);
+            if (firstChar == '0') {
+                ans = new String[10];
+                ans[0] = "0";
+                ans[1] = "1";
+                ans[2] = "2";
+                ans[3] = "3";
+                ans[4] = "4";
+                ans[5] = "5";
+                ans[6] = "6";
+                ans[7] = "7";
+                ans[8] = "8";
+                ans[9] = "9";
+            } else if (firstChar == 'a') {
+                ans = new String[3];
+                ans[0] = "a";
+                ans[1] = "b";
+                ans[2] = "c";
+            } else if (firstChar == 'd') {
+                ans = new String[3];
+                ans[0] = "d";
+                ans[1] = "e";
+                ans[2] = "f";
+            } else if (firstChar == 'g') {
+                ans = new String[5];
+                ans[0] = "g";
+                ans[1] = "h";
+                ans[2] = "i";
+                ans[3] = "j";
+                ans[4] = "k";
+            } else if (firstChar == 'l') {
+                ans = new String[5];
+                ans[0] = "l";
+                ans[1] = "m";
+                ans[2] = "n";
+                ans[3] = "o";
+                ans[4] = "p";
+            } else if (firstChar == 'q') {
+                ans = new String[10];
+                ans[0] = "q";
+                ans[1] = "r";
+                ans[2] = "s";
+                ans[3] = "t";
+                ans[4] = "u";
+                ans[5] = "v";
+                ans[6] = "w";
+                ans[7] = "x";
+                ans[8] = "y";
+                ans[9] = "z";
+            }
+
         }
         return ans;
     }

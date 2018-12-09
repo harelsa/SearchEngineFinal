@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 public class Document {
     private  String docLang = ""; // language of the doc
-    private String docNo; // id of doc
+    public String docNo; // id of doc
     private String parentFileName; // File id
     private int unique_t; // quantity of unique terms in doc
     private String city; // city of doc - appear in <F P=104> ...</F>
