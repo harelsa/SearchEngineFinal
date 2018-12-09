@@ -179,11 +179,11 @@ public class CorpusProcessingManager {
             System.out.println("Finished building Inverted Index");
         }
         closeAllSegmentFiles();
-        try {
-            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         buildCitiesPosting();
 
     }
@@ -199,7 +199,7 @@ public class CorpusProcessingManager {
     private void buildInvertedIndex() {
         for (int i = 0; i < NUM_OF_INVERTERS; i++) {
             System.out.println("inverter : " + i%NUM_OF_INVERTERS);
-            inverters[i%NUM_OF_INVERTERS].buildInvertedIndexes();
+            inverters[i%NUM_OF_INVERTERS].appendSegmentPartitionRangeToPostingAndIndexes();
        }
         System.out.println("done");
     }

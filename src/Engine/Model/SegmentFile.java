@@ -6,6 +6,9 @@ package Engine.Model;
  * Each instance of SegmentFilePartition is a physical file.
  */
 
+import org.apache.commons.lang3.CharUtils;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,6 +54,8 @@ public class SegmentFile implements Serializable {
         while (it.hasNext()) {
             HashMap.Entry pair = (HashMap.Entry)it.next();
             String term = (String) pair.getKey();
+//            if (term.length() > 2 && (term.charAt(0) == '|' || term.charAt(0) == '\'' || term.charAt(0) == '`'))
+//                term = StringUtils.substring(term, 1);
             if ( STEMMING ) {
                 Stemmer stemmer = new Stemmer() ;
                 stemmer.add(term.toCharArray(), term.length());
@@ -58,6 +63,7 @@ public class SegmentFile implements Serializable {
                 stemmer.stem();
                 term = stemmer.toString();
             }
+
 
             int partitionNum = getPartitionDest(term); // 0-6
             switch (partitionNum){

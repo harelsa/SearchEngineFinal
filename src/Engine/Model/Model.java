@@ -104,7 +104,6 @@ public class Model extends Observable {
     static public boolean deleteDirectory(File path) {
         if (path.exists()) {
             try {
-                Indexer.closeIO();
                 Posting.closeIO();
                 FileUtils.deleteDirectory(path);
                 return true;

@@ -100,7 +100,7 @@ public class Main extends Application {
 //        allTerms.put("Zzz", term3);
 //        allTerms.put("Yuli", term4);
 //        SegmentFile segmentFile = new SegmentFile();
-//        segmentFile.signToSpecificPartition(allTerms, doc);
+//        segmentFile.sortDocTermsToSpecificPartition(allTerms, doc);
 
 
 

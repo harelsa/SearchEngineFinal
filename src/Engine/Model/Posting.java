@@ -1,4 +1,12 @@
 package Engine.Model;
+/**
+ * This class represents a Posting File.
+ * The amount of Term Posting that we create as the number of Partitions we divided from each Segment File.
+ * The Posting File contains additional information we need to save for keys that are in a particular index.
+ * We save this information in a text file and link the relevant information to the keys by adding a pointer in the dictionary,
+ * in our case the pointer will be represented by a line number of the relevant information in posting file.
+ */
+
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -7,17 +15,16 @@ import java.util.*;
 
 
 public class Posting {
-    private String termsPostingPath;
     private BufferedWriter terms_buffer_writer;
     private static int docsPointer = 1;
     private static int docsCounter = 0;
     private static BufferedWriter documents_buffer_writer;
 
     public Posting(String postingsPath) {
-        this.termsPostingPath = postingsPath + ".txt";
+        String termsPostingPath = postingsPath + ".txt";
         //this.documentsPostingPath = documentsPostingPath + ".txt";
         try {
-            terms_buffer_writer = new BufferedWriter(new FileWriter(this.termsPostingPath));
+            terms_buffer_writer = new BufferedWriter(new FileWriter(termsPostingPath));
         } catch (IOException e1) {
             e1.printStackTrace();
         }
