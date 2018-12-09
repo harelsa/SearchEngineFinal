@@ -184,7 +184,7 @@ public class TextOperationsManager {
         }
     }
 
-    public void BuildCitiesPosting(){
+    public void buildCitiesPosting(){
         cities = reader.getCities() ;
         getCitiesInfo () ;
         //end of parse

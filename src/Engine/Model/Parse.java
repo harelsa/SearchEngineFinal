@@ -143,6 +143,9 @@ public class Parse {
                 continue;
             }
 
+            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
+                System.out.print("");
+
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
             if ( (tokensArray[i].length() > 5 && Character.isUpperCase(temp_char.charAt(0)) || Character.isLowerCase(temp_char.charAt(0)))
@@ -172,6 +175,7 @@ public class Parse {
                             Term tmp = docTerms.get(phrase_temp);
                             tmp.advanceTf();
                             tmp.addPosition(termPosition);
+                            docTerms.put(phrase_temp, tmp);
                             currDoc.addTerm(tmp);
                             termPosition++;
                             break;
@@ -235,6 +239,7 @@ public class Parse {
                         tmp.advanceTf();
                         tmp.addPosition(termPosition);
                         currDoc.addTerm(tmp);
+                        docTerms.put( what_to_add, tmp);
                         termPosition++;
                         if ( stop) break;
                     } else { // new term
@@ -347,18 +352,13 @@ public class Parse {
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
                 currDoc.addTerm(tmp);
+                docTerms.put(addTerm, tmp);
                 termPosition++;
             } else { // new term
-
-                // mutex
-                //StringUtils.replaceAll(addTerm, "/'?,", "");
                 Term obj_term = new Term(termPosition, 1, addTerm);
                 termPosition++;
                 currDoc.addTerm(obj_term);
                 docTerms.put(addTerm, obj_term);
-                //obj_term.addDoc(currDoc);
-                //obj_term.addDoc(currDoc);
-                //System.out.println(addTerm);
             }
             if ( !is_joint_term)
                 i++;

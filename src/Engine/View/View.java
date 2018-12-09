@@ -40,6 +40,7 @@ public class View extends Observable {
         fc.setAcceptAllFileFilterUsed(false );
         int result = fc.showOpenDialog(null);
         if (result == JFileChooser.APPROVE_OPTION) {
+            corpus_txt_field.clear();
             File selectedFile = fc.getSelectedFile();
             System.out.println("Selected file: " + selectedFile.getAbsolutePath());
             corpus_txt_field.appendText(selectedFile.getAbsolutePath());
@@ -53,6 +54,7 @@ public class View extends Observable {
         fc.setAcceptAllFileFilterUsed(false );
         int result = fc.showOpenDialog(null);
         if (result == JFileChooser.APPROVE_OPTION) {
+            posting_txt_field.clear();
             File selectedFile = fc.getSelectedFile();
             System.out.println("Selected file: " + selectedFile.getAbsolutePath());
             posting_txt_field.appendText(selectedFile.getAbsolutePath());

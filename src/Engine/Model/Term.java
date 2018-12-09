@@ -11,12 +11,12 @@ import java.util.List;
 public class Term implements Comparable, Serializable {
     private int tf; // term frequency in in doc 
     private String content;
-    private LinkedList<Integer> location_docs;// < doc obj , a list of locations(row num) in doc text >
+    private LinkedList<Integer> location_in_docs;// < doc obj , a list of locations(row num) in doc text >
     private boolean startsWithCapital;
 
     public Term(int position, int tf, String content) {
-        location_docs = new LinkedList<>();
-        location_docs.add(position);
+        location_in_docs = new LinkedList<>();
+        location_in_docs.add(position);
         this.tf = tf;
         this.content = content.toLowerCase();
         if (Character.isUpperCase(content.codePointAt(0)))
@@ -51,13 +51,13 @@ public class Term implements Comparable, Serializable {
                 //"df=" + df +
                 ", tf=" + tf +
                 ", content='" + content + '\'' +
-                ", docs=" + location_docs +
+                ", location in doc=" + location_in_docs +
                 '}';
     }
 
     // The short format will be: <TermContent>,<df>,<tf>,"<LOCS>:"<location_docs>,
     public String lightToString() {
-        return indicateCapital() + content+ "," + tf + "," + location_docs;
+        return indicateCapital() + content+ "," + tf + "," + location_in_docs;
     }
 
     public String postingToString(){
@@ -77,8 +77,8 @@ public class Term implements Comparable, Serializable {
     }
 
     public void addPosition(int termPosition) {
-        int firstFullPosition = location_docs.getFirst();
-        location_docs.add(termPosition - firstFullPosition);
+        int firstFullPosition = location_in_docs.getFirst();
+        location_in_docs.add(termPosition - firstFullPosition);
     }
 }
 
