@@ -1,7 +1,6 @@
 package Engine.Controller;
 
 import Engine.Model.Model;
-import Engine.Model.TextOperationsManager;
 import Engine.View.View;
 
 import java.util.Observable;

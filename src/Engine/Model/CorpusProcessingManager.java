@@ -1,3 +1,9 @@
+/**
+ This class actually manages the corpus processing and uses the various departments to perform the following actions (in chronological order):
+ 1. Reading and parsing the document repository (The parse output will be written into temporary files called segment files).
+ 2. Creating the inverted indexes
+ */
+
 package Engine.Model;
 
 import org.apache.commons.io.FileUtils;
@@ -14,31 +20,29 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class TextOperationsManager {
-    private final int NUM_OF_PARSERS = 8;
-    private final int NUM_OF_SEGMENT_FILES= 8;
-    private final int NUM_OF_INVERTERS = 6;
+public class CorpusProcessingManager {
+    public static final boolean testMode = false;
+
+    private final int NUM_OF_PARSERS = 8; // Number of parsers threads
+    private final int NUM_OF_SEGMENT_FILES= 8; // Unique segment file for each parse thread
+    private final int NUM_OF_INVERTERS = 6; // Num of inverters. Determined according to the subgroups that will be defined for each segment file (a-c, d-g, etc)
     private static double MILLION = Math.pow(10, 6);
-
-
-
     private ReadFile reader;
-    private String curposPath;
+    private String corpusPath;
     private String postingPath ;
-    private final boolean stemming;
+    private final boolean stemming; // If the current processing should be used in the stemming
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
     private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
-    private ArrayList<String> filesPathsList;
-    private static ExecutorService parseExecutor;
-    private static ExecutorService invertedExecutor;
-    static ConcurrentHashMap<String, City> cities ; // < City , City_obj >  cities after parsing
-
+    private ArrayList<String> filesPathsList; // A data structure that will hold all file paths in the corpus
+    private static ExecutorService parseExecutor; // Thread pool for the parsers run
+    private static ExecutorService invertedExecutor; // Thread pool for the inverters run
     private HashMap<String,String > inverted_city; // < State , City >
+    public static ConcurrentHashMap<String, City> cities ; // < City , City_obj >  cities after parsing
 
 
-    public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
-        this.curposPath = curposPath;
+    public CorpusProcessingManager(String corpusPath, String postingPath , boolean stemming) {
+        this.corpusPath = corpusPath;
         this.postingPath =  postingPath + "\\Postings" + ifStemming(stemming);
         this.stemming = stemming ;
         this.reader = new ReadFile();
@@ -60,12 +64,22 @@ public class TextOperationsManager {
         return "";
     }
 
+    /**
+     * Creates the required folder tree to hold the final output files that will be generated from the processing process
+     * @param postingPath The desired posting path given by the user
+     */
     private void createDirs(String postingPath) {
         new File(postingPath + "\\Terms").mkdirs();
         new File(postingPath + "\\Docs").mkdirs();
         new File(postingPath + "\\Segment Files").mkdirs();
     }
 
+    /**
+     * Initialization of the inverters.
+     * The method links each inverter to bunch of specific segment file partition (a certain alphabet range of terms) from the segment files.
+     * In addition, each inverter is linked to its own unique posting file.
+     * This posting will eventually contain the terms that will be in the alphabetical range defined for each inverter.
+     */
     private void initInverters() {
         String postingBaseFilePath = postingPath;
 
@@ -115,7 +129,10 @@ public class TextOperationsManager {
         inverters[5] = new Indexer(segmentFilesInverter6, termsPostingFile_q_z);
     }
 
-
+    /**
+     * Initialization of the parsers.
+     * And links each parser to specific segment file which will contain the parsing results of all documents parse processed.
+     */
     private void initParsers() {
         for (int i = 0; i < NUM_OF_PARSERS; i++) {
             segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
@@ -123,35 +140,52 @@ public class TextOperationsManager {
         }
     }
 
-    public void StartTextOperations() {
-        initFilesPathList(curposPath);
+
+    /**
+     * The method that manages the entire corpus processing process.
+     * The method calls for auxiliary methods in order to obtain the final outputs required
+     */
+    public void StartCorpusProcessing() {
+        initFilesPathList(corpusPath);
         Indexer.initIndexer(postingPath);
 
         try {
-            String startParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-            System.out.println("Starting parsing: " + startParseTimeStamp);
+            if (testMode) {
+                String startParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+                System.out.println("Starting parsing: " + startParseTimeStamp);
+            }
             readAndParse();
+
+            if (testMode) {
             String finishParseTimeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Finish parsing: " + finishParseTimeStamp);
+            }
 
 
         }
         catch (Exception e ){
         }
         //end of parse
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
         cities = reader.cities;
-        System.out.println("Starting building Inverted Index: " + timeStamp);
+        if (testMode){
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            System.out.println("Starting building Inverted Index: " + timeStamp);
+        }
+
         buildInvertedIndex();
-        System.out.println("Finished building Inverted Index");
+        if (testMode){
+            System.out.println("Finished building Inverted Index");
+        }
         closeAllSegmentFiles();
         try {
             FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        buildCitiesPosting();
 
     }
+
 
     private void closeAllSegmentFiles() {
         for (int i = 0; i < segmentFiles.length; i++) {
@@ -168,6 +202,11 @@ public class TextOperationsManager {
         System.out.println("done");
     }
 
+    /**
+     * This method manages the parallel run of the parsers.
+     * The method is part of a mechanism that takes care of parallelism in performing the reading and parsing operation of multiple files simultaneously.
+     * @throws InterruptedException
+     */
     private void readAndParse() throws InterruptedException {
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
@@ -179,12 +218,18 @@ public class TextOperationsManager {
         }
     }
 
-    public void BuildCitiesPosting(){
+
+    public void buildCitiesPosting(){
         cities = reader.getCities() ;
         getCitiesInfo () ;
         //end of parse
     }
 
+    /**
+     * An auxiliary method that makes it easy to retrieve a segment file path that belongs to a specific parser
+     * @param i The parse number
+     * @return Segment file path of a specific parse.
+     */
     private String getSegmentFilePath(int i) {
         String segmantBaseFilePath = this.postingPath + "\\Segment Files";
         String segmantFilePath = "";
@@ -217,6 +262,10 @@ public class TextOperationsManager {
         return segmantFilePath;
     }
 
+    /**
+     *
+     * @param curposPath
+     */
     private void initFilesPathList(String curposPath) {
         final File folder = new File(curposPath);
         listFilesOfFolder(folder);

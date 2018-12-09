@@ -2,7 +2,6 @@ package Engine.Model;
 
 import org.apache.commons.lang3.StringUtils;
 
-import javax.xml.soap.Text;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -212,9 +211,9 @@ public class Indexer {
     private static String getCityDetailsFromApi(String s) {
         StringBuilder sb = new StringBuilder();
         s= s.toLowerCase() ;
-        boolean test = TextOperationsManager.cities.containsKey(s) ;
+        boolean test = CorpusProcessingManager.cities.containsKey(s) ;
         if (test){
-            City city = TextOperationsManager.cities.get(s.toLowerCase());
+            City city = CorpusProcessingManager.cities.get(s.toLowerCase());
             String currency = city.getCurrency();
             String pop = city.getPopulation();
             sb.append(currency).append(",").append(pop);

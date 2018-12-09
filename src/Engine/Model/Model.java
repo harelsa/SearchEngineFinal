@@ -4,13 +4,11 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
-import java.io.IOException;
 import java.util.Observable;
 import java.util.concurrent.TimeUnit;
 
@@ -26,15 +24,14 @@ public class Model extends Observable {
         this.corpusPath = corpusPath;
         this.postingPath = postingPath;
         this.is_stemming = stemming ;
-        TextOperationsManager textOperationsManager = new TextOperationsManager(corpusPath, postingPath, stemming);
-        textOperationsManager.StartTextOperations();
-        textOperationsManager.BuildCitiesPosting();
+        CorpusProcessingManager corpusProcessingManager = new CorpusProcessingManager(corpusPath, postingPath, stemming);
+        corpusProcessingManager.StartCorpusProcessing();
         int uniqueTerms = Indexer.terms_dictionary.size();
         int docsGenerate = Indexer.docs_dictionary.size();
         Indexer.writeDictionariesToDisc();
         long estimatedTime = System.currentTimeMillis() - startTime;
         String summery = getSummary(estimatedTime, uniqueTerms, docsGenerate);
-        list_lang = textOperationsManager.getDocLang();
+        list_lang = corpusProcessingManager.getDocLang();
         setChanged();
         notifyObservers("finished");
         JOptionPane.showMessageDialog(null, summery, "Build Info", JOptionPane.INFORMATION_MESSAGE);
