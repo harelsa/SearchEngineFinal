@@ -11,14 +11,26 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Observable;
 import java.util.concurrent.TimeUnit;
-
+/**
+ * Part of MVC Design pattern  , get called from controller after View events
+ */
 public class Model extends Observable {
-    private String corpusPath;
-    private String postingPath ;
-    private boolean is_stemming ;
-    public String [] list_lang ;
+    private String corpusPath; //saved corpus path
+    private String postingPath ;// saved outpot posting path
+    private boolean is_stemming ; // using a stemmer on terms ot not
+    public String [] list_lang ; //list of lang returns from parsing the docs
+    // will allow to load the term dic to prog memory -
+    // will be used in project part 2
     HashMap < String , String[] > termDictionary = new HashMap<>();
 
+    /**
+     * run corpus processing manager , get back info from posting process and
+     * display it at the end ,
+     * get lang lind and set it in gui
+     * @param corpusPath
+     * @param postingPath
+     * @param stemming
+     */
     public void run(String corpusPath, String postingPath, boolean stemming) {
         long startTime = System.currentTimeMillis();
         this.corpusPath = corpusPath;
@@ -38,6 +50,13 @@ public class Model extends Observable {
 
     }
 
+    /**
+     * help to present a summary of run info in the end of posting
+     * @param estimatedTime - runtime
+     * @param uniqueTerms - num of unique terms in the corpus
+     * @param docsGenerate - how many docs in the corpus
+     * @return
+     */
     private String getSummary(long estimatedTime, int uniqueTerms, int docsGenerate) {
         long runTime = TimeUnit.MILLISECONDS.toSeconds(estimatedTime);
         String ans = uniqueTerms + " Unique Terms" + "\n";
@@ -50,6 +69,10 @@ public class Model extends Observable {
     public void showDic() {
     }
 
+    /**
+     * load the dic file from disk to memory - insert to termDictionary
+     * @param stemming
+     */
     public void loadDicToMemory(String stemming) {
         File dir = new File(postingPath + "\\Postings"+ ifStemming() );
         if ( dir!= null && dir.exists()){
@@ -79,6 +102,10 @@ public class Model extends Observable {
         }
     }
 
+    /**
+     * delete all files & folder created after posting process
+     * @return
+     */
     public boolean resetAll() {
         File dir = new File(postingPath + "\\Postings" + ifStemming());
         System.out.println("Deletes :" + postingPath + "\\Postings"+ifStemming());

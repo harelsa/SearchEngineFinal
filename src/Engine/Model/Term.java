@@ -5,13 +5,14 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * represent a term inside corpus
+ */
 public class Term implements Comparable, Serializable {
-    private int tf; // length of location docs
+    private int tf; // term frequency in in doc 
     private String content;
-    private LinkedList<Integer> location_docs;// < doc obj , a list of locations(row num)
+    private LinkedList<Integer> location_docs;// < doc obj , a list of locations(row num) in doc text >
     private boolean startsWithCapital;
-    //private HashMap<Document, Integer > tf_docs ;
-    // in doc (tr - number tomes the term appear in the doc , the length of the list ) >
 
     public Term(int position, int tf, String content) {
         location_docs = new LinkedList<>();

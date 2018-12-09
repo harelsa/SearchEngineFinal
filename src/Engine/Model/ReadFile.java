@@ -18,7 +18,9 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.joining;
 
-
+/**
+ * read a file and splits it to docs , by sending the splited text to parse
+ */
 public class ReadFile {
     ExecutorService executor;
 
@@ -29,7 +31,11 @@ public class ReadFile {
         executor = Executors.newFixedThreadPool(8);
     }
 
-
+    /**
+     * read line by line from giving file path and sends doc  & doc text's to parser
+     * @param filePathName
+     * @param parser assign parser
+     */
     public void readAndParseLineByLine(String filePathName, Parse parser) {
         BufferedReader br = null;
         System.out.println(filePathName);
@@ -140,11 +146,6 @@ public class ReadFile {
         }
     }
 
-    private String get_doc_date(String line) {
-        String[] arr = StringUtils.split(line , " ");
-
-        return "" ;
-    }
 
     private String getParentFileName(String filePathName) {
         String[] split = StringUtils.split(filePathName , "\\\\");
