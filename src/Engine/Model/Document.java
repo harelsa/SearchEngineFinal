@@ -6,19 +6,15 @@ import java.io.Serializable;
 import java.util.HashMap;
 
 public class Document {
-    private  String docLang = "";
-    private String docNo;
-    private String parentFileName;
+    private  String docLang = ""; // language of the doc
+    private String docNo; // id of doc
+    private String parentFileName; // File id
     private int unique_t; // quantity of unique terms in doc
     private String city; // city of doc - appear in <F P=104> ...</F>
     private HashMap<Term, Integer> termFrequency;
-    private Term maxFreqTerm;
-    private String date ;
-    private int maxFreqTermNumber;  // frequancy of the most common term in doc
+    private Term maxFreqTerm; // the term with most appearances
+    private int maxFreqTermNumber;  // frequency of the most common term in doc
 
-    public Document(String docNo, String parentFileName, String docCity, String maxTermFreq, String maxContentTermFreq) {
-
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -41,7 +37,6 @@ public class Document {
         this.docLang = docLang ;
         this.parentFileName = parentFileName;
         termFrequency = new HashMap<>();
-        this.date = date ;
     }
 
     public String getDocNo() {
@@ -51,7 +46,7 @@ public class Document {
     public String getParentFileName() {
         return parentFileName;
     }
-
+    //save the term in termFrequency Hash map
     public void addTerm(Term term){
         if (maxFreqTermNumber == 0){
             maxFreqTerm = term;
@@ -89,6 +84,9 @@ public class Document {
                 '}';
     }
 
+    /**
+     * updated the num of unique terms in doc after parsing
+      */
     public void updateAfterParsing() {
         unique_t = termFrequency.size();
     }

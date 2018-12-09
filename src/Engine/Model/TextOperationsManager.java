@@ -25,6 +25,7 @@ public class TextOperationsManager {
     private ReadFile reader;
     private String curposPath;
     private String postingPath ;
+    private String clean_path_output;
     private final boolean stemming;
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
     private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
@@ -39,6 +40,7 @@ public class TextOperationsManager {
 
     public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
         this.curposPath = curposPath;
+        this.clean_path_output = postingPath;
         this.postingPath =  postingPath + "\\Postings" + ifStemming(stemming);
         this.stemming = stemming ;
         this.reader = new ReadFile();
@@ -119,7 +121,7 @@ public class TextOperationsManager {
     private void initParsers() {
         for (int i = 0; i < NUM_OF_PARSERS; i++) {
             segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
-            parsers[i] = new Parse(segmentFiles[i]);
+            parsers[i] = new Parse(segmentFiles[i] , clean_path_output);
         }
     }
 

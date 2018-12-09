@@ -23,20 +23,19 @@ public class Parse {
     private static double BILLION = Math.pow(10, 9);
     private static double TRILLION = Math.pow(10, 12);
 
-    //private static ConcurrentHashMap<String, Term> AllTerms = new ConcurrentHashMap<>();  // < str_term , obj_term >  // will store all the terms in curpos
-    private static HashSet<String> stopwords = new HashSet<>();
+
+    private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words p
     private static HashSet<String> specialwords = new HashSet<>();
     private static HashSet<String> specialchars = new HashSet<>();
     private static HashSet<String> months = new HashSet<>();
 
-    private static FileReader stopwords_fr; // read stop words from the file
+    private FileReader stopwords_fr; // read stop words from the file
     private static FileReader specialwords_fr;
     private static FileReader specialchars_fr;
     private static FileReader months_fr;
 
     static {
         try {
-            stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt");
             specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
             specialchars_fr = new FileReader("src\\Engine\\resources\\special_chars.txt");
             months_fr = new FileReader("src\\Engine\\resources\\months.txt");
@@ -45,9 +44,7 @@ public class Parse {
             e.printStackTrace();
         }
     }
-    //[0-9]{1,2}(/|-)[0-9]{1,2}(/|-)[0-9]{4}
-    //Pattern NumberThousand = Pattern.compile("\\d* \\w Thousand");
-    //Pattern PRICE_DOU_DOLLAR = Pattern.compile( "$" + "\\d*" +" " + "(billion|million|Million|Billion)");
+
     private static Pattern NUMBER_ADDS = Pattern.compile("\\d+" + " " + "(Thousand|Million|Billion|Trillion|percent|percentage|Dollars)");
     private static Pattern PRICE_MBT_US_DOLLARS = Pattern.compile("\\d+" + " " + "(million|billion|trillion)" + " " + "U.S" + " " + "dollars");
     private static Pattern PRICE_DOU = Pattern.compile("\\d+" + "(m|bn) " + "(Dollars)");
@@ -67,11 +64,9 @@ public class Parse {
 
 
 
-    public Parse(SegmentFile segmantFile) {
+    public Parse(SegmentFile segmantFile , String path) {
         try {
-//            FileReader stopwords_fr = new FileReader("src\\Engine\\resources\\stop_words.txt"); // read stop words from the file
-//            FileReader specialwords_fr = new FileReader("src\\Engine\\resources\\special_words.txt"); // read stop words from the file
-//            FileReader specialchars_fr= new FileReader("src\\Engine\\resources\\special_chars.txt");
+            stopwords_fr = new FileReader(path  +"\\stop_words.txt");
             BufferedReader stopwords_br = new BufferedReader(stopwords_fr);
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
