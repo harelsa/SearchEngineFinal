@@ -61,16 +61,22 @@ public class View extends Observable {
 
     public void  run_btn_pressed () {
         //System.out.println("pressed");
-        if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty())
+        if ( corpus_txt_field.getText().isEmpty() || posting_txt_field.getText().isEmpty()) {
             JOptionPane.showMessageDialog(null, "One or  more Paths is missing", "Error", JOptionPane.ERROR_MESSAGE);
-        else {
+            return;
+        }
+        if ( !checkPaths() ) { // paths are not valid
+            JOptionPane.showMessageDialog(null, "Paths are Invalid", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
             setChanged();
             notifyObservers("run");
             load_dic_btn.setDisable(false );
             show_dic_btn.setDisable(false );
             reset_btn.setDisable(false);
             lang_list.setDisable(false);
-        }
+
 
     }
 
@@ -173,4 +179,15 @@ public class View extends Observable {
         setChanged();
         notifyObservers("load_to_memory");
     }
+
+    public boolean checkPaths ( ) {
+        String corpus = corpus_txt_field.getText();
+        String posting = posting_txt_field.getText();
+        File dir = new File(corpus);
+        File dir2 = new File(posting);
+        if (dir != null && dir.exists() && dir2 != null && dir2.exists()) {
+            return true;
+        } else return false;
+    }
+
 }

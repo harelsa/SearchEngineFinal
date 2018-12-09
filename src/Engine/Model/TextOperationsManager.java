@@ -32,13 +32,9 @@ public class TextOperationsManager {
     private ArrayList<String> filesPathsList;
     private static ExecutorService parseExecutor;
     private static ExecutorService invertedExecutor;
-    static ConcurrentHashMap<String, City> cities ; // cities after parsing
+    static ConcurrentHashMap<String, City> cities ; // < City , City_obj >  cities after parsing
 
-
-
-
-
-    private HashMap<String,String > inverted_city;
+    private HashMap<String,String > inverted_city; // < State , City >
 
 
     public TextOperationsManager(String curposPath , String postingPath ,boolean stemming) {
@@ -310,7 +306,7 @@ public class TextOperationsManager {
                 try {
                     city_obj.setState_name(state);
                     inverted_city.put(state, city);
-                    cities.put(s, city_obj);
+                    cities.put(city, city_obj);
                 }
                 catch (Exception e ){
                     System.out.println(city + " : " + state);
@@ -373,7 +369,7 @@ public class TextOperationsManager {
                         population =  "M" + Double.toString(num_d) ;
                     }
                     city_obj.setPopulation(population);
-                    cities.put(s, city_obj);
+                    cities.put(city, city_obj);
                 }
                 catch (Exception e ){
                     System.out.println(state + " " + city_obj.toString());
@@ -470,7 +466,7 @@ public class TextOperationsManager {
                 }
                 try {
                     city_obj.setCurrency(currency);
-                    cities.put(s, city_obj);
+                    cities.put(city, city_obj);
                 }
                 catch (Exception e ){
                     System.out.println(state + " : " + state);
