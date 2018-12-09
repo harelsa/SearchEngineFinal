@@ -13,7 +13,13 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-
+/**
+ * will break each doc to terms , by getting a :
+ * Segmentfile to Write ,an array of tokens from Current doc Text , Doc obj .
+ * The class will use java patterns and conditions to find the right way the
+ * term should be written to posting file . we are checking from long length patterns to short
+ *  this way we will not miss longer terms first
+ */
 public class Parse {
 
 
@@ -24,15 +30,19 @@ public class Parse {
     private static double TRILLION = Math.pow(10, 12);
 
 
-    private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words p
-    private static HashSet<String> specialwords = new HashSet<>();
-    private static HashSet<String> specialchars = new HashSet<>();
-    private static HashSet<String> months = new HashSet<>();
+    private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words
+    private static HashSet<String> specialwords = new HashSet<>(); // list of words might be in terms
+    private static HashSet<String> specialchars = new HashSet<>(); // list of chars that will be
+                                                                    // removed when term is cleaned
+    private static HashSet<String> months = new HashSet<>(); // list of months
 
     private FileReader stopwords_fr; // read stop words from the file
     private static FileReader specialwords_fr;
     private static FileReader specialchars_fr;
     private static FileReader months_fr;
+
+    private SegmentFile segmantFile; // each parser gets one segment file to write to
+    private int termPosition; // counts the term position inside the doc text
 
     static {
         try {
@@ -57,11 +67,6 @@ public class Parse {
     private static Pattern REGULAR_NUM = Pattern.compile("^[0-9]*$");
     private static Pattern DOUBLE_NUM = Pattern.compile("^[0-9]*$" + "." + "^[0-9]*$");
     private static Pattern BETWEEN = Pattern.compile("\\d+" + "and" + "\\d+");
-
-
-    private SegmentFile segmantFile;
-    private int termPosition;
-
 
 
     public Parse(SegmentFile segmantFile , String path) {
@@ -97,6 +102,12 @@ public class Parse {
 
     }
 
+    /**
+     *passes the terms from the func getTerms and passes it to the segment file
+     * @param text - doc's text
+     * @param currDoc - cuur doc obj
+     * @return
+     */
     public HashSet<String> parse(String text, Document currDoc) {
         termPosition = 0;
         //text = remove_stop_words(text);
@@ -109,10 +120,11 @@ public class Parse {
     }
 
     /**
-     * check witch pattars the tokens match
-     *
-     * @param tokensArray
-     * @param currDoc
+     * go through the tokens array and finds the right pattern to create
+     * a legal Term
+     * @param tokensArray - doc text splited by ","
+     * @param currDoc the curr doc obj
+     * @return a sorted map of all the terms in curr doc text
      */
     private SortedMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
         TreeMap<String, Term> docTerms = new TreeMap<String, Term>((Comparator) (o1, o2) -> {
@@ -145,11 +157,6 @@ public class Parse {
                 is_joint_term = true ;
 
             }
-
-
-
-
-
             //First law - save " phrase" - will be saved as phrase and single words
             if ( addTerm.equals("") &&tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
                 int j = i ;
@@ -359,6 +366,11 @@ public class Parse {
         return docTerms ;
     }
 
+    /**
+     * checks if a string is a number - by moving throuhg chars
+     * @param string
+     * @return true / false
+     */
     public static boolean isNumber(String string) {
 
         if (string == null || string.isEmpty()) {
@@ -384,6 +396,11 @@ public class Parse {
         return true;
     }
 
+    /**
+     * get a string and remove access chars from both sided of the term
+     * @param token
+     * @return clean token
+     */
     private String cleanToken(String token) {
         StringBuilder s = null;
         boolean changed = true  ;
@@ -411,6 +428,8 @@ public class Parse {
         return false;
     }
 
+    // the funcs handle a size i terms , by checking the next tokens of the curr token
+    // the funcs getting calls from getTerms() func , according to conditions & patters checked
     private String check1WordPattern(String token) {
         if (token.equals("")) return  "" ;
 
@@ -450,27 +469,6 @@ public class Parse {
         term = token;
         //System.out.println("Term added: " + term);
         return  term ;
-    }
-
-    private String get_term_from_simple_price(String token, String originalToken) {
-        originalToken = originalToken.replace("$", "");
-        token = token.replaceAll("," , "");
-
-        double value = 0;
-        if (isNumber(token)) {
-            try {
-                value = Double.parseDouble(token);
-            } catch (Exception e) {
-
-            }
-            if (isBetween(value, 0, MILLION - 1))
-                return originalToken + " Dollars";
-
-            if (isBetween(value, MILLION, Double.MAX_VALUE))
-                return checkVal(value / MILLION) + " M Dollars";
-        }
-        return "ERROR!!!";
-
     }
 
     private String check2WordsPattern(String token1, String token2) {
@@ -546,15 +544,6 @@ public class Parse {
             return  term ;
         }
         return term;
-    }
-
-    /**
-     * Check if term exits , and updates fields accordingly
-     *
-     * @param term
-     */
-    private void addToDocTerms(String term, Document currDoc) {
-
     }
 
     private String check3WordsPattern(String token1, String token2, String token3) {
@@ -635,6 +624,12 @@ public class Parse {
         return term;
     }
 
+    /**
+     * replace the second toke to the right sign by prog rule
+     * @param token number
+     * @param anotherToken million| billion| percent ..
+     * @return a term
+     */
     private String PairTokensIsNumberFormat(String token, String anotherToken) {
         String term = "";
         String temp = anotherToken;
@@ -666,6 +661,9 @@ public class Parse {
         }
         return term;
     }
+
+    //the next funcs change the anotherToken to the right sign and add it
+    // to the term , return  the changed term
 
     /* Month DD */
     private String PairTokensIsDate2Format(String token, String anotherToken) {
@@ -834,7 +832,38 @@ public class Parse {
 
         return "ERROR!!!";
     }
+    /**
+     * handle all patterns < $ + decimal + M Dolllars |Dollars ></>
+     * @param token
+     * @param originalToken
+     * @return the final term changed by prog rules
+     */
+    private String get_term_from_simple_price(String token, String originalToken) {
+        originalToken = originalToken.replace("$", "");
+        token = token.replaceAll("," , "");
 
+        double value = 0;
+        if (isNumber(token)) {
+            try {
+                value = Double.parseDouble(token);
+            } catch (Exception e) {
+
+            }
+            if (isBetween(value, 0, MILLION - 1))
+                return originalToken + " Dollars";
+
+            if (isBetween(value, MILLION, Double.MAX_VALUE))
+                return checkVal(value / MILLION) + " M Dollars";
+        }
+        return "ERROR!!!";
+
+    }
+
+    /**
+     * change a double token to int if the decimal point is 0 -  of 1.0 to 1
+     * @param v
+     * @return the fixed num
+     */
     private String checkVal(double v) {
         Double d = v;
         if (v == d.intValue())
@@ -842,26 +871,17 @@ public class Parse {
         else return v + "";
     }
 
+    /**
+     * check if a num is between to values
+     * @param x
+     * @param lower
+     * @param upper
+     * @return true / false
+     */
     public static boolean isBetween(double x, double lower, double upper) {
         return lower <= x && x <= upper;
     }
 
-    public String remove_stop_words(String str) {
 
-        StringBuilder res = new StringBuilder("");
-
-        String[] words = StringUtils.split(str , " ");
-        for (String s : words) {
-            if (stopwords.contains(s) || s.equals(" ") || s.equals("")) {
-                // Do something with the stop words found in the sample input or discard them.
-            } else {
-                res.append(s); // Append non-stop word to textOutput.
-                res.append(" ");
-            }
-
-        }
-
-        return res.toString();
-    }
 
 }
