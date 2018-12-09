@@ -68,7 +68,14 @@ public class Indexer {
                         line = segmentFilePartitions[i].readLine();
                         while (line != null && !line.contains("<D>")) {
                             String tf = "";
+                            if (!line.contains("[")){
+                                System.out.println(line);
+                            }
                             String[] locsSplited = StringUtils.split(line, "["); // Cuts the locations details
+                            if (locsSplited == null){
+                                line = segmentFilePartitions[i].readLine();
+                                continue;
+                            }
                             int lastIndex = StringUtils.lastIndexOf(locsSplited[0], ",");
                             if (lastIndex == -1) {
                                 line = segmentFilePartitions[i].readLine();
