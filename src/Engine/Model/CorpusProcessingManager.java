@@ -364,9 +364,9 @@ public class CorpusProcessingManager {
 //            e.printStackTrace();
 //        }
         buildCitiesPosting();
-        docsPostingWriterExecutor.shutdown();
-        while (!docsPostingWriterExecutor.isTerminated()) {
-        }
+//        docsPostingWriterExecutor.shutdown();
+//        while (!docsPostingWriterExecutor.isTerminated()) {
+//        }
 
     }
 
@@ -379,7 +379,7 @@ public class CorpusProcessingManager {
 
 
     private void buildInvertedIndex() {
-        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
+        for (int i = 10; i < NUM_OF_INVERTERS; i++) {
             System.out.println("inverter : " + i%NUM_OF_INVERTERS);
             inverters[i%NUM_OF_INVERTERS].appendSegmentPartitionRangeToPostingAndIndexes();
 
