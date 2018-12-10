@@ -407,12 +407,13 @@ public class Parse {
         while (  token != null  && token.length() >0  &&!token.equals("") && changed ) {
             changed = false;
             s = new StringBuilder(token);
-            if (specialchars.contains(""+s.charAt(0))) {
+            String a = " " ;
+            if (specialchars.contains(""+s.charAt(0)) || a.equals(""+s.charAt(0)) ) {
                 s.deleteCharAt(0);
                 token = s.toString() ;
                 changed = true ;
             }
-            if ( token != null  && token.length() >0  && !token.equals("")   && specialchars.contains(""+s.charAt(s.length()-1))) {
+            if ( token != null  && token.length() >0  && !token.equals("")   && ( specialchars.contains(""+s.charAt(s.length()-1))||  a.equals(""+s.charAt(0)))) {
                 s.deleteCharAt(s.length() - 1);
                 changed = true;
             }

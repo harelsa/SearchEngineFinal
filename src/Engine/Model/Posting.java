@@ -124,7 +124,7 @@ public class Posting {
                 if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key))
                     key = key.toUpperCase();
                 Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
-                if (TextOperationsManager.cities.containsKey(key.toLowerCase())){
+                if (CorpusProcessingManager.cities.containsKey(key.toLowerCase())){
                     Indexer.cities_dictionary.put(key, listOfTermDocs);
                 }
 

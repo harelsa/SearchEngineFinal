@@ -3,7 +3,6 @@ package Engine.Model;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.lang.annotation.Target;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -52,11 +51,9 @@ public class Indexer {
         this.segmentFilePartitions = segmentFilesInverter;
     }
 
-    public void buildInvertedIndexes() {
-        readDocsFromEachSegmentFile();
-    }
 
-    private void readDocsFromEachSegmentFile() {
+
+    public void appendSegmentPartitionRangeToPostingAndIndexes() {
         //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
         TreeMap[] termToDocsArr = new TreeMap[segmentFilePartitions.length];
         for (int i = 0; i < segmentFilePartitions.length; i++) {
@@ -145,6 +142,7 @@ public class Indexer {
                 termIt.remove(); // avoids a ConcurrentModificationException
             }
             termDictionary_bf.flush();
+            termDictionary_bf.close() ;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -212,9 +210,9 @@ public class Indexer {
     private static String getCityDetailsFromApi(String s) {
         StringBuilder sb = new StringBuilder();
         s= s.toLowerCase() ;
-        boolean test = TextOperationsManager.cities.containsKey(s) ;
+        boolean test = CorpusProcessingManager.cities.containsKey(s) ;
         if (test){
-            City city = TextOperationsManager.cities.get(s.toLowerCase());
+            City city = CorpusProcessingManager.cities.get(s.toLowerCase());
             String currency = city.getCurrency();
             String pop = city.getPopulation();
             sb.append(currency).append(",").append(pop);
