@@ -5,11 +5,15 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 public class SegmentFile implements Serializable {
     private SegmentFilePartition[] filePartitions;
     private final int NUM_OF_PARTITATIONS = 7;
     private boolean STEMMING = false ; // tells if to do stemmig - will be changed from gui
+
     //public static Stemmer stemmer = new Stemmer() ;
 
     // ('0', '9');
@@ -36,7 +40,8 @@ public class SegmentFile implements Serializable {
         if (allTerms.size() == 0)
             return;
         Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
-        writeToDocumentPosting.start();
+        //writeToDocumentPosting.start();
+        TextOperationsManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
         Iterator it = allTerms.entrySet().iterator();
         signNewDocSection(currDoc);
         while (it.hasNext()) {

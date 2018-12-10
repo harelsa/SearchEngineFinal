@@ -32,6 +32,8 @@ public class TextOperationsManager {
     private ArrayList<String> filesPathsList;
     private static ExecutorService parseExecutor;
     private static ExecutorService invertedExecutor;
+    public static ExecutorService docsPostingWriterExecutor;
+
     static ConcurrentHashMap<String, City> cities ; // cities after parsing
 
 
@@ -55,6 +57,7 @@ public class TextOperationsManager {
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
         invertedExecutor = Executors.newFixedThreadPool(NUM_OF_INVERTERS);
+        docsPostingWriterExecutor = Executors.newFixedThreadPool(4);
         cities = new ConcurrentHashMap<>();
         inverted_city = new HashMap<>() ;
     }
@@ -155,7 +158,9 @@ public class TextOperationsManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
+        docsPostingWriterExecutor.shutdown();
+        while (!docsPostingWriterExecutor.isTerminated()) {
+        }
     }
 
     private void closeAllSegmentFiles() {

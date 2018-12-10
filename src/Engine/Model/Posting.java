@@ -97,6 +97,7 @@ public class Posting {
                         pair = (Map.Entry) it.next();
                         key = pair.getKey().toString();
                         value = pair.getValue().toString();
+                        it.remove();
                     } else
                         break;
                 }
