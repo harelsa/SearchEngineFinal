@@ -32,9 +32,9 @@ public class SegmentFile implements Serializable {
     public void signToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
         if (allTerms.size() == 0)
             return;
-        Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
-        writeToDocumentPosting.start();
-        CorpusProcessingManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
+//        Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
+//        writeToDocumentPosting.start();
+//        CorpusProcessingManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
         Iterator it = allTerms.entrySet().iterator();
         signNewDocSection(currDoc);
         while (it.hasNext()) {
