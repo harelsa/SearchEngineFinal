@@ -97,12 +97,12 @@ public class Indexer {
                         tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
                         String term = StringUtils.substring(termLineSplitedByLocsPar[0],0, lastIndexOfComma); // to get <term>
                         String locs = "";
-//                        if (termLineSplitedByLocsPar.length > 1)
-//                            locs = "[" + termLineSplitedByLocsPar[1]; // to get <Locations> ([133, 4141, ..])
+                        if (termLineSplitedByLocsPar.length > 1)
+                            locs = "[" + termLineSplitedByLocsPar[1]; // to get <Locations> ([133, 4141, ..])
                         sb.append(docNo).append(",").append(tf).append('#');
                         if (termToDocsArr[i].containsKey(term)){
                             String value = (String)termToDocsArr[i].get(term);
-                            value = sb.append(value).toString();
+                            value = value + sb.toString();
                             termToDocsArr[i].put(term, value);
                         }
                         else
