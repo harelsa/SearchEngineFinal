@@ -63,21 +63,27 @@ public class Indexer {
         for (int i = 0; i < segmentFilePartitions.length; i++) {
             termToDocsArr[i] = new TreeMap<>(new TermComparator());
         }
-        for (int i = 0; i < segmentFilePartitions.length; i++) {
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-            System.out.println("Starting to handle: " + "Segment File " + i + " " + timeStamp);
-            StringBuilder sb;
-            String line = segmentFilePartitions[i].readLine();
-            while (line != null) {
-                if (line.contains("<D>")) {
-                    sb = new StringBuilder();
-                    String docNo = "";
-                    //if (isRealDoc(line)) {
-                    // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
-                    line = line.replace("<D>", "");
-                    String[] docLineSplited = StringUtils.split(line, ",");
-                    docNo = docLineSplited[0];
-                    line = segmentFilePartitions[i].readLine();
+        //int rangeSize = segmentFilePartitions[0].getRangeSize();
+        for (int i = 0; i < 10; i++) {
+            TreeMap<String, String> charTreeMap = new TreeMap<>(new TermComparator());
+            HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
+            //char curChar = segmentFilePartitions[0].getFromChar();
+            for (int j = 0; j < segmentFilePartitions.length; j++) {
+                StringBuilder sb;
+                String line = segmentFilePartitions[j].readLine();
+                while (line != null) {
+                    if (line.contains("<D>")) {
+                        sb = new StringBuilder();
+                        String docNo = "";
+                        // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
+                        line = line.replace("<D>", "");
+                        String[] docLineSplited = StringUtils.split(line, ",");
+                        docNo = docLineSplited[0];
+                        line = segmentFilePartitions[j].readLine();
+            }
+        }
+
+
                     while (line != null && !line.contains("<D>")) {
                         String tf = "";
                         String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
@@ -99,7 +105,8 @@ public class Indexer {
                         String locs = "";
                         if (termLineSplitedByLocsPar.length > 1)
                             locs = "[" + termLineSplitedByLocsPar[1]; // to get <Locations> ([133, 4141, ..])
-                        sb.append(docNo).append(",").append(tf).append('#');
+                        //sb.append(docNo).append(",").append(tf).append('#');
+                        sb = null;
                         if (termToDocsArr[i].containsKey(term)){
                             String value = (String)termToDocsArr[i].get(term);
                             value = value + sb.toString();
@@ -113,10 +120,11 @@ public class Indexer {
                     }
                 }
             }
-        }
         System.out.println("Starting to writeTermToPosting");
         termsPosting.writeToTermsPosting(termToDocsArr);
-    }
+        }
+
+
 
 
 //    private boolean isRealDoc(String line) {
