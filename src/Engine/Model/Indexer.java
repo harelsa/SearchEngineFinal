@@ -105,11 +105,14 @@ public class Indexer {
                             termToDocsArr[i].put(term, docNo + "," + tf + "," + locs + "#");
                             line = segmentFilePartitions[i].readLine();
                         }
+                        sb.delete(0, sb.length());
+                        sb.setLength(0);
                         // finished to read one doc from segment partition. sb = <Term>,<tf>"#"<Term>,<tf>"#"...
                         //DocToTerms.put(docNo.toLowerCase(), sb.toString());
                     }
                 }
             }
+
         }
 
         termsPosting.writeToTermsPosting(termToDocsArr);

@@ -124,8 +124,8 @@ public class ReadFile {
 
 
                 sb_docInfo.delete(0, sb_docInfo.length());
-                sb_text.delete(0, sb_text.length());
                 sb_docInfo.setLength(0);
+                sb_text.delete(0, sb_text.length());
                 sb_text.setLength(0);
                 sb_text = new StringBuilder();
                 sb_docInfo = new StringBuilder();
