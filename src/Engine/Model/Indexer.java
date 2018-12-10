@@ -1,10 +1,8 @@
 package Engine.Model;
 
-import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.lang.annotation.Target;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -53,78 +51,66 @@ public class Indexer {
         this.segmentFilePartitions = segmentFilesInverter;
     }
 
-    public void buildInvertedIndexes() {
-        readDocsFromEachSegmentFile();
-    }
 
-    private void readDocsFromEachSegmentFile() {
+    public void appendSegmentPartitionRangeToPostingAndIndexes() {
         //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
-        TreeMap[] termToDocsArr = new TreeMap[segmentFilePartitions.length];
+        TreeMap<String, String> charTerms = new TreeMap<>(new TermComparator());
+        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
         for (int i = 0; i < segmentFilePartitions.length; i++) {
-            termToDocsArr[i] = new TreeMap<>(new TermComparator());
-        }
-        //int rangeSize = segmentFilePartitions[0].getRangeSize();
-        for (int i = 0; i < 10; i++) {
-            TreeMap<String, String> charTreeMap = new TreeMap<>(new TermComparator());
-            HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
-            //char curChar = segmentFilePartitions[0].getFromChar();
-            for (int j = 0; j < segmentFilePartitions.length; j++) {
-                StringBuilder sb;
-                String line = segmentFilePartitions[j].readLine();
-                while (line != null) {
-                    if (line.contains("<D>")) {
-                        sb = new StringBuilder();
-                        String docNo = "";
-                        // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
-                        line = line.replace("<D>", "");
-                        String[] docLineSplited = StringUtils.split(line, ",");
-                        docNo = docLineSplited[0];
-                        line = segmentFilePartitions[j].readLine();
-            }
-        }
-
-
+            StringBuilder sb;
+            String line = segmentFilePartitions[i].readLine();
+            while (line != null) {
+                if (line.contains("<D>")) {
+                    sb = new StringBuilder();
+                    String docNo = "";
+                    line = line.replace("<D>", "");
+                    String[] docLineSplited = StringUtils.split(line, ",");
+                    docNo = docLineSplited[0];
+                    line = segmentFilePartitions[i].readLine();
                     while (line != null && !line.contains("<D>")) {
                         String tf = "";
                         String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
-
                         int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
                         if (lastIndexOfComma == -1) { // Not a really term (there is no location)
                             line = segmentFilePartitions[i].readLine();
                             continue;
                         }
-
                         termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
                         lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
                         if (lastIndexOfComma == -1) {
                             line = segmentFilePartitions[i].readLine();
                             continue;
                         }
-                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
-                        String term = StringUtils.substring(termLineSplitedByLocsPar[0],0, lastIndexOfComma); // to get <term>
                         String locs = "";
                         if (termLineSplitedByLocsPar.length > 1)
-                            locs = "[" + termLineSplitedByLocsPar[1]; // to get <Locations> ([133, 4141, ..])
-                        //sb.append(docNo).append(",").append(tf).append('#');
-                        sb = null;
-                        if (termToDocsArr[i].containsKey(term)){
-                            String value = (String)termToDocsArr[i].get(term);
-                            value = value + sb.toString();
-                            termToDocsArr[i].put(term, value);
+                            locs = "[" + termLineSplitedByLocsPar[1];
+                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
+                        String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
+                        sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
+
+                        if (term.charAt(0) == '*' && term.length() > 1) {
+                            term = StringUtils.substring(term, 1);
+                            if (!ifTermStartsWithCapital.containsKey(term))
+                                ifTermStartsWithCapital.put(term, true);
+                        } else if (term.charAt(0) != '*') {
+                            ifTermStartsWithCapital.put(term, false);
                         }
-                        else
-                            termToDocsArr[i].put(term, sb.toString());
+                        if (charTerms.containsKey(term)) {
+                            String value = charTerms.get(term);
+                            value = sb.append(value).toString();
+                            charTerms.put(term, value);
+                        } else
+                            charTerms.put(term, sb.toString());
                         line = segmentFilePartitions[i].readLine();
                         sb.delete(0, sb.length());
                         sb.setLength(0);
                     }
                 }
             }
-        System.out.println("Starting to writeTermToPosting");
-        termsPosting.writeToTermsPosting(termToDocsArr);
         }
-
-
+        System.out.println("Starting to writeTermToPosting");
+        termsPosting.writeToTermsPosting(charTerms, ifTermStartsWithCapital);
+    }
 
 
 //    private boolean isRealDoc(String line) {
@@ -140,7 +126,7 @@ public class Indexer {
             while (termIt.hasNext()) {
                 Map.Entry pair = (Map.Entry) termIt.next();
                 try {
-                    termDictionary_bf.append(pair.getKey().toString() + pair.getValue().toString() + "\n");
+                    termDictionary_bf.append(pair.getKey().toString() + "," + pair.getValue().toString() + "\n");
                     counter++;
                     if (counter > 10000) {
                         termDictionary_bf.flush();
@@ -220,9 +206,9 @@ public class Indexer {
     private static String getCityDetailsFromApi(String s) {
         StringBuilder sb = new StringBuilder();
         s = s.toLowerCase();
-        boolean test = TextOperationsManager.cities.containsKey(s);
+        boolean test = CorpusProcessingManager.cities.containsKey(s);
         if (test) {
-            City city = TextOperationsManager.cities.get(s.toLowerCase());
+            City city = CorpusProcessingManager.cities.get(s.toLowerCase());
             String currency = city.getCurrency();
             String pop = city.getPopulation();
             sb.append(currency).append(",").append(pop);

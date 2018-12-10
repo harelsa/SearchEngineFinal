@@ -364,6 +364,9 @@ public class CorpusProcessingManager {
 //            e.printStackTrace();
 //        }
         buildCitiesPosting();
+        docsPostingWriterExecutor.shutdown();
+        while (!docsPostingWriterExecutor.isTerminated()) {
+        }
 
     }
 
@@ -391,14 +394,14 @@ public class CorpusProcessingManager {
      */
     private void readAndParse() throws InterruptedException {
         for (int i = 0; i < filesPathsList.size(); i++) {
-//            int finalI = i;
-//            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
-//            parseExecutor.execute(readNParseThread);
-            reader.readAndParseLineByLine(filesPathsList.get(i), parsers[i]);
+            int finalI = i;
+            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
+            parseExecutor.execute(readNParseThread);
+//            reader.readAndParseLineByLine(filesPathsList.get(i), parsers[i%8]);
         }
-//        parseExecutor.shutdown();
-//        while (!parseExecutor.isTerminated()) {
-//        }
+        parseExecutor.shutdown();
+        while (!parseExecutor.isTerminated()) {
+        }
     }
 
 
