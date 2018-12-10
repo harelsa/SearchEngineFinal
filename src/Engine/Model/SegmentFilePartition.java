@@ -11,19 +11,23 @@ public class SegmentFilePartition implements Serializable {
     private BufferedWriter file_buffer_writer;
     private BufferedReader file_buffer_reader;
     private int counter;
+    private char partitionChar;
 
-    public SegmentFilePartition(String path, char from, char to) {
-        String segmantPartitionFilePath = path + "_" + from + "_" + "to" + "_" + to + ".txt";
+    public SegmentFilePartition(String path, char partitionChar) {
+        String segmantPartitionFilePath = path + "_" + partitionChar + ".txt";
+        this.partitionChar = partitionChar;
         try {
-
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
             file_buffer_reader = new BufferedReader(new FileReader(segmantPartitionFilePath));
-
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
             e1.printStackTrace();
         }
+    }
+
+    public char getPartitionChar() {
+        return partitionChar;
     }
 
     synchronized public void signNewTerm(Term term) {

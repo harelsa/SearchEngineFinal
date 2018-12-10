@@ -1,5 +1,7 @@
 package Engine.Model;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,37 +13,28 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class SegmentFile implements Serializable {
     private SegmentFilePartition[] filePartitions;
-    private final int NUM_OF_PARTITATIONS = 7;
+    private final int NUM_OF_PARTITATIONS = 36;
     private boolean STEMMING = false ; // tells if to do stemmig - will be changed from gui
 
-    //public static Stemmer stemmer = new Stemmer() ;
-
-    // ('0', '9');
-    // ('a', 'c');
-    // ('d', 'f');
-    // ('g', 'k');
-    // ('l', 'p');
-    // ('p', 'z');
-    // ('z', 'z');
     public SegmentFile(String path , boolean stemming ) {
         STEMMING = stemming ;
-        filePartitions = new SegmentFilePartition[7]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
-        filePartitions[0] = new SegmentFilePartition(path, '0', '9');
-        filePartitions[1] = new SegmentFilePartition(path, 'a', 'c');
-        filePartitions[2] = new SegmentFilePartition(path, 'd', 'f');
-        filePartitions[3] = new SegmentFilePartition(path, 'g', 'k');
-        filePartitions[4] = new SegmentFilePartition(path, 'l', 'p');
-        filePartitions[5] = new SegmentFilePartition(path, 'q', 'z');
-        filePartitions[6] = new SegmentFilePartition(path, 'z', 'z');
+        filePartitions = new SegmentFilePartition[NUM_OF_PARTITATIONS]; // startsWith Digit ,a-f, g-p, q-z, startsWith "
+        char j = '0';
+        for (int i = 0 ; i < 10; i++, j++) {
+            filePartitions[i] = new SegmentFilePartition(path, j);
+        }
+        j = 'a';
+        for (int i = 10; i < 36; i++, j++) {
+            filePartitions[i] = new SegmentFilePartition(path, j);
+        }
     }
 
-    /* Need to do it concurrent (new thread in parser which calls this method) */
     public void signToSpecificPartition(SortedMap<String, Term> allTerms, Document currDoc) {
         if (allTerms.size() == 0)
             return;
-        Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
+        //Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
         //writeToDocumentPosting.start();
-        CorpusProcessingManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
+        //CorpusProcessingManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
         Iterator it = allTerms.entrySet().iterator();
         signNewDocSection(currDoc);
         while (it.hasNext()) {
@@ -58,30 +51,8 @@ public class SegmentFile implements Serializable {
 
             }
 
-            int partitionNum = getPartitionDest(term); // 0-6
-            switch (partitionNum){
-                case 0:
-                    filePartitions[0].signNewTerm((Term)pair.getValue());
-                    break;
-                case 1:
-                    filePartitions[1].signNewTerm((Term)pair.getValue());
-                    break;
-                case 2:
-                    filePartitions[2].signNewTerm((Term)pair.getValue());
-                    break;
-                case 3:
-                    filePartitions[3].signNewTerm((Term)pair.getValue());
-                    break;
-                case 4:
-                    filePartitions[4].signNewTerm((Term)pair.getValue());
-                    break;
-                case 5:
-                    filePartitions[5].signNewTerm((Term)pair.getValue());
-                    break;
-                case 6:
-                    filePartitions[6].signNewTerm((Term)pair.getValue());
-                    break;
-            }
+            int partitionNum = getPartitionDest(term); // 0-36
+            filePartitions[partitionNum].signNewTerm((Term)pair.getValue());
         }
         flushAllPartitions();
 
@@ -98,56 +69,30 @@ public class SegmentFile implements Serializable {
             filePartitions[i].signDocSection(currDoc);
         }
     }
-    // ('0', '9');
-    // ('a', 'c');
-    // ('d', 'f');
-    // ('g', 'k');
-    // ('l', 'p');
-    // ('q', 'z');
-    // ('z', 'z');
 
     private int getPartitionDest(String term) {
         char termFirstChar = term.toLowerCase().charAt(0);
-        if (Character.isDigit(termFirstChar))
-            return 0;
-        else if (termFirstChar >= 'a' && termFirstChar <= 'c')
-            return 1;
-        else if (termFirstChar >= 'd' && termFirstChar <= 'f')
-            return 2;
-        else if (termFirstChar >= 'g' && termFirstChar <= 'k')
-            return 3;
-        else if (termFirstChar >= 'l' && termFirstChar <= 'p')
-            return 4;
-        else if (termFirstChar >= 'q' && termFirstChar <= 'z')
-            return 5;
-        else
-            return 6;
+        if (Character.isDigit(termFirstChar)){
+            String number = "";
+            number += termFirstChar;
+            return Integer.parseInt(number);
+        }
+        int ascii = (int) termFirstChar;
+        int ans = ascii - 87;
+        return ans;
     }
 
-    // ('0', '9');
-    // ('a', 'c');
-    // ('d', 'f');
-    // ('g', 'k');
-    // ('l', 'p');
-    // ('q', 'z');
-    // ('z', 'z');
 
-    public SegmentFilePartition getSegmentFilePartitions(char from, char to){
-        if (from == '0' && to == '9')
-            return filePartitions[0];
-        if (from == 'a' && to == 'c')
-            return filePartitions[1];
-        if (from == 'd' && to == 'f')
-            return filePartitions[2];
-        if (from == 'g' && to == 'k')
-            return filePartitions[3];
-        if (from == 'l' && to == 'p')
-            return filePartitions[4];
-        if (from == 'q' && to == 'z')
-            return filePartitions[5];
-        if (from == 'z' && to == 'z')
-            return filePartitions[6];
-        return null;
+    public SegmentFilePartition getSegmentFilePartitions(char charFile){
+        if (Character.isDigit(charFile)) {
+            String number = "";
+            number += charFile;
+            int index = Integer.parseInt(number);
+            return filePartitions[index];
+        }
+        int ascii = (int) charFile;
+        int ans = ascii - 87;
+        return filePartitions[ans];
     }
 
     public void closeBuffers() {
