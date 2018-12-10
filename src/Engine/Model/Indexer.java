@@ -71,46 +71,56 @@ public class Indexer {
                 if (line.contains("<D>")) {
                     sb = new StringBuilder();
                     String docNo = "";
-                    if (isRealDoc(line)) {
-                        // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
-                        line.replace("<D>", "");
-                        String[] splitedLine = StringUtils.split(line, ",");
-                        docNo = splitedLine[0];
-                        line = segmentFilePartitions[i].readLine();
-                        while (line != null && !line.contains("<D>")) {
-                            String tf = "";
-                            String[] locsSplited = StringUtils.split(line, "[");
-                            int lastIndex = StringUtils.lastIndexOf(locsSplited[0], ",");
-                            if (lastIndex == -1) {
-                                line = segmentFilePartitions[i].readLine();
-                                continue;
-                            }
-                            locsSplited[0] = StringUtils.substring(locsSplited[0], 0, lastIndex);
-                            lastIndex = StringUtils.lastIndexOf(locsSplited[0], ",");
-                            if (lastIndex == -1) {
-                                line = segmentFilePartitions[i].readLine();
-                                continue;
-                            }
-                            tf = locsSplited[0].substring(lastIndex + 1);
-                            String term = locsSplited[0].substring(0, lastIndex);
-                            String locs = "";
-                            if (locsSplited.length > 1)
-                                locs = "[" + locsSplited[1];
-                            sb.append(term).append(",").append(tf).append('#');
-                            //if (TermToDocs.containsKey(term)) {
-                            //    String tmp = TermToDocs.get(term);
-                            //    termToDocsArr[i].put(term, tmp + docNo + "," + tf + "," + locs + "#");
-                            //    if (term.charAt(0) == '*')
-                            //        term = StringUtils.substring(term, 1);
-                            //    checkTermTfFromAnotherDoc(term, docNo, tf);
-                            //}
-                            //else {
-                            termToDocsArr[i].put(term, docNo + "," + tf + "," + locs + "#");
+                    //if (isRealDoc(line)) {
+                    // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
+                    line.replace("<D>", "");
+                    String[] docLineSplited = StringUtils.split(line, ",");
+                    docNo = docLineSplited[0];
+                    line = segmentFilePartitions[i].readLine();
+                    while (line != null && !line.contains("<D>")) {
+                        String tf = "";
+                        String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
+
+                        int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+                        if (lastIndexOfComma == -1) { // Not a really term (there is no location)
                             line = segmentFilePartitions[i].readLine();
+                            continue;
                         }
-                        // finished to read one doc from segment partition. sb = <Term>,<tf>"#"<Term>,<tf>"#"...
-                        //DocToTerms.put(docNo.toLowerCase(), sb.toString());
+
+                        termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
+                        lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+                        if (lastIndexOfComma == -1) {
+                            line = segmentFilePartitions[i].readLine();
+                            continue;
+                        }
+                        tf = termLineSplitedByLocsPar[0].substring(lastIndexOfComma + 1); // to get <tf>
+                        String term = termLineSplitedByLocsPar[0].substring(0, lastIndexOfComma); // to get <term>
+                        String locs = "";
+                        if (termLineSplitedByLocsPar.length > 1)
+                            locs = "[" + termLineSplitedByLocsPar[1]; // to get <Locations> ([133, 4141, ..])
+                        sb.append(docNo).append(",").append(tf).append('#');
+                        if (termToDocsArr[i].containsKey(term)){
+                            String value = (String)termToDocsArr[i].get(term);
+                            value = value + sb.toString();
+                            termToDocsArr[i].put(term, value);
+                        }
+                        else
+                            termToDocsArr[i].put(term, sb.toString());
+                        line = segmentFilePartitions[i].readLine();
+                        sb.delete(0, sb.length());
+                        sb.setLength(0);
+
+//                        if (TermToDocs.containsKey(term)) {
+//                            String tmp = TermToDocs.get(term);
+//                            termToDocsArr[i].put(term, tmp + docNo + "," + tf + "," + locs + "#");
+//                            if (term.charAt(0) == '*')
+//                                term = StringUtils.substring(term, 1);
+//                            checkTermTfFromAnotherDoc(term, docNo, tf);
+//                        }
                     }
+                    // finished to read one doc from segment partition. sb = <Term>,<tf>"#"<Term>,<tf>"#"...
+                    //DocToTerms.put(docNo.toLowerCase(), sb.toString());
+                    //}
                 }
             }
         }
@@ -120,11 +130,11 @@ public class Indexer {
     }
 
 
-    private boolean isRealDoc(String line) {
-        if (line.contains("null"))
-            return false;
-        return true;
-    }
+//    private boolean isRealDoc(String line) {
+//        if (line.contains("null"))
+//            return false;
+//        return true;
+//    }
 
     public static void writeDictionariesToDisc() {
         try {
@@ -145,6 +155,7 @@ public class Indexer {
                 termIt.remove(); // avoids a ConcurrentModificationException
             }
             termDictionary_bf.flush();
+            termDictionary_bf.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -211,9 +222,9 @@ public class Indexer {
 
     private static String getCityDetailsFromApi(String s) {
         StringBuilder sb = new StringBuilder();
-        s= s.toLowerCase() ;
-        boolean test = TextOperationsManager.cities.containsKey(s) ;
-        if (test){
+        s = s.toLowerCase();
+        boolean test = TextOperationsManager.cities.containsKey(s);
+        if (test) {
             City city = TextOperationsManager.cities.get(s.toLowerCase());
             String currency = city.getCurrency();
             String pop = city.getPopulation();
