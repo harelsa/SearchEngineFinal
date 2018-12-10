@@ -179,6 +179,7 @@ public class Indexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         terms_dictionary.clear();
 
         try {
