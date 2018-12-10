@@ -66,14 +66,14 @@ public class Indexer {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Starting to handle: " + "Segment File " + i + " " + timeStamp);
             StringBuilder sb;
-            String line;
-            while ((line = segmentFilePartitions[i].readLine()) != null) {
+            String line = segmentFilePartitions[i].readLine();
+            while (line != null) {
                 if (line.contains("<D>")) {
                     sb = new StringBuilder();
                     String docNo = "";
                     //if (isRealDoc(line)) {
                     // <D>FBIS3-1830,FB396008,BEIJING,8,administrative,164</D>
-                    line.replace("<D>", "");
+                    line = line.replace("<D>", "");
                     String[] docLineSplited = StringUtils.split(line, ",");
                     docNo = docLineSplited[0];
                     line = segmentFilePartitions[i].readLine();
