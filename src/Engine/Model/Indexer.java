@@ -1,5 +1,6 @@
 package Engine.Model;
 
+import com.sun.scenario.effect.impl.sw.sse.SSEBlend_SRC_OUTPeer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
@@ -109,24 +110,12 @@ public class Indexer {
                         line = segmentFilePartitions[i].readLine();
                         sb.delete(0, sb.length());
                         sb.setLength(0);
-
-//                        if (TermToDocs.containsKey(term)) {
-//                            String tmp = TermToDocs.get(term);
-//                            termToDocsArr[i].put(term, tmp + docNo + "," + tf + "," + locs + "#");
-//                            if (term.charAt(0) == '*')
-//                                term = StringUtils.substring(term, 1);
-//                            checkTermTfFromAnotherDoc(term, docNo, tf);
-//                        }
                     }
-                    // finished to read one doc from segment partition. sb = <Term>,<tf>"#"<Term>,<tf>"#"...
-                    //DocToTerms.put(docNo.toLowerCase(), sb.toString());
-                    //}
                 }
             }
         }
-
+        System.out.println("Starting to writeTermToPosting");
         termsPosting.writeToTermsPosting(termToDocsArr);
-
     }
 
 
