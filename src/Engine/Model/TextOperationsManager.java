@@ -153,11 +153,11 @@ public class TextOperationsManager {
         buildInvertedIndex();
         System.out.println("Finished building Inverted Index");
         closeAllSegmentFiles();
-        try {
-            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         docsPostingWriterExecutor.shutdown();
         while (!docsPostingWriterExecutor.isTerminated()) {
         }
