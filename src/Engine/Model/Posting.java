@@ -124,7 +124,7 @@ public class Posting {
                 if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key))
                     key = key.toUpperCase();
                 Indexer.terms_dictionary.put(key, docMostTermFreq + "," + df + "," + pointer);
-                if (TextOperationsManager.cities.containsKey(key.toLowerCase())){
+                if (CorpusProcessingManager.cities.containsKey(key.toLowerCase())){
                     Indexer.cities_dictionary.put(key, listOfTermDocs);
                 }
 
@@ -183,7 +183,7 @@ public class Posting {
         return key.substring(0, 1);
     }
 
-    private String[] getRange(TreeMap termDoc) {
+    public static String[] getRange(TreeMap termDoc) {
         String[] ans = null;
         Iterator it = termDoc.entrySet().iterator();
         if (it.hasNext()) {

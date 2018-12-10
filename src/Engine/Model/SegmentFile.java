@@ -41,7 +41,7 @@ public class SegmentFile implements Serializable {
             return;
         Thread writeToDocumentPosting = new Thread(() -> Posting.writeToDocumentsPosting(currDoc, allTerms));
         //writeToDocumentPosting.start();
-        TextOperationsManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
+        CorpusProcessingManager.docsPostingWriterExecutor.execute(writeToDocumentPosting);
         Iterator it = allTerms.entrySet().iterator();
         signNewDocSection(currDoc);
         while (it.hasNext()) {

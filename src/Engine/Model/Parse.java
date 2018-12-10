@@ -29,6 +29,8 @@ public class Parse {
     private static double BILLION = Math.pow(10, 9);
     private static double TRILLION = Math.pow(10, 12);
 
+    boolean debug = false ;
+
 
     private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words
     private static HashSet<String> specialwords = new HashSet<>(); // list of words might be in terms
@@ -115,7 +117,7 @@ public class Parse {
         tokens = StringUtils.split(text , " ");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+       // segmantFile.signToSpecificPartition(AllTerms , currDoc);
         return null;
     }
 
@@ -143,8 +145,8 @@ public class Parse {
                 continue;
             }
 
-            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
-                System.out.print("");
+//            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
+//                System.out.print("");
 
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
@@ -170,7 +172,7 @@ public class Parse {
                         phrase = phrase.append(" " + tokensArray[j]);
                         String phrase_temp  = phrase.toString();
                         phrase_temp = cleanToken(phrase_temp) ;
-                        //System.out.println(phrase_temp);
+                        if ( debug ) System.out.println(phrase_temp);
                         if (docTerms.containsKey(phrase_temp)) {
                             Term tmp = docTerms.get(phrase_temp);
                             tmp.advanceTf();
@@ -233,7 +235,7 @@ public class Parse {
                         stop = true;
                         i = j ;
                     }
-                    //System.out.println(what_to_add);
+                    if (debug)System.out.println(what_to_add);
                     if (docTerms.containsKey(what_to_add)) {
                         Term tmp = docTerms.get(what_to_add);
                         tmp.advanceTf();
@@ -250,6 +252,8 @@ public class Parse {
                         if ( stop ) break;
                     } // ***** adding to doc terms ****
                 }
+                i = j  ;
+                continue;
             }// second law
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
@@ -346,8 +350,8 @@ public class Parse {
 
             if ( addTerm.equals("")){ i++; continue;}
 
+            if ( debug ) System.out.println(addTerm);
             if (docTerms.containsKey(addTerm)) {
-                //System.out.println(addTerm);
                 Term tmp = docTerms.get(addTerm);
                 tmp.advanceTf();
                 tmp.addPosition(termPosition);
@@ -407,12 +411,13 @@ public class Parse {
         while (  token != null  && token.length() >0  &&!token.equals("") && changed ) {
             changed = false;
             s = new StringBuilder(token);
-            if (specialchars.contains(""+s.charAt(0))) {
+            String a = " " ;
+            if (specialchars.contains(""+s.charAt(0)) || a.equals(""+s.charAt(0)) ) {
                 s.deleteCharAt(0);
                 token = s.toString() ;
                 changed = true ;
             }
-            if ( token != null  && token.length() >0  && !token.equals("")   && specialchars.contains(""+s.charAt(s.length()-1))) {
+            if ( token != null  && token.length() >0  && !token.equals("")   && ( specialchars.contains(""+s.charAt(s.length()-1))||  a.equals(""+s.charAt(0)))) {
                 s.deleteCharAt(s.length() - 1);
                 changed = true;
             }

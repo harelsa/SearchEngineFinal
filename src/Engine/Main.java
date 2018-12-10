@@ -25,8 +25,8 @@ public class Main extends Application {
         Controller controller = new Controller();
         //view notify controller
         View view = fxmlLoader.getController();
-        view.posting_txt_field.appendText( "d:\\documents\\users\\bardanad\\Downloads\\corpus\\resources-10files" );
-        view.corpus_txt_field.appendText("d:\\documents\\users\\bardanad\\Downloads\\corpus\\corpus-10files");
+        view.posting_txt_field.appendText( "D:\\documents\\users\\harelsa\\Downloads\\test" );
+        view.corpus_txt_field.appendText("D:\\documents\\users\\harelsa\\Downloads\\corpus\\corpus");
         view.setParent(primaryStage) ;
         view.setScene(scene) ;
         view.addObserver(controller);
@@ -78,9 +78,9 @@ public class Main extends Application {
 
 
 //        // move to TExt operationg !!!
-      // Parse parser = new Parse(null);
-       // Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020", " JERUSALEM" , "ENGLISH") ;
-      // parser.parse(str2 , doc );
+//       Parse parser = new Parse(null , "D:\\\\documents\\\\users\\\\harelsa\\\\Downloads\\\\test");
+//        Document doc = new Document( "FBIS3-50" , "C:\\Users\\harel_000\\Desktop\\Retrival\\corpus\\corpus\\FB396002\\FB3960020", " JERUSALEM" , "ENGLISH") ;
+//       parser.parse(str1 , doc );
 //        Term term = new Term(0,0, "Nadav");
 //        SegmentFilePartition sfp = new SegmentFilePartition("d:\\documents\\users\\bardanad\\Downloads\\Segment Files", 'a', 'd');
 //        sfp.signNewTerm(term, doc);
