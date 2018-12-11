@@ -114,7 +114,7 @@ public class Parse {
         termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
-        tokens = StringUtils.split(text , "\"\\`:)?*(|;!&=}{[],'<> ");
+        tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> \\r?\\n");
         SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
         segmantFile.signToSpecificPartition(AllTerms , currDoc);
@@ -163,98 +163,100 @@ public class Parse {
 
             }
             //First law - save " phrase" - will be saved as phrase and single words
-            if ( addTerm.equals("") &&tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
-                int j = i ;
-                StringBuilder phrase = new StringBuilder(tokensArray[j]);
-                j++ ;
-                while ( j < tokensArray.length && ( j - i ) < 6 ) {
-                    if (tokensArray[j].endsWith("\"")) { // end of phrase
-                        phrase = phrase.append(" " + tokensArray[j]);
-                        String phrase_temp  = phrase.toString();
-                        phrase_temp = cleanToken(phrase_temp) ;
-                        if ( debug ) System.out.println(phrase_temp);
-                        if (docTerms.containsKey(phrase_temp)) {
-                            Term tmp = docTerms.get(phrase_temp);
-                            tmp.advanceTf();
-                            tmp.addPosition(termPosition);
-                            docTerms.put(phrase_temp, tmp);
-                            currDoc.addTerm(tmp);
-                            termPosition++;
-                            break;
-                        } else { // new term
-                            Term obj_term = new Term(termPosition, 1, phrase_temp);
-                            termPosition++;
-                            currDoc.addTerm(obj_term);
-                            docTerms.put(phrase_temp, obj_term);
-                            break;
-                        } // ***** adding to doc terms ****
-                    } else {
-                        phrase = phrase.append(" "+ tokensArray[j]);
-                        j++ ;
-                    }
-
-                }
-            }
+//            if ( addTerm.equals("") &&tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
+//                int j = i ;
+//                StringBuilder phrase = new StringBuilder(tokensArray[j]);
+//                j++ ;
+//                while ( j < tokensArray.length && ( j - i ) < 6 ) {
+//                    if (tokensArray[j].endsWith("\"")) { // end of phrase
+//                        phrase = phrase.append(" " + tokensArray[j]);
+//                        String phrase_temp  = phrase.toString();
+//                        phrase_temp = cleanToken(phrase_temp) ;
+//                        if ( debug ) System.out.println(phrase_temp);
+//                        if (docTerms.containsKey(phrase_temp)) {
+//                            Term tmp = docTerms.get(phrase_temp);
+//                            tmp.advanceTf();
+//                            tmp.addPosition(termPosition);
+//                            docTerms.put(phrase_temp, tmp);
+//                            currDoc.addTerm(tmp);
+//                            termPosition++;
+//                            break;
+//                        } else { // new term
+//                            Term obj_term = new Term(termPosition, 1, phrase_temp);
+//                            termPosition++;
+//                            currDoc.addTerm(obj_term);
+//                            docTerms.put(phrase_temp, obj_term);
+//                            break;
+//                        } // ***** adding to doc terms ****
+//                    } else {
+//                        phrase = phrase.append(" "+ tokensArray[j]);
+//                        j++ ;
+//                    }
+//
+//                }
+//            }
             // Second law  - save terms of capitals letters - Ashley Cummins Brittingham
-            String temp_token = cleanToken(tokensArray[i] ) ;
-            if ( addTerm.equals("") &&temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
-                    && !specialchars.contains(tokensArray[i].charAt(tokensArray[i].length()-1)) //check Cummins,
-                    && !specialchars.contains(tokensArray[i+1].charAt(0)) // check ,Cummins
-                    && cleanToken(tokensArray[i+1]).length()>1
-                    &&Character.isUpperCase(cleanToken(tokensArray[i+1]).charAt(0)) // check capital of the second word
-                    ){
-                int j = i ;
-                StringBuilder long_term = new StringBuilder();
-                //j++ ;
-                boolean stop = false ;
-                boolean insert_and_stop = false ;
-                String what_to_add = "";
-                while ( j < tokensArray.length && ( j - i ) < 6 ) {
-                    temp_token = cleanToken(tokensArray[j] ) ;
-                    if (    !insert_and_stop
-                            && tokensArray[j].length() > 1
-                            &&!specialchars.contains(tokensArray[j].charAt(0))
-                            && temp_token.length() > 1
-                            &&Character.isUpperCase(temp_token.charAt(0))
-                            && ( j < tokensArray.length-1
-                            && !(months.contains(tokensArray[j]) && isNumber(tokensArray[j+1])))
-                            ){  // add one word term
-                        long_term = long_term.append(temp_token + " ");
-                        what_to_add = temp_token ;
-                        if ( specialchars.contains(tokensArray[j].charAt(tokensArray[j].length()-1))) // end
-                            insert_and_stop = true;
-                        j++;
+//            String temp_token = cleanToken(tokensArray[i] ) ;
+//            if ( addTerm.equals("") &&temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital
+//                    && !specialchars.contains(tokensArray[i].charAt(tokensArray[i].length()-1)) //check Cummins,
+//                    && !specialchars.contains(tokensArray[i+1].charAt(0)) // check ,Cummins
+//                    && cleanToken(tokensArray[i+1]).length()>1
+//                    &&Character.isUpperCase(cleanToken(tokensArray[i+1]).charAt(0)) // check capital of the second word
+//                    ){
+//                int j = i ;
+//                StringBuilder long_term = new StringBuilder();
+//                //j++ ;
+//                boolean stop = false ;
+//                boolean insert_and_stop = false ;
+//                String what_to_add = "";
+//                while ( j < tokensArray.length && ( j - i ) < 6 ) {
+//                    temp_token = cleanToken(tokensArray[j] ) ;
+//                    if (    !insert_and_stop
+//                            && tokensArray[j].length() > 1
+//                            &&!specialchars.contains(tokensArray[j].charAt(0))
+//                            && temp_token.length() > 1
+//                            &&Character.isUpperCase(temp_token.charAt(0))
+//                            && ( j < tokensArray.length-1
+//                            && !(months.contains(tokensArray[j]) && isNumber(tokensArray[j+1])))
+//                            ){  // add one word term
+//                        long_term = long_term.append(temp_token + " ");
+//                        what_to_add = temp_token ;
+//                        if ( specialchars.contains(tokensArray[j].charAt(tokensArray[j].length()-1))) // end
+//                            insert_and_stop = true;
+//                        j++;
+//
+//                    } else { // end of long term
+//                        if ( long_term.length() < 2) {
+//                            i=j ;
+//                            break;
+//                        }
+//                        what_to_add  = long_term.toString();
+//                        what_to_add = cleanToken(what_to_add) ;
+//                        stop = true;
+//                        i = j ;
+//                    }
+//                    if (debug)System.out.println(what_to_add);
+//                    if (docTerms.containsKey(what_to_add)) {
+//                        Term tmp = docTerms.get(what_to_add);
+//                        tmp.advanceTf();
+//                        tmp.addPosition(termPosition);
+//                        currDoc.addTerm(tmp);
+//                        docTerms.put( what_to_add, tmp);
+//                        termPosition++;
+//                        if ( stop) break;
+//                    } else { // new term
+//                        Term obj_term = new Term(termPosition, 1,what_to_add);
+//                        termPosition++;
+//                        currDoc.addTerm(obj_term);
+//                        docTerms.put( what_to_add, obj_term);
+//                        if ( stop ) break;
+//                    } // ***** adding to doc terms ****
+//                }
+//                i = j  ;
+//                continue;
+//            }// second law
 
-                    } else { // end of long term
-                        if ( long_term.length() < 2) {
-                            i=j ;
-                            break;
-                        }
-                        what_to_add  = long_term.toString();
-                        what_to_add = cleanToken(what_to_add) ;
-                        stop = true;
-                        i = j ;
-                    }
-                    if (debug)System.out.println(what_to_add);
-                    if (docTerms.containsKey(what_to_add)) {
-                        Term tmp = docTerms.get(what_to_add);
-                        tmp.advanceTf();
-                        tmp.addPosition(termPosition);
-                        currDoc.addTerm(tmp);
-                        docTerms.put( what_to_add, tmp);
-                        termPosition++;
-                        if ( stop) break;
-                    } else { // new term
-                        Term obj_term = new Term(termPosition, 1,what_to_add);
-                        termPosition++;
-                        currDoc.addTerm(obj_term);
-                        docTerms.put( what_to_add, obj_term);
-                        if ( stop ) break;
-                    } // ***** adding to doc terms ****
-                }
-                i = j  ;
-                continue;
-            }// second law
+
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
@@ -348,7 +350,18 @@ public class Parse {
                     addTerm = tokensArray[i] ;
             }
 
-            if ( addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%+^;]#!<>")){ i++; continue;}
+            if ( StringUtils.containsAny(addTerm , "-")){
+                String[] term = StringUtils.split(addTerm , "-");
+                for (String s :term
+                     ) {
+                    if ( s.length() < 2 ) {
+                        addTerm = "";
+                        break ;
+                    }
+                }
+            }
+
+            if ( addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%$+^;]#!<>")){ i++; continue;}
 
             if ( debug ) System.out.println(addTerm);
             if (docTerms.containsKey(addTerm)) {

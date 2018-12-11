@@ -3,18 +3,25 @@ package Engine.Model;
 import javafx.util.Pair;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.TreeMap;
+import java.util.stream.Stream;
 
 public class SegmentFilePartition implements Serializable {
     private BufferedWriter file_buffer_writer;
     private BufferedReader file_buffer_reader;
     private int counter;
     private char partitionChar;
+    private String path_u ;
 
     public SegmentFilePartition(String path, char partitionChar) {
         String segmantPartitionFilePath = path + "_" + partitionChar + ".txt";
+        this.path_u = segmantPartitionFilePath ;
         this.partitionChar = partitionChar;
         try {
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
@@ -52,6 +59,17 @@ public class SegmentFilePartition implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    public List<String> readAllLines(){
+        try {
+            System.out.println(path_u);
+        List<String> lines = Files.readAllLines(Paths.get(path_u), StandardCharsets.UTF_8);
+        return lines ;
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
         return null;
     }
 

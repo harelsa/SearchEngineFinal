@@ -85,8 +85,8 @@ public class ReadFile {
 
 
                     if (! text_adding ) // add to doc info
-                    sb_docInfo.append(line);
-                    else sb_text.append(line) ; // add to text
+                    sb_docInfo.append(" "+line);
+                    else sb_text.append(" "+line) ; // add to text
 
 
                     // CITY

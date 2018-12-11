@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class Indexer {
     public static TreeMap<String, String> terms_dictionary;
@@ -52,66 +53,143 @@ public class Indexer {
     }
 
 
-    public void appendSegmentPartitionRangeToPostingAndIndexes() {
-        //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
-        TreeMap<String, String> charTerms = new TreeMap<>(new TermComparator());
-        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
-        for (int i = 0; i < segmentFilePartitions.length; i++) {
-            StringBuilder sb;
-            String line = segmentFilePartitions[i].readLine();
-            while (line != null) {
-                if (line.contains("<D>")) {
-                    sb = new StringBuilder();
-                    String docNo = "";
-                    line = line.replace("<D>", "");
-                    String[] docLineSplited = StringUtils.split(line, ",");
-                    docNo = docLineSplited[0];
-                    line = segmentFilePartitions[i].readLine();
-                    while (line != null && !line.contains("<D>")) {
-                        String tf = "";
-                        String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
-                        int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-                        if (lastIndexOfComma == -1) { // Not a really term (there is no location)
-                            line = segmentFilePartitions[i].readLine();
-                            continue;
-                        }
-                        termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
-                        lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-                        if (lastIndexOfComma == -1) {
-                            line = segmentFilePartitions[i].readLine();
-                            continue;
-                        }
-                        String locs = "";
-                        if (termLineSplitedByLocsPar.length > 1)
-                            locs = "[" + termLineSplitedByLocsPar[1];
-                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
-                        String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
-                        sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
+//    public void appendSegmentPartitionRangeToPostingAndIndexes() {
+//        //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
+//        TreeMap<String, String> charTerms = new TreeMap<>();//new TermComparator());
+//        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
+//        for (int i = 0; i < segmentFilePartitions.length; i++) {
+//            StringBuilder sb;
+//            String line = segmentFilePartitions[i].readLine();
+//            while (line != null) {
+//                if (line.contains("<D>")) {
+//                    sb = new StringBuilder();
+//                    String docNo = "";
+//                    line = line.replace("<D>", "");
+//                    String[] docLineSplited = StringUtils.split(line, ",");
+//                    docNo = docLineSplited[0];
+//                    line = segmentFilePartitions[i].readLine();
+//                    while (line != null && !line.contains("<D>")) {
+//                        String tf = "";
+//                        String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
+//                        int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+//                        if (lastIndexOfComma == -1) { // Not a really term (there is no location)
+//                            line = segmentFilePartitions[i].readLine();
+//                            continue;
+//                        }
+//                        termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
+//                        lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+//                        if (lastIndexOfComma == -1) {
+//                            line = segmentFilePartitions[i].readLine();
+//                            continue;
+//                        }
+//                        String locs = "";
+//                        if (termLineSplitedByLocsPar.length > 1)
+//                            locs = "[" + termLineSplitedByLocsPar[1];
+//                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
+//                        String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
+//                        sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
+//
+//                        if (term.charAt(0) == '*' && term.length() > 1) {
+//                            term = StringUtils.substring(term, 1);
+//                            if (!ifTermStartsWithCapital.containsKey(term))
+//                                ifTermStartsWithCapital.put(term, true);
+//                        } else if (term.charAt(0) != '*') {
+//                            ifTermStartsWithCapital.put(term, false);
+//                        }
+//                        if (charTerms.containsKey(term)) {
+//                            String value = charTerms.get(term);
+//                            value = sb.append(value).toString();
+//                            charTerms.put(term, value);
+//                        } else
+//                            charTerms.put(term, sb.toString());
+//                        line = segmentFilePartitions[i].readLine();
+//                        sb.delete(0, sb.length());
+//                        sb.setLength(0);
+//                    }
+//                }
+//            }
+//        }
+//        System.out.println("Starting to writeTermToPosting");
+//        termsPosting.writeToTermsPosting(charTerms, ifTermStartsWithCapital);
+//    }
+public void appendSegmentPartitionRangeToPostingAndIndexes() {
+    //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
+    TreeMap<String, String>[] seg_i_arr = new TreeMap[8] ;
+    for (int i =0 ; i< seg_i_arr.length ; i++
+         ) {
+        seg_i_arr[i] = new TreeMap<String , String>();//new TermComparator());
+    }
 
-                        if (term.charAt(0) == '*' && term.length() > 1) {
-                            term = StringUtils.substring(term, 1);
-                            if (!ifTermStartsWithCapital.containsKey(term))
-                                ifTermStartsWithCapital.put(term, true);
-                        } else if (term.charAt(0) != '*') {
-                            ifTermStartsWithCapital.put(term, false);
-                        }
-                        if (charTerms.containsKey(term)) {
-                            String value = charTerms.get(term);
-                            value = sb.append(value).toString();
-                            charTerms.put(term, value);
-                        } else
-                            charTerms.put(term, sb.toString());
-                        line = segmentFilePartitions[i].readLine();
-                        sb.delete(0, sb.length());
-                        sb.setLength(0);
+
+    HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
+    for (int i = 0; i < segmentFilePartitions.length; i++) {
+        StringBuilder sb;
+        List<String> lines = segmentFilePartitions[i].readAllLines();
+        Iterator<String> line_it = lines.iterator() ;
+        String line ;
+        if ( line_it.hasNext())
+            line = line_it.next();
+        else line = null ;
+        while (line != null ) {
+            if (line.contains("<D>")) {
+                sb = new StringBuilder();
+                String docNo = "";
+                line = line.replace("<D>", "");
+                String[] docLineSplited = StringUtils.split(line, ",");
+                docNo = docLineSplited[0];
+                if ( line_it.hasNext())
+                line = line_it.next();
+                else line = null ;
+                while (line != null && !line.contains("<D>")) {
+                    String tf = "";
+                    String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
+                    int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+                    if (lastIndexOfComma == -1) { // Not a really term (there is no location)
+                        if ( line_it.hasNext())
+                            line = line_it.next();
+                        else line = null ;
+                        continue;
                     }
+                    termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
+                    lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+                    if (lastIndexOfComma == -1) {
+                        if ( line_it.hasNext())
+                            line = line_it.next();
+                        else line = null ;
+                        continue;
+                    }
+                    String locs = "";
+                    if (termLineSplitedByLocsPar.length > 1)
+                        locs = "[" + termLineSplitedByLocsPar[1];
+                    tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
+                    String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
+                    sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
+
+                    if (term.charAt(0) == '*' && term.length() > 1) {
+                        term = StringUtils.substring(term, 1);
+                        if (!ifTermStartsWithCapital.containsKey(term))
+                            ifTermStartsWithCapital.put(term, true);
+                    } else if (term.charAt(0) != '*') {
+                        ifTermStartsWithCapital.put(term, false);
+                    }
+                    if (seg_i_arr[i].containsKey(term)) {
+                        String value = seg_i_arr[i].get(term);
+                        value = sb.append(value).toString();
+                        seg_i_arr[i].put(term, value);
+                    } else
+                        seg_i_arr[i].put(term, sb.toString());
+                    if ( line_it.hasNext())
+                        line = line_it.next();
+                    else line = null ;
+                    sb.delete(0, sb.length());
+                    sb.setLength(0);
                 }
             }
         }
-        System.out.println("Starting to writeTermToPosting");
-        termsPosting.writeToTermsPosting(charTerms, ifTermStartsWithCapital);
     }
-
+    System.out.println("Starting to writeTermToPosting");
+    termsPosting.writeToTermsPosting(seg_i_arr, ifTermStartsWithCapital);
+}
 
 //    private boolean isRealDoc(String line) {
 //        if (line.contains("null"))
