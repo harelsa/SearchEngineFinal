@@ -2,6 +2,7 @@ package Engine.Model;
 
 
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
@@ -13,6 +14,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static Engine.Model.CorpusProcessingManager.ifStemming;
+
 /**
  * will break each doc to terms , by getting a :
  * Segmentfile to Write ,an array of tokens from Current doc Text , Doc obj .
@@ -23,14 +26,20 @@ import java.util.regex.Pattern;
 public class Parse {
 
 
+    private static final int CHUNK_SIZE = 50 ;
     // enums
     private static double THOUSAND = Math.pow(10, 3);
     private static double MILLION = Math.pow(10, 6);
     private static double BILLION = Math.pow(10, 9);
     private static double TRILLION = Math.pow(10, 12);
+    private String posting_path ;
 
     boolean debug = false ;
 
+
+    TreeMap< String , String > TermsOnly;
+    HashMap < String  , String  > FilesTerms ;
+    String lastDoc = "";
 
     private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words
     private static HashSet<String> specialwords = new HashSet<>(); // list of words might be in terms
@@ -44,6 +53,9 @@ public class Parse {
     private static FileReader months_fr;
 
     private SegmentFile segmantFile; // each parser gets one segment file to write to
+    String path ;
+    boolean stemming = false ;
+
     private int termPosition; // counts the term position inside the doc text
 
     static {
@@ -71,15 +83,24 @@ public class Parse {
     private static Pattern BETWEEN = Pattern.compile("\\d+" + "and" + "\\d+");
 
 
-    public Parse(SegmentFile segmantFile , String path) {
+    public Parse(String path  , boolean stemming) {
         try {
             stopwords_fr = new FileReader(path  +"\\stop_words.txt");
+            this.posting_path =  path + "\\Postings" + ifStemming(stemming);
+            this.path = path ;
+            this.stemming = stemming ;
             BufferedReader stopwords_br = new BufferedReader(stopwords_fr);
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
             BufferedReader months_br = new BufferedReader(months_fr);
 
-            this.segmantFile = segmantFile;
+            this.segmantFile = new SegmentFile(path , stemming );
+            FilesTerms = new HashMap< >() ;
+            TermsOnly = new TreeMap<String, String>((Comparator) (o1, o2) -> {
+                String s1 = ((String)(o1)).toLowerCase();
+                String s2 = ((String)(o2)).toLowerCase();
+                return s1.compareTo(s2);
+            });
             String curr_line;
 
             while ((curr_line = stopwords_br.readLine()) != null) {
@@ -114,11 +135,42 @@ public class Parse {
         termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
-        tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> \\r?\\n");
-        SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
+        tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> ") ;
+        getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+
         return null;
+    }
+
+    public void sendToSeg ( int chunk ){
+        // write to file
+        Thread seg = new Thread(() ->writeSeg(chunk));
+        seg.start();
+    }
+
+    public void writeSeg (int chunk ) {
+
+        SegmentFilePartition sfp = new SegmentFilePartition( posting_path, chunk) ;
+
+        Iterator it = TermsOnly.keySet().iterator();
+        //signNewDocSection(currDoc);
+        while (it.hasNext()) {
+            //String key = (String)it.next();
+            String term = (String) it.next() ;
+            String  value = FilesTerms.get(term );
+            if ( stemming ) {
+                Stemmer stemmer = new Stemmer() ;
+                stemmer.add(term.toCharArray(), term.length());
+                String stemmed = "";
+                stemmer.stem();
+                term = stemmer.toString();
+
+            }
+            sfp.signNewTerm(term  , value);
+        }
+        System.out.println(sfp.getPath());
+        sfp.flushFile();
+        sfp.closeBuffers();
     }
 
     /**
@@ -129,11 +181,7 @@ public class Parse {
      * @return a sorted map of all the terms in curr doc text
      */
     private SortedMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
-        TreeMap<String, Term> docTerms = new TreeMap<String, Term>((Comparator) (o1, o2) -> {
-            String s1 = ((String)(o1)).toLowerCase();
-            String s2 = ((String)(o2)).toLowerCase();
-            return s1.compareTo(s2);
-        });  // < str_term , obj_term >  // will store all the terms in curpos
+  // < str_term , obj_term >  // will store all the terms in curpos
         String addTerm = "" ;
         for (int i = 0; i < tokensArray.length; ) {
 
@@ -144,7 +192,6 @@ public class Parse {
                 i += 1;
                 continue;
             }
-
 //            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
 //                System.out.print("");
 
@@ -364,23 +411,53 @@ public class Parse {
             if ( addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%$+^;]#!<>")){ i++; continue;}
 
             if ( debug ) System.out.println(addTerm);
-            if (docTerms.containsKey(addTerm)) {
-                Term tmp = docTerms.get(addTerm);
-                tmp.advanceTf();
-                tmp.addPosition(termPosition);
-                currDoc.addTerm(tmp);
-                docTerms.put(addTerm, tmp);
-                termPosition++;
-            } else { // new term
-                Term obj_term = new Term(termPosition, 1, addTerm);
-                termPosition++;
-                currDoc.addTerm(obj_term);
-                docTerms.put(addTerm, obj_term);
-            }
+
+            addTermFunc ( addTerm , currDoc.docNo ) ;
             if ( !is_joint_term)
                 i++;
-        } //end for
-        return docTerms ;
+        }//end for
+
+        return null ;
+    }
+
+
+
+    private synchronized void addTermFunc(String addTerm, String docNo ) {
+        StringBuilder sb = new StringBuilder();
+//        if ( FilesTerms == null ||FilesTerms.isEmpty()  )
+//            return;
+       // System.out.println( addTerm + " , " + docNo);
+        if (FilesTerms.containsKey(addTerm) ) {
+            String value = FilesTerms.get(addTerm);
+            String[] docs = StringUtils.split(value , "#") ;
+            String[] getnum =StringUtils.split(docs[docs.length-1] , "|") ;
+            if ( !getnum[0].equals(docNo)){ //new doc
+                sb.append(value) ;
+                value = sb.append( docNo + "|" + "1" + "#").toString();
+            }
+            else { //existing doc
+                int num = 0 ;
+                if ( isNumber(getnum[1]))
+                 num= Integer.parseInt(getnum[1]) ;
+                else{
+                    System.out.println("problem : " + value + addTerm);
+                    return ;
+                }
+                num ++ ;
+                value = StringUtils.substring(value, 0 , value.length()-(getnum[1].length()+1));
+                sb.append(value);
+                sb.append(num+"#") ;
+                value= sb.toString() ;
+            }
+            FilesTerms.put(addTerm, value);
+        } else {
+            sb.append(docNo + "|" +"1" +"#") ;
+            FilesTerms.put(addTerm, sb.toString());
+            TermsOnly.put(addTerm , addTerm) ;
+            }
+
+
+
     }
 
     /**
@@ -425,7 +502,9 @@ public class Parse {
             changed = false;
             s = new StringBuilder(token);
             String a = " " ;
-            if (specialchars.contains(""+s.charAt(0)) || a.equals(""+s.charAt(0)) ) {
+            if (specialchars.contains(""+s.charAt(0)) || a.equals(""+s.charAt(0))  ) {
+                if ( s.charAt(0) == '-' && s.length() > 1 && isNumber(s.charAt(1)+""))
+                    continue;
                 s.deleteCharAt(0);
                 token = s.toString() ;
                 changed = true ;

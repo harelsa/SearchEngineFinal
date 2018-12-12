@@ -16,13 +16,19 @@ public class SegmentFilePartition implements Serializable {
     private BufferedWriter file_buffer_writer;
     private BufferedReader file_buffer_reader;
     private int counter;
-    private char partitionChar;
+    private int chunk_num;
     private String path_u ;
 
-    public SegmentFilePartition(String path, char partitionChar) {
-        String segmantPartitionFilePath = path + "_" + partitionChar + ".txt";
+    public SegmentFilePartition(String path, int chunk_num) {
+        String segmantPartitionFilePath = path+"\\Segment Files\\seg" + "_" + chunk_num + ".txt";
+        File newFile = new File(segmantPartitionFilePath );
+        try {
+            //newFile.getParentFile().mkdirs();
+            newFile.createNewFile();
+        }
+        catch (Exception e ){}
         this.path_u = segmantPartitionFilePath ;
-        this.partitionChar = partitionChar;
+        //this.partitionChar = partitionChar;
         try {
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
             file_buffer_reader = new BufferedReader(new FileReader(segmantPartitionFilePath));
@@ -33,13 +39,14 @@ public class SegmentFilePartition implements Serializable {
         }
     }
 
-    public char getPartitionChar() {
-        return partitionChar;
-    }
+   // public int getPartitionChar() {
+//        return chunk_num;
+//    }
 
-    synchronized public void signNewTerm(Term term) {
+    synchronized public void signNewTerm(String term , String DocsList) {
         try {
-            file_buffer_writer.append(term.lightToString() + "\n");
+            file_buffer_writer.append(term + "\n");
+            file_buffer_writer.append(DocsList + "\n");
             counter++;
             if (counter > 13000){
                 file_buffer_writer.flush();
@@ -96,6 +103,10 @@ public class SegmentFilePartition implements Serializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getPath() {
+        return  path_u ;
     }
 
 //

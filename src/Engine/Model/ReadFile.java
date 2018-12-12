@@ -22,127 +22,162 @@ import static java.util.stream.Collectors.joining;
  * read a file and splits it to docs , by sending the splited text to parse
  */
 public class ReadFile {
+    private final String postingPath;
+    private final boolean stemming;
     ExecutorService executor;
+
+    int counterToFullChunk = 0 ;
+    int CHUNK = 0 ;
+    Parse parser ;
 
     ConcurrentHashMap< String ,City> cities = new ConcurrentHashMap<>() ; // save all the doc info cities
     ConcurrentSkipListSet< String  > languages = new ConcurrentSkipListSet<>(); // save all docs lang
 
-    public ReadFile() {
-        executor = Executors.newFixedThreadPool(8);
+    public ReadFile(String postingPath, boolean stemming ) {
+        //parser =new Parse(postingPath , stemming ) ;
+        this.postingPath = postingPath ;
+        this.stemming = stemming ;
+        executor = Executors.newFixedThreadPool(4);
     }
 
     /**
      * read line by line from giving file path and sends doc  & doc text's to parser
      * @param filePathName
-     * @param parser assign parser
+
+
      */
-    public void readAndParseLineByLine(String filePathName, Parse parser) {
-        BufferedReader br = null;
-        System.out.println(filePathName);
-        String parentFileName = getParentFileName(filePathName);
-        try {
-            br = new BufferedReader(new FileReader(filePathName));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        try {
-            boolean text_adding = false ;
-            String line = "" ;
-            StringBuilder sb_docInfo = new StringBuilder();
-            StringBuilder sb_text = new StringBuilder();
-            String docNo = "" ;
-            String docCity = "" ;
-            String doc_language = "" ;
-            String doc_date = "" ;
-            String doc_Headline = "";
-            while ((line = br.readLine()) != null) {
-                while (line != null && !line.equals("</DOC>") && !line.equals("</TEXT>")) {
-                    if (line.equals("<DOC>")) {
-                        line=br.readLine() ;
-                        text_adding = false ;
-                        continue;
-                    }
-                    if (  line.equals("<P>") || line.equals("</ P>") || line.equals("<TP>") || line.equals("</ TP>") || line.equals("</P>")) {
-                        line = br.readLine() ;  // start doc
-                        continue;
-                    }
-                    if ( line.equals("<TEXT>")) {
-                        text_adding  = true ;
-                        line = br.readLine();
-                    }
-                    //clean
-                    if ( line.startsWith("<F P=106>" ) ){
-                       String[] temp =  StringUtils.split(line , "><");
-                       line = temp[1] ;
-                    }
-
-                    if (line.contains("P>")){
-                        String[] temp = StringUtils.split(line , ">") ;
-                        if ( temp.length > 1)
-                        line = temp [1] ;
-                    }
-
-
-
-                    if (! text_adding ) // add to doc info
-                    sb_docInfo.append(" "+line);
-                    else sb_text.append(" "+line) ; // add to text
-
-
-                    // CITY
-                    if (line.startsWith("<F P=104>")){
-                       String[] arr = StringUtils.split(line , " ");
-                       if (arr.length < 4){
-                           line = br.readLine();
-                           continue;
-                       }
-                       int i = 4 ;
-                        docCity = arr [2] ; // only the first word between tags
-                       this.cities.put( docCity.toLowerCase() , new City(docCity) ) ;
-                       docCity = docCity.toUpperCase();
-                    }
-                    // Doc Language
-                    if (line.contains("<F P=105>")) {
-                        int k = 0;
-                        String[] arr = StringUtils.split(line, "> <");
-                        while (k < arr.length && !arr[k].equals("P=105")) k++;
-                        doc_language = arr[k + 1];
-                        doc_language = doc_language.toUpperCase();
-                        languages.add(doc_language) ;
-                    }
-                    // Doc num
-                    if (line.startsWith("<DOCNO>")){
-                        String[] arr = StringUtils.split( line , " ");
-                        if (arr.length >= 2)
-                            docNo = arr [1] ;
-                    }
-                    line = br.readLine();
-                }
-                //sb_docInfo.append(line);
-                String text = sb_text.toString();
-                Document doc = new Document(docNo, parentFileName , docCity , doc_language );
-
-
-                sb_docInfo.delete(0, sb_docInfo.length());
-                sb_docInfo.setLength(0);
-                sb_text.delete(0, sb_text.length());
-                sb_text.setLength(0);
-                sb_text = new StringBuilder();
-                sb_docInfo = new StringBuilder();
-                parser.parse(text,doc);
-                //executor.execute(parseThread);
-
-            }
-            br.close();
-            //return splitDocumentsFromFile(sb.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
+    public void readAndParseLineByLine(ArrayList<String> paths_list , int chunk  ) {
+        int y = 0 ;
+        String filePathName = "" ;
+        Parse parser = new Parse(postingPath , stemming) ;
+        boolean write = false ;
+        while ( y < paths_list.size()) {
+            filePathName = paths_list.get(y) ;
+            BufferedReader br = null;
+            System.out.println(filePathName);
+            String parentFileName = getParentFileName(filePathName);
+            counterToFullChunk++;
             try {
-                br.close();
-            } catch (IOException e) {
+                br = new BufferedReader(new FileReader(filePathName));
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
+            try {
+                boolean text_adding = false;
+                String line = "";
+                StringBuilder sb_docInfo = new StringBuilder();
+                StringBuilder sb_text = new StringBuilder();
+                String docNo = "";
+                String docCity = "";
+                String doc_language = "";
+                String doc_date = "";
+                String doc_Headline = "";
+                while ((line = br.readLine()) != null) {
+                    while (line != null) {
+                        if (line.equals("<DOC>")) {
+                            line = br.readLine();
+                            text_adding = false;
+                            continue;
+                        }
+                        if (line.equals("</TEXT>")) {
+                            line = br.readLine();
+                            continue;
+                        }
+                        if (line.equals("</DOC>")) {
+                            line = br.readLine();
+                            break;
+                        }
+
+
+                        if (line.equals("<P>") || line.equals("</ P>") || line.equals("<TP>") || line.equals("</ TP>") || line.equals("</P>")) {
+                            line = br.readLine();  // start doc
+                            continue;
+                        }
+                        if (line.equals("<TEXT>")) {
+                            text_adding = true;
+                            line = br.readLine();
+                        }
+                        //clean
+                        if (line.startsWith("<F P=106>")) {
+                            String[] temp = StringUtils.split(line, "><");
+                            line = temp[1];
+                        }
+
+                        if (line.contains("P>")) {
+                            String[] temp = StringUtils.split(line, ">");
+                            if (temp.length > 1)
+                                line = temp[1];
+                        }
+
+
+                        if (!text_adding) // add to doc info
+                            sb_docInfo.append(" " + line);
+                        else sb_text.append(" " + line); // add to text
+
+
+                        // CITY
+                        if (line.startsWith("<F P=104>")) {
+                            String[] arr = StringUtils.split(line, " ");
+                            if (arr.length < 4) {
+                                line = br.readLine();
+                                continue;
+                            }
+                            int i = 4;
+                            docCity = arr[2]; // only the first word between tags
+                            this.cities.put(docCity.toLowerCase(), new City(docCity));
+                            docCity = docCity.toUpperCase();
+                        }
+                        // Doc Language
+                        if (line.contains("<F P=105>")) {
+                            int k = 0;
+                            String[] arr = StringUtils.split(line, "> <");
+                            while (k < arr.length && !arr[k].equals("P=105")) k++;
+                            doc_language = arr[k + 1];
+                            doc_language = doc_language.toUpperCase();
+                            languages.add(doc_language);
+                        }
+                        // Doc num
+                        if (line.startsWith("<DOCNO>")) {
+                            String[] arr = StringUtils.split(line, " ");
+                            if (arr.length >= 2)
+                                docNo = arr[1];
+                        }
+                        line = br.readLine();
+                    }
+                    //sb_docInfo.append(line);
+                    String text = sb_text.toString();
+                    Document doc = new Document(docNo, parentFileName, docCity, doc_language);
+
+
+                    sb_docInfo.delete(0, sb_docInfo.length());
+                    sb_docInfo.setLength(0);
+                    sb_text.delete(0, sb_text.length());
+                    sb_text.setLength(0);
+                    sb_text = new StringBuilder();
+                    sb_docInfo = new StringBuilder();
+                    parser.parse(text, doc );
+                    write = false;
+
+                    // line= br.readLine();
+                    //executor.execute(parseThread);
+
+
+                }
+                if ( y ==paths_list.size() -1 )
+                    parser.sendToSeg(chunk);
+                y++ ;
+                br.close();
+                //return splitDocumentsFromFile(sb.toString());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
     }
 
