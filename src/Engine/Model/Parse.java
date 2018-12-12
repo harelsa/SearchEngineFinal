@@ -38,7 +38,7 @@ public class Parse {
 
 
     TreeMap< String , String > TermsOnly;
-    HashMap < String  , String  > FilesTerms ;
+    HashMap < String  , StringBuilder  > FilesTerms ;
     String lastDoc = "";
 
     private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words
@@ -144,8 +144,9 @@ public class Parse {
 
     public void sendToSeg ( int chunk ){
         // write to file
-        Thread seg = new Thread(() ->writeSeg(chunk));
-        seg.start();
+        //Thread seg = new Thread(() ->writeSeg(chunk));
+        //seg.start();
+        writeSeg(chunk);
     }
 
     public void writeSeg (int chunk ) {
@@ -157,7 +158,7 @@ public class Parse {
         while (it.hasNext()) {
             //String key = (String)it.next();
             String term = (String) it.next() ;
-            String  value = FilesTerms.get(term );
+            StringBuilder  value = FilesTerms.get(term );
             if ( stemming ) {
                 Stemmer stemmer = new Stemmer() ;
                 stemmer.add(term.toCharArray(), term.length());
@@ -166,7 +167,7 @@ public class Parse {
                 term = stemmer.toString();
 
             }
-            sfp.signNewTerm(term  , value);
+            sfp.signNewTerm(term  , value.toString());
         }
         System.out.println(sfp.getPath());
         sfp.flushFile();
@@ -427,32 +428,37 @@ public class Parse {
 //        if ( FilesTerms == null ||FilesTerms.isEmpty()  )
 //            return;
        // System.out.println( addTerm + " , " + docNo);
+        if ( docNo =="" )
+            System.out.println("stop !");
         if (FilesTerms.containsKey(addTerm) ) {
-            String value = FilesTerms.get(addTerm);
-            String[] docs = StringUtils.split(value , "#") ;
-            String[] getnum =StringUtils.split(docs[docs.length-1] , "|") ;
-            if ( !getnum[0].equals(docNo)){ //new doc
+            StringBuilder value = FilesTerms.get(addTerm);
+            //String[] docs = StringUtils.split(value.toString(), "#") ;
+            //String[] getnum =StringUtils.split(docs[docs.length-1] , "|") ;
+            int start = value.lastIndexOf("#") ;
+            String doc = value.substring(start+1 , value.length()-2);
+            if ( !doc.equals(docNo)){ //new doc
                 sb.append(value) ;
-                value = sb.append( docNo + "|" + "1" + "#").toString();
+                value.append( "#"+ docNo + "|" + "1" );
             }
             else { //existing doc
                 int num = 0 ;
-                if ( isNumber(getnum[1]))
-                 num= Integer.parseInt(getnum[1]) ;
+                if ( isNumber(value.charAt(value.length()-1)+""))
+                 num= Integer.parseInt(value.substring(value.lastIndexOf("|")+1 , value.length())) ;
                 else{
                     System.out.println("problem : " + value + addTerm);
                     return ;
                 }
                 num ++ ;
-                value = StringUtils.substring(value, 0 , value.length()-(getnum[1].length()+1));
-                sb.append(value);
-                sb.append(num+"#") ;
-                value= sb.toString() ;
+                value.replace(value.lastIndexOf("|")+1,value.length() ,num+""  );
+                //value = StringUtils.substring(value, 0 , value.length()-(getnum[1].length()+1));
+                //sb.append(value);
+                //sb.append(num) ;
+                //value= sb.toString() ;
             }
             FilesTerms.put(addTerm, value);
         } else {
-            sb.append(docNo + "|" +"1" +"#") ;
-            FilesTerms.put(addTerm, sb.toString());
+            sb.append("#" + docNo + "|" +"1" ) ;
+            FilesTerms.put(addTerm, sb );
             TermsOnly.put(addTerm , addTerm) ;
             }
 

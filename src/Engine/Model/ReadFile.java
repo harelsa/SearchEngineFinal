@@ -138,7 +138,7 @@ public class ReadFile {
                         }
                         // Doc num
                         if (line.startsWith("<DOCNO>")) {
-                            String[] arr = StringUtils.split(line, " ");
+                            String[] arr = StringUtils.split(line, "<> ");
                             if (arr.length >= 2)
                                 docNo = arr[1];
                         }
@@ -156,6 +156,8 @@ public class ReadFile {
                     sb_text = new StringBuilder();
                     sb_docInfo = new StringBuilder();
                     parser.parse(text, doc );
+                    if ( doc.docNo.equals(""))
+                        System.out.println("stop!!!");
                     write = false;
 
                     // line= br.readLine();
