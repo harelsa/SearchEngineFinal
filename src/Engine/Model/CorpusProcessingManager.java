@@ -23,7 +23,7 @@ import java.util.concurrent.Executors;
 public class CorpusProcessingManager {
     public static final boolean testMode = false;
 
-    private final int NUM_OF_PARSERS = 4; // Number of parsers threads
+    private final int NUM_OF_PARSERS = 2; // Number of parsers threads
     private final int NUM_OF_SEGMENT_FILES= 8; // Unique segment file for each parse thread
     private final int NUM_OF_SEGMENT_PARTITIONS= 36; // Unique segment file for each parse thread
     private final int NUM_OF_INVERTERS = 36; // Num of inverters. Determined according to the subgroups that will be defined for each segment file (a-c, d-g, etc)
@@ -173,7 +173,7 @@ public class CorpusProcessingManager {
             int j = i ;
             ArrayList<String> temp_list= new ArrayList<>() ;
             int u = 0 ;
-            while ( j < filesPathsList.size() && u < 50 ){
+            while ( j < filesPathsList.size() && u < 20 ){
                temp_list.add( filesPathsList.get(j));
                j++ ;
                u++ ;

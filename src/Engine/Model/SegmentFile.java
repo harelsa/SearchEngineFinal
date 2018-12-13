@@ -38,7 +38,7 @@ public class SegmentFile implements Serializable {
                 term = stemmer.toString();
 
             }
-            sfp.signNewTerm(term  , value);
+            //sfp.signNewTerm(term  , value);
         }
         sfp.flushFile();
         sfp.closeBuffers();

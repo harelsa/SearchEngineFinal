@@ -167,7 +167,9 @@ public class Parse {
                 term = stemmer.toString();
 
             }
-            sfp.signNewTerm(term  , value.toString());
+            sfp.signNewTerm(term  , value);
+            value.delete(0, value.length()) ;
+            value.setLength(0);
         }
         System.out.println(sfp.getPath());
         sfp.flushFile();
@@ -409,7 +411,7 @@ public class Parse {
                 }
             }
 
-            if ( addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%$+^;]#!<>")){ i++; continue;}
+            if ( addTerm.length() < 2 ||addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%$+^;]#!<>")){ i++; continue;}
 
             if ( debug ) System.out.println(addTerm);
 
@@ -462,7 +464,7 @@ public class Parse {
             TermsOnly.put(addTerm , addTerm) ;
             }
 
-
+            //sb.delete(0 , sb.length()) ;
 
     }
 
