@@ -8,11 +8,11 @@ import java.util.*;
 
 
 public class Posting {
-    private BufferedWriter terms_buffer_writer;
     private static int docsPointer = 1;
     private static int counter = 0;
     private static int termsPointer = 1;
     private static int docsCounter = 0;
+    private static BufferedWriter terms_buffer_writer;
     private static BufferedWriter documents_buffer_writer;
 
     public Posting(String postingsPath) {
@@ -107,7 +107,10 @@ public class Posting {
 
     public static void closeIO() {
         try {
-            documents_buffer_writer.close();
+            if (documents_buffer_writer != null)
+                documents_buffer_writer.close();
+            if (terms_buffer_writer != null)
+                terms_buffer_writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         }

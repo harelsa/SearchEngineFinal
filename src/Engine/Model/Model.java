@@ -114,6 +114,7 @@ public class Model extends Observable {
             try {
                 return deleteDirectory(dir);
             } catch (Exception e) {
+                e.printStackTrace();
             }
         }else {
 

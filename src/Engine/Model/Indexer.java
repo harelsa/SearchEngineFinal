@@ -87,6 +87,13 @@ public class Indexer {
             ifTermStartsWithCapital.clear();
             ifTermStartsWithCapital = new HashMap<>();
         }
+        for (int i = 0; i < segsReaders.length; i++) {
+            try {
+                segsReaders[i].close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 

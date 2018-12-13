@@ -99,8 +99,10 @@ public class SegmentFilePartition implements Serializable {
 
     public void closeBuffers() {
         try {
-            file_buffer_writer.close();
-            file_buffer_reader.close();
+            if (file_buffer_writer != null)
+                file_buffer_writer.close();
+            if (file_buffer_reader != null)
+                file_buffer_reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
