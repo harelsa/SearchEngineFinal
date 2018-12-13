@@ -228,38 +228,25 @@ public class Parse {
 
             }
             //First law - save " phrase" - will be saved as phrase and single words
-//            if ( addTerm.equals("") &&tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
-//                int j = i ;
-//                StringBuilder phrase = new StringBuilder(tokensArray[j]);
-//                j++ ;
-//                while ( j < tokensArray.length && ( j - i ) < 6 ) {
-//                    if (tokensArray[j].endsWith("\"")) { // end of phrase
-//                        phrase = phrase.append(" " + tokensArray[j]);
-//                        String phrase_temp  = phrase.toString();
-//                        phrase_temp = cleanToken(phrase_temp) ;
-//                        if ( debug ) System.out.println(phrase_temp);
-//                        if (docTerms.containsKey(phrase_temp)) {
-//                            Term tmp = docTerms.get(phrase_temp);
-//                            tmp.advanceTf();
-//                            tmp.addPosition(termPosition);
-//                            docTerms.put(phrase_temp, tmp);
-//                            currDoc.addTerm(tmp);
-//                            termPosition++;
-//                            break;
-//                        } else { // new term
-//                            Term obj_term = new Term(termPosition, 1, phrase_temp);
-//                            termPosition++;
-//                            currDoc.addTerm(obj_term);
-//                            docTerms.put(phrase_temp, obj_term);
-//                            break;
-//                        } // ***** adding to doc terms ****
-//                    } else {
-//                        phrase = phrase.append(" "+ tokensArray[j]);
-//                        j++ ;
-//                    }
-//
-//                }
-//            }
+            if ( addTerm.equals("") &&tokensArray[i].startsWith("\"") && !tokensArray[i].endsWith("\"")){
+                int j = i ;
+                StringBuilder phrase = new StringBuilder(tokensArray[j]);
+                j++ ;
+                while ( j < tokensArray.length && ( j - i ) < 6 ) {
+                    if (tokensArray[j].endsWith("\"")) { // end of phrase
+                        phrase = phrase.append(" " + tokensArray[j]);
+                        String phrase_temp  = phrase.toString();
+                        phrase_temp = cleanToken(phrase_temp) ;
+                        if ( debug ) System.out.println(phrase_temp);
+                            addTermFunc(phrase_temp , currDoc.docNo);
+                            break;
+                    } else {
+                        phrase = phrase.append(" "+ tokensArray[j]);
+                        j++ ;
+                    }
+
+                }
+            }
             // Second law  - save terms of capitals letters - Ashley Cummins Brittingham
 //            String temp_token = cleanToken(tokensArray[i] ) ;
 //            if ( addTerm.equals("") &&temp_token.length() > 1 && i < tokensArray.length-1 && Character.isUpperCase(temp_token.charAt(0)) // check first letter is a capital

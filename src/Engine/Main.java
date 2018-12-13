@@ -25,8 +25,8 @@ public class Main extends Application {
         Controller controller = new Controller();
         //view notify controller
         View view = fxmlLoader.getController();
-        view.posting_txt_field.appendText( "D:\\documents\\users\\bardanad\\Downloads\\resource-400files" );
-        view.corpus_txt_field.appendText("d:\\documents\\users\\bardanad\\Downloads\\corpus\\corpus-400files");
+        view.posting_txt_field.appendText( "d:\\documents\\users\\harelsa\\Downloads\\test" );
+        view.corpus_txt_field.appendText("d:\\documents\\users\\harelsa\\Downloads\\corpus\\corpus");
         view.setParent(primaryStage) ;
         view.setScene(scene) ;
         view.addObserver(controller);
