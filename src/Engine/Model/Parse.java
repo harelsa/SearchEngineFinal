@@ -435,12 +435,12 @@ public class Parse {
                 i++;
         }//end for
 
-         writeToDocsFiles( currDoc.docNo , currDoc.getParentFileName() , mostFreqTerm , tf_mft  ) ;
+         writeToDocsFiles( currDoc.docNo , currDoc.getParentFileName() , mostFreqTerm , tf_mft, num_unique_term) ;
         return null ;
     }
 
-    private synchronized void writeToDocsFiles(String docNo, String parentFileName, String mostFreqTerm, int tf_mft) {
-        //write to file
+    private void writeToDocsFiles(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms) {
+        Posting.writeToDocumentsPosting(docNo, parentFileName, mostFreqTerm, tf_mft, numOfUniqueTerms);
 
 
     }

@@ -8,7 +8,7 @@ import java.util.*;
 public class Indexer {
     public static TreeMap<String, String> terms_dictionary;
     public static TreeMap<String, String> cities_dictionary;
-    public static TreeMap<String, String> docs_dictionary;
+    public static TreeMap<String, Integer> docs_dictionary;
     private static FileWriter termDictionary_fw;
     public static String staticPostingsPath;
 
@@ -25,13 +25,6 @@ public class Indexer {
             e.printStackTrace();
         }
         cities_dictionary = new TreeMap<>();
-
-//        cities_dictionary = new TreeMap<>((Comparator) (o1, o2) -> {
-//            String s1 = ((City) (o1)).getCityName();
-//            String s2 = ((City) (o2)).getCityName();
-//            return s1.compareTo(s2);
-//        });
-
         docs_dictionary = new TreeMap<>(new DocComparator());
         staticPostingsPath = postingPath;
     }
@@ -49,68 +42,7 @@ public class Indexer {
         //docsPosting = docsPostingFile;
     }
 
-
-    //    public void appendSegmentPartitionRangeToPostingAndIndexes() {
-//        //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
-//        TreeMap<String, String> charTerms = new TreeMap<>();//new TermComparator());
-//        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
-//        for (int i = 0; i < segmentFilePartitions.length; i++) {
-//            StringBuilder sb;
-//            String line = segmentFilePartitions[i].readLine();
-//            while (line != null) {
-//                if (line.contains("<D>")) {
-//                    sb = new StringBuilder();
-//                    String docNo = "";
-//                    line = line.replace("<D>", "");
-//                    String[] docLineSplited = StringUtils.split(line, ",");
-//                    docNo = docLineSplited[0];
-//                    line = segmentFilePartitions[i].readLine();
-//                    while (line != null && !line.contains("<D>")) {
-//                        String tf = "";
-//                        String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
-//                        int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-//                        if (lastIndexOfComma == -1) { // Not a really term (there is no location)
-//                            line = segmentFilePartitions[i].readLine();
-//                            continue;
-//                        }
-//                        termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
-//                        lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-//                        if (lastIndexOfComma == -1) {
-//                            line = segmentFilePartitions[i].readLine();
-//                            continue;
-//                        }
-//                        String locs = "";
-//                        if (termLineSplitedByLocsPar.length > 1)
-//                            locs = "[" + termLineSplitedByLocsPar[1];
-//                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
-//                        String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
-//                        sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
-//
-//                        if (term.charAt(0) == '*' && term.length() > 1) {
-//                            term = StringUtils.substring(term, 1);
-//                            if (!ifTermStartsWithCapital.containsKey(term))
-//                                ifTermStartsWithCapital.put(term, true);
-//                        } else if (term.charAt(0) != '*') {
-//                            ifTermStartsWithCapital.put(term, false);
-//                        }
-//                        if (charTerms.containsKey(term)) {
-//                            String value = charTerms.get(term);
-//                            value = sb.append(value).toString();
-//                            charTerms.put(term, value);
-//                        } else
-//                            charTerms.put(term, sb.toString());
-//                        line = segmentFilePartitions[i].readLine();
-//                        sb.delete(0, sb.length());
-//                        sb.setLength(0);
-//                    }
-//                }
-//            }
-//        }
-//        System.out.println("Starting to writeTermToPosting");
-//        termsPosting.writeToTermsPosting(charTerms, ifTermStartsWithCapital);
-//    }
     public void appendSegmentPartitionRangeToPostingAndIndexes() throws FileNotFoundException {
-        int counter = 0;
         chunksPath = getChunkPath();
         chunksCurrLines = new String[chunksPath.size()];
         segsReaders = new BufferedReader[chunksPath.size()];
@@ -210,12 +142,6 @@ public class Indexer {
         return true;
     }
 
-
-//    private boolean isRealDoc(String line) {
-//        if (line.contains("null"))
-//            return false;
-//        return true;
-//    }
 
     public static void writeDictionariesToDisc() {
         try {
@@ -317,16 +243,8 @@ public class Indexer {
     }
 
 
-    synchronized public static void addNewDocToDocDictionary(String docNo, String docValue) {
+    synchronized public static void addNewDocToDocDictionary(String docNo, int docValue) {
         docs_dictionary.put(docNo, docValue);
-    }
-
-    public static void closeIO() {
-        try {
-            termDictionary_bf.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     public ArrayList<String> getChunkPath() {
