@@ -87,7 +87,7 @@ public class CorpusProcessingManager {
      * This posting will eventually contain the terms that will be in the alphabetical range defined for each inverter.
      */
     private void initInverters() {
-
+        inverters[0] = new Indexer(new Posting(postingPath));
     }
 
     /**
@@ -133,7 +133,11 @@ public class CorpusProcessingManager {
             System.out.println("Starting building Inverted Index: " + timeStamp);
         }
 
-        //buildInvertedIndex();
+        try {
+            buildInvertedIndex();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         if (testMode){
             System.out.println("Finished building Inverted Index");
         }
@@ -153,12 +157,11 @@ public class CorpusProcessingManager {
 
 
 
-    private void buildInvertedIndex() {
-        for (int i = 11; i < NUM_OF_INVERTERS; i++) {
-            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
-           // inverters[i%NUM_OF_INVERTERS].appendSegmentPartitionRangeToPostingAndIndexes();
+    private void buildInvertedIndex() throws FileNotFoundException {
+//        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
+//            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
+            inverters[0].appendSegmentPartitionRangeToPostingAndIndexes();
 
-        }
         System.out.println("done");
     }
 

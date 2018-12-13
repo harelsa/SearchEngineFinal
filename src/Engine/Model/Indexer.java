@@ -3,9 +3,7 @@ package Engine.Model;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class Indexer {
     public static TreeMap<String, String> terms_dictionary;
@@ -38,22 +36,21 @@ public class Indexer {
         staticPostingsPath = postingPath;
     }
 
-    private SegmentFilePartition[] segmentFilePartitions;
+    private ArrayList<String> chunksPath;
+    private String[] chunksCurrLines;
+    private BufferedReader[] segsReaders;
     private Posting termsPosting;
     private Posting docsPosting;
+    private HashMap<String, Boolean> ifTermStartsWithCapital;
 
-    public Indexer(SegmentFilePartition[] segmentFilePartitions) {
-        this.segmentFilePartitions = segmentFilePartitions;
-    }
 
-    public Indexer(SegmentFilePartition[] segmentFilesInverter, Posting termsPostingFile) {
+    public Indexer(Posting termsPostingFile) {
         termsPosting = termsPostingFile;
         //docsPosting = docsPostingFile;
-        this.segmentFilePartitions = segmentFilesInverter;
     }
 
 
-//    public void appendSegmentPartitionRangeToPostingAndIndexes() {
+    //    public void appendSegmentPartitionRangeToPostingAndIndexes() {
 //        //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
 //        TreeMap<String, String> charTerms = new TreeMap<>();//new TermComparator());
 //        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
@@ -112,84 +109,183 @@ public class Indexer {
 //        System.out.println("Starting to writeTermToPosting");
 //        termsPosting.writeToTermsPosting(charTerms, ifTermStartsWithCapital);
 //    }
-public void appendSegmentPartitionRangeToPostingAndIndexes() {
-    //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
-    TreeMap<String, String>[] seg_i_arr = new TreeMap[8] ;
-    for (int i =0 ; i< seg_i_arr.length ; i++
-         ) {
-        seg_i_arr[i] = new TreeMap<String , String>();//new TermComparator());
-    }
-
-
-    HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
-    for (int i = 0; i < segmentFilePartitions.length; i++) {
-        StringBuilder sb;
-        List<String> lines = segmentFilePartitions[i].readAllLines();
-        Iterator<String> line_it = lines.iterator() ;
-        String line ;
-        if ( line_it.hasNext())
-            line = line_it.next();
-        else line = null ;
-        while (line != null ) {
-            if (line.contains("<D>")) {
-                sb = new StringBuilder();
-                String docNo = "";
-                line = line.replace("<D>", "");
-                String[] docLineSplited = StringUtils.split(line, ",");
-                docNo = docLineSplited[0];
-                if ( line_it.hasNext())
-                line = line_it.next();
-                else line = null ;
-                while (line != null && !line.contains("<D>")) {
-                    String tf = "";
-                    String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
-                    int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-                    if (lastIndexOfComma == -1) { // Not a really term (there is no location)
-                        if ( line_it.hasNext())
-                            line = line_it.next();
-                        else line = null ;
-                        continue;
-                    }
-                    termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
-                    lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-                    if (lastIndexOfComma == -1) {
-                        if ( line_it.hasNext())
-                            line = line_it.next();
-                        else line = null ;
-                        continue;
-                    }
-                    String locs = "";
-                    if (termLineSplitedByLocsPar.length > 1)
-                        locs = "[" + termLineSplitedByLocsPar[1];
-                    tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
-                    String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
-                    sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
-
-                    if (term.charAt(0) == '*' && term.length() > 1) {
-                        term = StringUtils.substring(term, 1);
-                        if (!ifTermStartsWithCapital.containsKey(term))
-                            ifTermStartsWithCapital.put(term, true);
-                    } else if (term.charAt(0) != '*') {
-                        ifTermStartsWithCapital.put(term, false);
-                    }
-                    if (seg_i_arr[i].containsKey(term)) {
-                        String value = seg_i_arr[i].get(term);
-                        value = sb.append(value).toString();
-                        seg_i_arr[i].put(term, value);
-                    } else
-                        seg_i_arr[i].put(term, sb.toString());
-                    if ( line_it.hasNext())
-                        line = line_it.next();
-                    else line = null ;
-                    sb.delete(0, sb.length());
-                    sb.setLength(0);
+    public void appendSegmentPartitionRangeToPostingAndIndexes() throws FileNotFoundException {
+        chunksPath = getChunkPath();
+        chunksCurrLines = new String[chunksPath.size()];
+        segsReaders = new BufferedReader[chunksPath.size()];
+        HashMap<String, String> termToDocs = new HashMap<>();
+        ifTermStartsWithCapital = new HashMap<>();
+        for (int i = 0; i < segsReaders.length; i++) {
+            segsReaders[i] = new BufferedReader(new FileReader(chunksPath.get(i)));
+            try {
+                chunksCurrLines[i] = segsReaders[i].readLine(); // each readers reads it's first term.
+                if (chunksCurrLines[i].charAt(0) == '*' && chunksCurrLines[i].length() > 1) {
+                    chunksCurrLines[i] = StringUtils.substring(chunksCurrLines[i], 1);
+                    if (!ifTermStartsWithCapital.containsKey(chunksCurrLines[i]))
+                        ifTermStartsWithCapital.put(chunksCurrLines[i], true);
+                } else if (chunksCurrLines[i].charAt(0) != '*') {
+                    ifTermStartsWithCapital.put(chunksCurrLines[i], false);
                 }
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
+        while (!finishToRead(chunksCurrLines)) {
+            ifTermStartsWithCapital.clear();
+            ifTermStartsWithCapital = new HashMap<>();
+            termToDocs.clear();
+            while (termToDocs.size() < 2500 || isContainsTheNextMin(termToDocs)) {
+                String minTermDetails = getMinimum(chunksCurrLines);
+                if (minTermDetails.contains("null"))
+                    break;
+                int termIsUntilIndex = StringUtils.indexOf(minTermDetails, "@");
+                String term = StringUtils.substring(minTermDetails, 0, termIsUntilIndex);
+
+                String listOfDocs = StringUtils.substring(minTermDetails, termIsUntilIndex + 1);
+                if (termToDocs.containsKey(term)) {
+                    String curValue = termToDocs.get(term);
+                    String newValue = curValue + listOfDocs;
+                    termToDocs.put(term, newValue);
+                } else
+                    termToDocs.put(term, listOfDocs);
+            }
+            termsPosting.writeToTermsPosting(termToDocs, ifTermStartsWithCapital);
+        }
     }
-    System.out.println("Starting to writeTermToPosting");
-    termsPosting.writeToTermsPosting(seg_i_arr, ifTermStartsWithCapital);
-}
+
+
+//
+//        TreeMap<String, String>[] seg_i_arr = new TreeMap[8];
+//        for (
+//                int i = 0;
+//                i < seg_i_arr.length; i++
+//                )
+//
+//        {
+//            seg_i_arr[i] = new TreeMap<String, String>();//new TermComparator());
+//        }
+//
+//
+//        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
+//        for (
+//                int i = 0;
+//                i < segmentFilePartitions.length; i++)
+//
+//        {
+//            StringBuilder sb;
+//            List<String> lines = segmentFilePartitions[i].readAllLines();
+//            Iterator<String> line_it = lines.iterator();
+//            String line;
+//            if (line_it.hasNext())
+//                line = line_it.next();
+//            else line = null;
+//            while (line != null) {
+//                if (line.contains("<D>")) {
+//                    sb = new StringBuilder();
+//                    String docNo = "";
+//                    line = line.replace("<D>", "");
+//                    String[] docLineSplited = StringUtils.split(line, ",");
+//                    docNo = docLineSplited[0];
+//                    if (line_it.hasNext())
+//                        line = line_it.next();
+//                    else line = null;
+//                    while (line != null && !line.contains("<D>")) {
+//                        String tf = "";
+//                        String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
+//                        int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+//                        if (lastIndexOfComma == -1) { // Not a really term (there is no location)
+//                            if (line_it.hasNext())
+//                                line = line_it.next();
+//                            else line = null;
+//                            continue;
+//                        }
+//                        termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
+//                        lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
+//                        if (lastIndexOfComma == -1) {
+//                            if (line_it.hasNext())
+//                                line = line_it.next();
+//                            else line = null;
+//                            continue;
+//                        }
+//                        String locs = "";
+//                        if (termLineSplitedByLocsPar.length > 1)
+//                            locs = "[" + termLineSplitedByLocsPar[1];
+//                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
+//                        String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
+//                        sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
+//
+//                        if (term.charAt(0) == '*' && term.length() > 1) {
+//                            term = StringUtils.substring(term, 1);
+//                            if (!ifTermStartsWithCapital.containsKey(term))
+//                                ifTermStartsWithCapital.put(term, true);
+//                        } else if (term.charAt(0) != '*') {
+//                            ifTermStartsWithCapital.put(term, false);
+//                        }
+//                        if (seg_i_arr[i].containsKey(term)) {
+//                            String value = seg_i_arr[i].get(term);
+//                            value = sb.append(value).toString();
+//                            seg_i_arr[i].put(term, value);
+//                        } else
+//                            seg_i_arr[i].put(term, sb.toString());
+//                        if (line_it.hasNext())
+//                            line = line_it.next();
+//                        else line = null;
+//                        sb.delete(0, sb.length());
+//                        sb.setLength(0);
+//                    }
+//                }
+//            }
+//        }
+//        System.out.println("Starting to writeTermToPosting");
+//        termsPosting.writeToTermsPosting(seg_i_arr, ifTermStartsWithCapital);
+//    }
+
+    private boolean isContainsTheNextMin(HashMap<String, String> termToDocs) {
+        for (int i = 0; i < chunksCurrLines.length; i++) {
+            if (termToDocs.containsKey(chunksCurrLines[i]))
+                return true;
+        }
+        return false;
+    }
+
+    private String getMinimum(String[] chunksCurrLines) {
+        String minSoFar = chunksCurrLines[0]; // The term it self
+        String docsOfTerm = "";
+        int indexOfMin = 0;
+        for (int i = 1; i < chunksCurrLines.length; i++) {
+                if (chunksCurrLines[i] != null && minSoFar != null && chunksCurrLines[i].compareTo(minSoFar) < 1){
+                    minSoFar = chunksCurrLines[i];
+                    indexOfMin = i;
+                }
+        }
+        try {
+            docsOfTerm = segsReaders[indexOfMin].readLine();  // The docs which contains the minimum term
+            String nextTerm = segsReaders[indexOfMin].readLine(); // Hold the next term
+            chunksCurrLines[indexOfMin] = nextTerm;
+            if (chunksCurrLines[indexOfMin] != null) {
+                if (nextTerm.charAt(0) == '*' && nextTerm.length() > 1) {
+                    nextTerm = StringUtils.substring(nextTerm, 1);
+                    if (!ifTermStartsWithCapital.containsKey(nextTerm))
+                        ifTermStartsWithCapital.put(nextTerm, true);
+                } else if (nextTerm.charAt(0) != '*') {
+                    ifTermStartsWithCapital.put(nextTerm, false);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return minSoFar + "@" + docsOfTerm; // <Term>"@"<ListOfDocs>
+    }
+
+    private boolean finishToRead(String[] bufferReaders) {
+        for (int i = 0; i < bufferReaders.length; i++) {
+            if (bufferReaders[i] != null)
+                return false;
+        }
+        return true;
+    }
+
 
 //    private boolean isRealDoc(String line) {
 //        if (line.contains("null"))
@@ -213,6 +309,7 @@ public void appendSegmentPartitionRangeToPostingAndIndexes() {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                termDictionary_bf.flush();
                 termIt.remove(); // avoids a ConcurrentModificationException
             }
             termDictionary_bf.flush();
@@ -308,6 +405,14 @@ public void appendSegmentPartitionRangeToPostingAndIndexes() {
         }
     }
 
+    public ArrayList<String> getChunkPath() {
+        ArrayList<String> filesPathsList = new ArrayList<>();
+        final File folder = new File(staticPostingsPath + "\\Segment Files");
+        for (final File fileEntry : folder.listFiles())
+            filesPathsList.add(fileEntry.getPath());
+        return filesPathsList;
+    }
+
     public static class TermComparator implements Comparator<Object> {
 
         @Override
@@ -332,4 +437,6 @@ public void appendSegmentPartitionRangeToPostingAndIndexes() {
         }
     }
 }
+
+
 

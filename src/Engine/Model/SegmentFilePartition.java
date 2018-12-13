@@ -20,7 +20,8 @@ public class SegmentFilePartition implements Serializable {
     private String path_u ;
 
     public SegmentFilePartition(String path, int chunk_num) {
-        String segmantPartitionFilePath = path+"\\Segment Files\\seg" + "_" + chunk_num + ".txt";
+        this.chunk_num = chunk_num;
+        String segmantPartitionFilePath = path+"\\Segment Files\\seg" + "_" + this.chunk_num + ".txt";
         File newFile = new File(segmantPartitionFilePath );
         try {
             //newFile.getParentFile().mkdirs();
