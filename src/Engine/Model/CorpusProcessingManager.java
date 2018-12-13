@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CorpusProcessingManager {
-    public static final boolean testMode = false;
+    public static final boolean testMode = true;
 
     private final int NUM_OF_PARSERS = 2; // Number of parsers threads
     private final int NUM_OF_SEGMENT_FILES= 8; // Unique segment file for each parse thread
@@ -87,7 +87,7 @@ public class CorpusProcessingManager {
      * This posting will eventually contain the terms that will be in the alphabetical range defined for each inverter.
      */
     private void initInverters() {
-
+        inverters[0] = new Indexer(new Posting(postingPath));
     }
 
     /**
@@ -133,9 +133,14 @@ public class CorpusProcessingManager {
             System.out.println("Starting building Inverted Index: " + timeStamp);
         }
 
-        //buildInvertedIndex();
+        try {
+            buildInvertedIndex();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
         if (testMode){
-            System.out.println("Finished building Inverted Index");
+            String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            System.out.println("Finished building Inverted Index: " + timeStamp1);
         }
 //        closeAllSegmentFiles();
 //        try {
@@ -153,12 +158,11 @@ public class CorpusProcessingManager {
 
 
 
-    private void buildInvertedIndex() {
-        for (int i = 11; i < NUM_OF_INVERTERS; i++) {
-            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
-           // inverters[i%NUM_OF_INVERTERS].appendSegmentPartitionRangeToPostingAndIndexes();
+    private void buildInvertedIndex() throws FileNotFoundException {
+//        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
+//            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
+            inverters[0].appendSegmentPartitionRangeToPostingAndIndexes();
 
-        }
         System.out.println("done");
     }
 
@@ -513,4 +517,3 @@ public class CorpusProcessingManager {
     //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;population");
 
 }
-

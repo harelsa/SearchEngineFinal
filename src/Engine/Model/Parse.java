@@ -106,6 +106,10 @@ public class Parse {
             TermsOnly = new TreeMap<String, String>((Comparator) (o1, o2) -> {
                 String s1 = ((String)(o1)).toLowerCase();
                 String s2 = ((String)(o2)).toLowerCase();
+                if (s1.charAt(0) == '*')
+                    s1 = StringUtils.substring(s1, 1);
+                if (s2.charAt(0) == '*')
+                    s2 = StringUtils.substring(s2, 1);
                 return s1.compareTo(s2);
             });
             String curr_line;
@@ -444,6 +448,11 @@ public class Parse {
 
     private synchronized void addTermFunc(String addTerm, String docNo ) {
         StringBuilder sb = new StringBuilder();
+        if (Character.isUpperCase(addTerm.charAt(0))){
+            addTerm = addTerm.toLowerCase();
+            addTerm = "*" + addTerm;
+        }
+
 //        if ( FilesTerms == null ||FilesTerms.isEmpty()  )
 //            return;
        // System.out.println( addTerm + " , " + docNo);
