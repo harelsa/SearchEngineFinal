@@ -1,7 +1,7 @@
 /**
- This class actually manages the corpus processing and uses the various departments to perform the following actions (in chronological order):
- 1. Reading and parsing the document repository (The parse output will be written into temporary files called segment files).
- 2. Creating the inverted indexes
+ * This class actually manages the corpus processing and uses the various departments to perform the following actions (in chronological order):
+ * 1. Reading and parsing the document repository (The parse output will be written into temporary files called segment files).
+ * 2. Creating the inverted indexes
  */
 
 package Engine.Model;
@@ -24,13 +24,13 @@ public class CorpusProcessingManager {
     public static final boolean testMode = false;
 
     private final int NUM_OF_PARSERS = 8; // Number of parsers threads
-    private final int NUM_OF_SEGMENT_FILES= 8; // Unique segment file for each parse thread
-    private final int NUM_OF_SEGMENT_PARTITIONS= 36; // Unique segment file for each parse thread
+    private final int NUM_OF_SEGMENT_FILES = 8; // Unique segment file for each parse thread
+    private final int NUM_OF_SEGMENT_PARTITIONS = 36; // Unique segment file for each parse thread
     private final int NUM_OF_INVERTERS = 36; // Num of inverters. Determined according to the subgroups that will be defined for each segment file (a-c, d-g, etc)
     private static double MILLION = Math.pow(10, 6);
     private ReadFile reader;
     private String corpusPath;
-    private String postingPath ;
+    private String postingPath;
     private String originalPath;
     private final boolean stemming; // If the current processing should be used in the stemming
     private Parse[] parsers = new Parse[NUM_OF_PARSERS];
@@ -39,16 +39,16 @@ public class CorpusProcessingManager {
     private ArrayList<String> filesPathsList; // A data structure that will hold all file paths in the corpus
     private static ExecutorService parseExecutor; // Thread pool for the parsers run
     private static ExecutorService invertedExecutor; // Thread pool for the inverters run
-    private HashMap<String,String > inverted_city; // < State , City >
+    private HashMap<String, String> inverted_city; // < State , City >
     public static ExecutorService docsPostingWriterExecutor;
-    public static ConcurrentHashMap<String, City> cities ; // < City , City_obj >  cities after parsing
+    public static ConcurrentHashMap<String, City> cities; // < City , City_obj >  cities after parsing
 
 
-    public CorpusProcessingManager(String corpusPath, String postingPath , boolean stemming) {
+    public CorpusProcessingManager(String corpusPath, String postingPath, boolean stemming) {
         this.corpusPath = corpusPath;
         this.originalPath = postingPath;
-        this.postingPath =  postingPath + "\\Postings" + ifStemming(stemming);
-        this.stemming = stemming ;
+        this.postingPath = postingPath + "\\Postings" + ifStemming(stemming);
+        this.stemming = stemming;
         this.reader = new ReadFile();
         createDirs(this.postingPath);
         Posting.initPosting(this.postingPath + "\\Docs");
@@ -57,10 +57,10 @@ public class CorpusProcessingManager {
 
         filesPathsList = new ArrayList<>();
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
-        invertedExecutor = Executors.newFixedThreadPool(NUM_OF_INVERTERS);
+        invertedExecutor = Executors.newFixedThreadPool(8);
         docsPostingWriterExecutor = Executors.newFixedThreadPool(4);
         cities = new ConcurrentHashMap<>();
-        inverted_city = new HashMap<>() ;
+        inverted_city = new HashMap<>();
     }
 
     private String ifStemming(boolean stemming) {
@@ -316,7 +316,7 @@ public class CorpusProcessingManager {
      */
     private void initParsers() {
         for (int i = 0; i < NUM_OF_PARSERS; i++) {
-            segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
+            segmentFiles[i] = new SegmentFile(getSegmentFilePath(i), stemming);
             parsers[i] = new Parse(segmentFiles[i], originalPath);
         }
     }
@@ -343,18 +343,17 @@ public class CorpusProcessingManager {
             }
 
 
-        }
-        catch (Exception e ){
+        } catch (Exception e) {
         }
         //end of parse
         cities = reader.cities;
-        if (testMode){
+        if (testMode) {
             String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Starting building Inverted Index: " + timeStamp);
         }
 
         buildInvertedIndex();
-        if (testMode){
+        if (testMode) {
             System.out.println("Finished building Inverted Index");
         }
         closeAllSegmentFiles();
@@ -379,13 +378,22 @@ public class CorpusProcessingManager {
 
 
     private void buildInvertedIndex() {
-        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
-            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
-            inverters[i%NUM_OF_INVERTERS].appendSegmentPartitionRangeToPostingAndIndexes();
-
+        for (int i = 10; i < NUM_OF_INVERTERS; i++) {
+            System.out.println("inverter : " + i);
+            inverters[i].appendSegmentPartitionRangeToPostingAndIndexes();
+//            inverters[i%NUM_OF_INVERTERS].appendSegmentPartitionRangeToPostingAndIndexes();
+//            inverters[i].appendSegmentPartitionRangeToPostingAndIndexes();
+//            int finalI = i;
+//            Thread inverterThread = new Thread(() -> inverters[finalI].appendSegmentPartitionRangeToPostingAndIndexes());
+//            invertedExecutor.execute(inverterThread);
+//            reader.readAndParseLineByLine(filesPathsList.get(i), parsers[i%8]);
         }
-        System.out.println("done");
+//        invertedExecutor.shutdown();
+//        while (!invertedExecutor.isTerminated()) {
+//        }
+//        System.out.println("done");
     }
+
 
     /**
      * This method manages the parallel run of the parsers.
@@ -395,7 +403,7 @@ public class CorpusProcessingManager {
     private void readAndParse() throws InterruptedException {
         for (int i = 0; i < filesPathsList.size(); i++) {
             int finalI = i;
-            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI%8]));
+            Thread readNParseThread = new Thread(() -> reader.readAndParseLineByLine(filesPathsList.get(finalI), parsers[finalI % 8]));
             parseExecutor.execute(readNParseThread);
 //            reader.readAndParseLineByLine(filesPathsList.get(i), parsers[i%8]);
         }
@@ -405,9 +413,9 @@ public class CorpusProcessingManager {
     }
 
 
-    public void buildCitiesPosting(){
-        cities = reader.getCities() ;
-        getCitiesInfo () ;
+    public void buildCitiesPosting() {
+        cities = reader.getCities();
+        getCitiesInfo();
         //end of parse
     }
 
@@ -472,7 +480,7 @@ public class CorpusProcessingManager {
      * save city in a global hash map
      * @param
      */
-    public void getCitiesInfo (){
+    public void getCitiesInfo() {
 //        for (Map.Entry<String, City> entry : cities.entrySet())
 //        {
         //System.out.println(entry.getKey() + "/" + entry.getValue());
@@ -480,14 +488,12 @@ public class CorpusProcessingManager {
             // System.out.println(getText(entry.getKey()));
             //get hash maps
             getCitiesState();
-            getCitiesPopulation() ;
-            getCitiesCurrencies() ;
-        }
-        catch (Exception e ){
+            getCitiesPopulation();
+            getCitiesCurrencies();
+        } catch (Exception e) {
             System.out.println(e.getCause());
         }
 //        }
-
 
 
     }
@@ -497,14 +503,14 @@ public class CorpusProcessingManager {
      * @return
      * @throws Exception
      */
-    public  String getCitiesState() throws Exception {
+    public String getCitiesState() throws Exception {
 
         //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
         URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;capital;");
 
 
         //URLConnection connection = website.openConnection();
-        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
 
 
@@ -514,12 +520,12 @@ public class CorpusProcessingManager {
 
         StringBuilder response = new StringBuilder();
         String inputLine;
-        inputLine = in.readLine() ;
+        inputLine = in.readLine();
         //while (() != null) {
         //response.append(inputLine);
-        String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
-        for ( int i= 0 ; i < splited.length-3; ) {
-            String s =  splited[i] ;
+        String[] splited = StringUtils.split(inputLine, "[]}{,:\"");
+        for (int i = 0; i < splited.length - 3; ) {
+            String s = splited[i];
             if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
                 i++;
                 continue;
@@ -527,36 +533,35 @@ public class CorpusProcessingManager {
             //String[] splited_split = StringUtils.split(inputLine,"") ;
 
             String state = splited[i].toLowerCase();
-            String city = splited[i+2].toLowerCase();
-            String first_part = "" ;
-            if ( city.contains(" ") ) // 2 word city
+            String city = splited[i + 2].toLowerCase();
+            String first_part = "";
+            if (city.contains(" ")) // 2 word city
                 first_part = city.split(" ")[0].toLowerCase();
             if (cities.containsKey(city) || cities.containsKey(first_part)) {
                 City city_obj = cities.get(city);
-                if (city_obj == null )
-                    city_obj = cities.get(first_part) ;
-                if ( city_obj == null ) {
-                    i=i+3 ;
+                if (city_obj == null)
+                    city_obj = cities.get(first_part);
+                if (city_obj == null) {
+                    i = i + 3;
                     continue;
                 }
                 try {
                     city_obj.setState_name(state);
                     inverted_city.put(state, city);
                     cities.put(city, city_obj);
-                }
-                catch (Exception e ){
+                } catch (Exception e) {
                     System.out.println(city + " : " + state);
                 }
 
             }
-            i=i+3;
+            i = i + 3;
         }
 
         // }
 
         in.close();
 
-        return null ;
+        return null;
     }
 
     /**
@@ -564,31 +569,31 @@ public class CorpusProcessingManager {
      * @return
      * @throws Exception
      */
-    public  String getCitiesPopulation() throws Exception {
+    public String getCitiesPopulation() throws Exception {
         //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
         URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;population");
         //URLConnection connection = website.openConnection();
-        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(
                         con.getInputStream()));
         //StringBuilder response = new StringBuilder();
         String inputLine;
-        inputLine = in.readLine() ;
-        String[] splited = StringUtils.split(inputLine,"[]}{:\"") ;
-        for ( int i= 0 ; i < splited.length-3; ) {
-            String s =  splited[i] ;
+        inputLine = in.readLine();
+        String[] splited = StringUtils.split(inputLine, "[]}{:\"");
+        for (int i = 0; i < splited.length - 3; ) {
+            String s = splited[i];
             if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("population")) {
                 i++;
                 continue;
             }
             //String[] splited_split = StringUtils.split(inputLine,"") ;
             String state = splited[i].toLowerCase();
-            String population = splited[i+3];
-            String first_part = "" ;
+            String population = splited[i + 3];
+            String first_part = "";
 
-            if (inverted_city.containsKey(state) ) {
+            if (inverted_city.containsKey(state)) {
                 String city = inverted_city.get(state);
 
                 City city_obj = cities.get(city); // try 1 word city first
@@ -599,23 +604,22 @@ public class CorpusProcessingManager {
                 //round num
                 int num = Integer.parseInt(population);
                 try {
-                    if ( Parse.isNumber( population ) && num > MILLION ){
+                    if (Parse.isNumber(population) && num > MILLION) {
 
-                        double num_d = round_num ( num ) ;
-                        population =  "M" + Double.toString(num_d) ;
+                        double num_d = round_num(num);
+                        population = "M" + Double.toString(num_d);
                     }
                     city_obj.setPopulation(population);
                     cities.put(city, city_obj);
-                }
-                catch (Exception e ){
+                } catch (Exception e) {
                     System.out.println(state + " " + city_obj.toString());
                 }
             }
-            i=i+4;
+            i = i + 4;
         }
         in.close();
 
-        return null ;
+        return null;
     }
 
     /**
@@ -625,8 +629,8 @@ public class CorpusProcessingManager {
      */
     private double round_num(int num) {
         double rounded = num / MILLION;
-        rounded = round( rounded , 2 ) ;
-        return rounded ;
+        rounded = round(rounded, 2);
+        return rounded;
     }
 
     public static double round(double value, int places) {
@@ -642,7 +646,7 @@ public class CorpusProcessingManager {
      * @return
      * @throws Exception
      */
-    public  String getCitiesCurrencies() throws Exception {
+    public String getCitiesCurrencies() throws Exception {
 
 
         //URL website = new URL("http://getcitydetails.geobytes.com/GetCityDetails?fqcn=" + city_name);
@@ -650,7 +654,7 @@ public class CorpusProcessingManager {
 
 
         //URLConnection connection = website.openConnection();
-        HttpURLConnection con  = ( HttpURLConnection)  url.openConnection();
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod("GET");
 
 
@@ -660,39 +664,39 @@ public class CorpusProcessingManager {
 
         StringBuilder response = new StringBuilder();
         String inputLine;
-        inputLine = in.readLine() ;
+        inputLine = in.readLine();
         //while (() != null) {
         //response.append(inputLine);
-        String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
-        int jump = 7 ;
-        for ( int i= 0 ; i < splited.length-3; ) {
-            String s =  splited[i] ;
+        String[] splited = StringUtils.split(inputLine, "[]}{,:\"");
+        int jump = 7;
+        for (int i = 0; i < splited.length - 3; ) {
+            String s = splited[i];
             if (!s.equals("code")) {
                 i++;
                 continue;
             }
             //String[] splited_split = StringUtils.split(inputLine,"") ;
-            String currency = "" ;
-            if ( s.equals("code"))
-                currency= splited[i+1] ; // got cuurency
-            i++ ;
+            String currency = "";
+            if (s.equals("code"))
+                currency = splited[i + 1]; // got cuurency
+            i++;
             //now find state
-            String state = "" ;
-            int count_name = 0 ;
-            while( i < splited.length-3 &&  !inverted_city.containsKey(state)  ){
-                state = splited[i].toLowerCase() ;
-                if (state.equals("name")){
+            String state = "";
+            int count_name = 0;
+            while (i < splited.length - 3 && !inverted_city.containsKey(state)) {
+                state = splited[i].toLowerCase();
+                if (state.equals("name")) {
                     count_name++;
                 }
-                if ( count_name == 2) {// counted 2 names , should stop
+                if (count_name == 2) {// counted 2 names , should stop
                     state = splited[i + 1].toLowerCase();
                     break;
                 }
-                i++ ;
+                i++;
             }
 
-            String first_part = "" ;
-            if (inverted_city.containsKey(state) ) {
+            String first_part = "";
+            if (inverted_city.containsKey(state)) {
                 String city = inverted_city.get(state);
 
                 City city_obj = cities.get(city); // try 1 word city first
@@ -703,8 +707,7 @@ public class CorpusProcessingManager {
                 try {
                     city_obj.setCurrency(currency);
                     cities.put(city, city_obj);
-                }
-                catch (Exception e ){
+                } catch (Exception e) {
                     System.out.println(state + " : " + state);
                 }
 
@@ -716,11 +719,10 @@ public class CorpusProcessingManager {
 
         in.close();
 
-        return null ;
+        return null;
     }
 
-    public String[] getDocLang ()
-    {
+    public String[] getDocLang() {
         return reader.getLanguagesList();
     }
     //URL url = new URL("http://restcountries.eu/rest/v2/all?fields=name;currencies;");

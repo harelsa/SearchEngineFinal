@@ -18,7 +18,7 @@ public class Indexer {
 
 
     public static void initIndexer(String postingPath) {
-        terms_dictionary = new TreeMap<>(new TermComparator());
+        terms_dictionary = new TreeMap<>();
         try {
             termDictionary_fw = new FileWriter(postingPath + "\\termDictionary.txt");
             termDictionary_bf = new BufferedWriter(termDictionary_fw);
@@ -54,7 +54,7 @@ public class Indexer {
 
     public void appendSegmentPartitionRangeToPostingAndIndexes() {
         //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
-        TreeMap<String, String> charTerms = new TreeMap<>(new TermComparator());
+        HashMap<String, String> charTerms = new HashMap<>();
         HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
         for (int i = 0; i < segmentFilePartitions.length; i++) {
             StringBuilder sb;

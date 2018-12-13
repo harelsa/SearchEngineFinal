@@ -55,12 +55,13 @@ public class Posting {
         }
     }
 
-    public void writeToTermsPosting(TreeMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
+    public void writeToTermsPosting(HashMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
         Iterator iterator = termDocs.entrySet().iterator();
         int pointer = 1;
         int counter = 0;
         while (iterator.hasNext()) {
             Map.Entry pair = (Map.Entry) iterator.next();
+            iterator.remove();
             String key = pair.getKey().toString(); // term
             String listOfDocs = pair.getValue().toString(); // list of docs
             String termDetails = getMostFreqDocAndTotalTf(listOfDocs); // "<D>"<DOC-NO>","<MaxTf>","<TotalTf>,<df>
@@ -105,11 +106,16 @@ public class Posting {
         String docNoOfMax = "";
         for (int i = 0; i < docs.length; i++) {
             String[] splited = StringUtils.split(docs[i], ",");
+            try{
             int tmp = Integer.parseInt(splited[1]);
             totalTf += tmp;
             if (tmp > maxTf) {
                 maxTf = tmp;
                 docNoOfMax = splited[0];
+            }
+        }catch(NumberFormatException n){
+                System.out.println("ERROR: " + docs[i]);
+                System.out.println("ERROR: " + splited[1]);
             }
         }
         return docNoOfMax + "," + maxTf + "," + totalTf + "," + df;
