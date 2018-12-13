@@ -100,9 +100,9 @@ public class Parse {
                 String s1 = ((String)(o1)).toLowerCase();
                 String s2 = ((String)(o2)).toLowerCase();
                 if (s1.charAt(0) == '*')
-                    StringUtils.substring(s1, 1);
+                    s1 = StringUtils.substring(s1, 1);
                 if (s2.charAt(0) == '*')
-                    StringUtils.substring(s2, 1);
+                    s2 = StringUtils.substring(s2, 1);
                 return s1.compareTo(s2);
             });
             String curr_line;

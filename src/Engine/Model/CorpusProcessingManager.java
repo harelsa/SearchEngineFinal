@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CorpusProcessingManager {
-    public static final boolean testMode = false;
+    public static final boolean testMode = true;
 
     private final int NUM_OF_PARSERS = 2; // Number of parsers threads
     private final int NUM_OF_SEGMENT_FILES= 8; // Unique segment file for each parse thread
@@ -139,7 +139,8 @@ public class CorpusProcessingManager {
             e.printStackTrace();
         }
         if (testMode){
-            System.out.println("Finished building Inverted Index");
+            String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+            System.out.println("Finished building Inverted Index: " + timeStamp1);
         }
 //        closeAllSegmentFiles();
 //        try {
