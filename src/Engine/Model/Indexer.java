@@ -4,22 +4,22 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class Indexer {
-    public static TreeMap<String, String> terms_dictionary;
-    public static TreeMap<String, String> cities_dictionary;
-    public static TreeMap<String, Integer> docs_dictionary;
-    private static FileWriter termDictionary_fw;
-    public static String staticPostingsPath;
+class Indexer {
+    static TreeMap<String, String> terms_dictionary;
+    static TreeMap<String, String> cities_dictionary;
+    static TreeMap<String, Integer> docs_dictionary;
+    private static String staticPostingsPath;
 
 
     private static BufferedWriter termDictionary_bf;
 
 
-    public static void initIndexer(String postingPath) {
+    static void initIndexer(String postingPath) {
         terms_dictionary = new TreeMap<>(new TermComparator());
         try {
-            termDictionary_fw = new FileWriter(postingPath + "\\termDictionary.txt");
+            FileWriter termDictionary_fw = new FileWriter(postingPath + "\\termDictionary.txt");
             termDictionary_bf = new BufferedWriter(termDictionary_fw);
         } catch (IOException e) {
             e.printStackTrace();
@@ -29,21 +29,19 @@ public class Indexer {
         staticPostingsPath = postingPath;
     }
 
-    private ArrayList<String> chunksPath;
     private String[] chunksCurrLines;
     private BufferedReader[] segsReaders;
     private Posting termsPosting;
-    private Posting docsPosting;
     private HashMap<String, Boolean> ifTermStartsWithCapital;
 
 
-    public Indexer(Posting termsPostingFile) {
+    Indexer(Posting termsPostingFile) {
         termsPosting = termsPostingFile;
         //docsPosting = docsPostingFile;
     }
 
-    public void appendSegmentPartitionRangeToPostingAndIndexes() throws FileNotFoundException {
-        chunksPath = getChunkPath();
+    void appendSegmentPartitionRangeToPostingAndIndexes() throws FileNotFoundException {
+        ArrayList<String> chunksPath = getChunkPath();
         chunksCurrLines = new String[chunksPath.size()];
         segsReaders = new BufferedReader[chunksPath.size()];
         TreeMap<String, String> termToDocs = new TreeMap<>(new TermComparator());
@@ -72,8 +70,6 @@ public class Indexer {
                     break;
                 int termIsUntilIndex = StringUtils.indexOf(minTermDetails, "@");
                 String term = StringUtils.substring(minTermDetails, 0, termIsUntilIndex);
-//                if (term.charAt(0) == 'z')
-//                    System.out.println("z");
 
                 String listOfDocs = StringUtils.substring(minTermDetails, termIsUntilIndex + 1);
                 if (termToDocs.containsKey(term)) {
@@ -87,9 +83,9 @@ public class Indexer {
             ifTermStartsWithCapital.clear();
             ifTermStartsWithCapital = new HashMap<>();
         }
-        for (int i = 0; i < segsReaders.length; i++) {
+        for (BufferedReader segsReader : segsReaders) {
             try {
-                segsReaders[i].close();
+                segsReader.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -98,8 +94,8 @@ public class Indexer {
 
 
     private boolean isContainsTheNextMin(TreeMap<String, String> termToDocs) {
-        for (int i = 0; i < chunksCurrLines.length; i++) {
-            if (termToDocs.containsKey(chunksCurrLines[i]))
+        for (String chunksCurrLine : chunksCurrLines) {
+            if (termToDocs.containsKey(chunksCurrLine))
                 return true;
         }
         return false;
@@ -108,9 +104,9 @@ public class Indexer {
     private String getMinimum(String[] chunksCurrLines) {
         String docsOfTerm = "";
         String minSoFar = ""; // The term it self
-        for (int i = 0; i < chunksCurrLines.length; i++) {
-            if (chunksCurrLines[i] != null && !chunksCurrLines[i].equals("")) {
-                minSoFar = chunksCurrLines[i];
+        for (String chunksCurrLine : chunksCurrLines) {
+            if (chunksCurrLine != null && !chunksCurrLine.equals("")) {
+                minSoFar = chunksCurrLine;
                 break;
             }
         }
@@ -142,22 +138,22 @@ public class Indexer {
     }
 
     private boolean finishToRead() {
-        for (int i = 0; i < chunksCurrLines.length; i++) {
-            if (chunksCurrLines[i] != null)
+        for (String chunksCurrLine : chunksCurrLines) {
+            if (chunksCurrLine != null)
                 return false;
         }
         return true;
     }
 
 
-    public static void writeDictionariesToDisc() {
+    static void writeDictionariesToDisc() {
         try {
             Iterator termIt = terms_dictionary.entrySet().iterator();
             int counter = 0;
             while (termIt.hasNext()) {
                 Map.Entry pair = (Map.Entry) termIt.next();
                 try {
-                    termDictionary_bf.append(pair.getKey().toString() + "," + pair.getValue().toString() + "\n");
+                    termDictionary_bf.append(pair.getKey().toString()).append(",").append(pair.getValue().toString()).append("\n");
                     counter++;
                     if (counter > 10000) {
                         termDictionary_bf.flush();
@@ -174,20 +170,21 @@ public class Indexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        FileWriter docDictionary_fw = null;
+        AtomicReference<FileWriter> docDictionary_fw = new AtomicReference<>(null);
 
         try {
-            docDictionary_fw = new FileWriter(staticPostingsPath + "\\docDictionary.txt");
+            docDictionary_fw.set(new FileWriter(staticPostingsPath + "\\docDictionary.txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        BufferedWriter docDictionary_bf = new BufferedWriter(docDictionary_fw);
+        assert docDictionary_fw.get() != null;
+        BufferedWriter docDictionary_bf = new BufferedWriter(docDictionary_fw.get());
         Iterator docIt = docs_dictionary.entrySet().iterator();
         int counter = 0;
         while (docIt.hasNext()) {
             Map.Entry pair = (Map.Entry) docIt.next();
             try {
-                docDictionary_bf.append(pair.getKey().toString() + "," + pair.getValue().toString() + "\n");
+                docDictionary_bf.append(pair.getKey().toString()).append(",").append(pair.getValue().toString()).append("\n");
                 counter++;
                 if (counter > 10000) {
                     docDictionary_bf.flush();
@@ -215,7 +212,7 @@ public class Indexer {
                 try {
                     String key = pair.getKey().toString();
                     String cityDetailsFromApi = getCityDetailsFromApi(key);
-                    citiesDictionary_bf.append(key).append(",").append(cityDetailsFromApi).append(",").append(pair.getValue().toString() + "\n");
+                    citiesDictionary_bf.append(key).append(",").append(cityDetailsFromApi).append(",").append(pair.getValue().toString()).append("\n");
                     counter++;
                     if (counter > 10000) {
                         citiesDictionary_bf.flush();
@@ -250,11 +247,11 @@ public class Indexer {
     }
 
 
-    synchronized public static void addNewDocToDocDictionary(String docNo, int docValue) {
+    synchronized static void addNewDocToDocDictionary(String docNo, int docValue) {
         docs_dictionary.put(docNo, docValue);
     }
 
-    public ArrayList<String> getChunkPath() {
+    private ArrayList<String> getChunkPath() {
         ArrayList<String> filesPathsList = new ArrayList<>();
         final File folder = new File(staticPostingsPath + "\\Segment Files");
         for (final File fileEntry : folder.listFiles())
