@@ -34,6 +34,13 @@ public class Parse {
     private static double TRILLION = Math.pow(10, 12);
     private String posting_path ;
 
+    private String mostFreqTerm = "" ;
+    private int  tf_mft = 0 ;
+    int  num_unique_term = 0 ;
+
+
+
+
     boolean debug = false ;
 
 
@@ -185,7 +192,11 @@ public class Parse {
      */
     private SortedMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
   // < str_term , obj_term >  // will store all the terms in curpos
+        //doc no. , perent ,term , tf , n,uniqueterm , pointer
         String addTerm = "" ;
+        num_unique_term = 0 ;
+        mostFreqTerm = "";
+        tf_mft = 0 ;
         for (int i = 0; i < tokensArray.length; ) {
 
             addTerm = "" ;
@@ -420,9 +431,15 @@ public class Parse {
                 i++;
         }//end for
 
+         writeToDocsFiles( currDoc.docNo , currDoc.getParentFileName() , mostFreqTerm , tf_mft  ) ;
         return null ;
     }
 
+    private synchronized void writeToDocsFiles(String docNo, String parentFileName, String mostFreqTerm, int tf_mft) {
+        //write to file
+
+
+    }
 
 
     private synchronized void addTermFunc(String addTerm, String docNo ) {
@@ -451,6 +468,10 @@ public class Parse {
                     return ;
                 }
                 num ++ ;
+                if ( num > tf_mft ) {
+                    tf_mft = num;
+                    mostFreqTerm = addTerm ;
+                }
                 value.replace(value.lastIndexOf("|")+1,value.length() ,num+""  );
                 //value = StringUtils.substring(value, 0 , value.length()-(getnum[1].length()+1));
                 //sb.append(value);
@@ -459,6 +480,7 @@ public class Parse {
             }
             FilesTerms.put(addTerm, value);
         } else {
+            num_unique_term++ ;
             sb.append("#" + docNo + "|" +"1" ) ;
             FilesTerms.put(addTerm, sb );
             TermsOnly.put(addTerm , addTerm) ;
