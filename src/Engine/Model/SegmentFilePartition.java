@@ -43,12 +43,12 @@ public class SegmentFilePartition implements Serializable {
 //        return chunk_num;
 //    }
 
-    synchronized public void signNewTerm(String term , String DocsList) {
+    synchronized public void signNewTerm(String term , StringBuilder sb) {
         try {
             file_buffer_writer.append(term + "\n");
-            file_buffer_writer.append(DocsList + "\n");
+            file_buffer_writer.append(sb.toString() + "\n");
             counter++;
-            if (counter > 13000){
+            if (counter > 1000){
                 file_buffer_writer.flush();
                 counter = 0;
             }
