@@ -8,17 +8,17 @@ import java.util.*;
 
 
 public class Posting {
-    private String termsPostingPath;
-    private BufferedWriter terms_buffer_writer;
     private static int docsPointer = 1;
+    private static int counter = 0;
+    private static int termsPointer = 1;
     private static int docsCounter = 0;
+    private static BufferedWriter terms_buffer_writer;
     private static BufferedWriter documents_buffer_writer;
 
     public Posting(String postingsPath) {
-        this.termsPostingPath = postingsPath + ".txt";
-        //this.documentsPostingPath = documentsPostingPath + ".txt";
+        String termsPostingPath = postingsPath + "\\Terms\\termsPosting.txt";
         try {
-            terms_buffer_writer = new BufferedWriter(new FileWriter(this.termsPostingPath));
+            terms_buffer_writer = new BufferedWriter(new FileWriter(termsPostingPath));
         } catch (IOException e1) {
             e1.printStackTrace();
         }
@@ -32,38 +32,12 @@ public class Posting {
         }
     }
 
-    synchronized public static void writeToDocumentsPosting(Document doc, SortedMap<String, Term> sm) {
-        StringBuilder listOfTerms = new StringBuilder();
-        listOfTerms.append("#");
-        for (String term : sm.keySet()) {
-            listOfTerms.append(sm.get(term).postingToString()).append("#");
-        }
-        StringBuilder docValueInDictionary = new StringBuilder();
-        docValueInDictionary.append(doc.getParentFileName()).append(",").append(doc.getLang()).append(",").append(doc.getCity()).append(",").append(doc.getFreqTermContent()).
-                append(",").append(doc.getMaxTF()).append(",").append(doc.getNumOfUniqueTerms()).append(",").append(docsPointer);
-        docsPointer += 2;
-        Indexer.addNewDocToDocDictionary(doc.getDocNo(), docValueInDictionary.toString());
-        try {
-            documents_buffer_writer.append(doc.getDocNo() + "\n");
-            documents_buffer_writer.append(listOfTerms + "\n");
-            if (docsCounter > 7000) {
-                documents_buffer_writer.flush();
-                docsCounter = 0;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void writeToTermsPosting(HashMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
-        Iterator iterator = termDocs.entrySet().iterator();
-        int pointer = 1;
-        int counter = 0;
-        while (iterator.hasNext()) {
-            Map.Entry pair = (Map.Entry) iterator.next();
-            iterator.remove();
+    void writeToTermsPosting(TreeMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
+        for (Object o : termDocs.entrySet()) {
+            Map.Entry pair = (Map.Entry) o;
             String key = pair.getKey().toString(); // term
-            String listOfDocs = pair.getValue().toString(); // list of docs
+            String listOfDocs = (String) pair.getValue(); // list of docs
+            //String listOfDocs = sb.toString();
             String termDetails = getMostFreqDocAndTotalTf(listOfDocs); // "<D>"<DOC-NO>","<MaxTf>","<TotalTf>,<df>
             String[] termDetailsSplited = StringUtils.split(termDetails, ",");
             int df = Integer.parseInt(termDetailsSplited[termDetailsSplited.length - 1]);
@@ -75,17 +49,17 @@ public class Posting {
 
             if (ifTermStartsWithCapital.containsKey(key) && ifTermStartsWithCapital.get(key))
                 key = key.toUpperCase();
-            Indexer.terms_dictionary.put(key, termDetails + "," + pointer);
-            pointer += 2;
-            if (CorpusProcessingManager.cities.containsKey(key.toLowerCase())){
+            Indexer.terms_dictionary.put(key, termDetails + "," + termsPointer);
+            termsPointer += 2;
+            if (CorpusProcessingManager.cities.containsKey(key.toLowerCase())) {
                 Indexer.cities_dictionary.put(key, listOfDocs);
             }
-            //Indexer.terms_dictionary.put(key, currDicValue + df + "," + pointer);
             try {
                 terms_buffer_writer.append(key).append('\n');
                 counter++;
                 terms_buffer_writer.append(listOfDocs).append(String.valueOf('\n'));
                 counter++;
+
                 if (counter > 3000) {
                     terms_buffer_writer.flush();
                     counter = 0;
@@ -105,17 +79,14 @@ public class Posting {
         int totalTf = 0;
         String docNoOfMax = "";
         for (int i = 0; i < docs.length; i++) {
-            String[] splited = StringUtils.split(docs[i], ",");
-            try{
+            String[] splited = StringUtils.split(docs[i], "|");
+            if (splited.length < 2)
+                continue;
             int tmp = Integer.parseInt(splited[1]);
             totalTf += tmp;
             if (tmp > maxTf) {
                 maxTf = tmp;
                 docNoOfMax = splited[0];
-            }
-        }catch(NumberFormatException n){
-                System.out.println("ERROR: " + docs[i]);
-                System.out.println("ERROR: " + splited[1]);
             }
         }
         return docNoOfMax + "," + maxTf + "," + totalTf + "," + df;
@@ -136,7 +107,26 @@ public class Posting {
 
     public static void closeIO() {
         try {
-            documents_buffer_writer.close();
+            if (documents_buffer_writer != null)
+                documents_buffer_writer.close();
+            if (terms_buffer_writer != null)
+                terms_buffer_writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    synchronized public static void writeToDocumentsPosting(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms) {
+        try {
+            documents_buffer_writer.append(docNo + "," + parentFileName + "," + mostFreqTerm + "," + tf_mft + "," + numOfUniqueTerms + "\n");
+            docsCounter++;
+            if (docsCounter > 7000) {
+                documents_buffer_writer.flush();
+                docsCounter = 0;
+            }
+            Indexer.addNewDocToDocDictionary(docNo, docsPointer);
+            docsPointer++;
+
         } catch (IOException e) {
             e.printStackTrace();
         }

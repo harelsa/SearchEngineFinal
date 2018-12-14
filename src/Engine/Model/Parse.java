@@ -2,6 +2,7 @@ package Engine.Model;
 
 
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
@@ -13,6 +14,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static Engine.Model.CorpusProcessingManager.ifStemming;
+
 /**
  * will break each doc to terms , by getting a :
  * Segmentfile to Write ,an array of tokens from Current doc Text , Doc obj .
@@ -23,14 +26,27 @@ import java.util.regex.Pattern;
 public class Parse {
 
 
+    private static final int CHUNK_SIZE = 50 ;
     // enums
     private static double THOUSAND = Math.pow(10, 3);
     private static double MILLION = Math.pow(10, 6);
     private static double BILLION = Math.pow(10, 9);
     private static double TRILLION = Math.pow(10, 12);
+    private String posting_path ;
+
+    private String mostFreqTerm = "" ;
+    private int  tf_mft = 0 ;
+    int  num_unique_term = 0 ;
+
+
+
 
     boolean debug = false ;
 
+
+    TreeMap< String , String > TermsOnly;
+    HashMap < String  , StringBuilder  > FilesTerms ;
+    String lastDoc = "";
 
     private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words
     private static HashSet<String> specialwords = new HashSet<>(); // list of words might be in terms
@@ -44,6 +60,9 @@ public class Parse {
     private static FileReader months_fr;
 
     private SegmentFile segmantFile; // each parser gets one segment file to write to
+    String path ;
+    boolean stemming = false ;
+
     private int termPosition; // counts the term position inside the doc text
 
     static {
@@ -71,15 +90,28 @@ public class Parse {
     private static Pattern BETWEEN = Pattern.compile("\\d+" + "and" + "\\d+");
 
 
-    public Parse(SegmentFile segmantFile , String path) {
+    public Parse(String path  , boolean stemming) {
         try {
             stopwords_fr = new FileReader(path  +"\\stop_words.txt");
+            this.posting_path =  path + "\\Postings" + ifStemming(stemming);
+            this.path = path ;
+            this.stemming = stemming ;
             BufferedReader stopwords_br = new BufferedReader(stopwords_fr);
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
             BufferedReader months_br = new BufferedReader(months_fr);
 
-            this.segmantFile = segmantFile;
+            this.segmantFile = new SegmentFile(path , stemming );
+            FilesTerms = new HashMap< >() ;
+            TermsOnly = new TreeMap<String, String>((Comparator) (o1, o2) -> {
+                String s1 = ((String)(o1)).toLowerCase();
+                String s2 = ((String)(o2)).toLowerCase();
+                if (s1.charAt(0) == '*')
+                    s1 = StringUtils.substring(s1, 1);
+                if (s2.charAt(0) == '*')
+                    s2 = StringUtils.substring(s2, 1);
+                return s1.compareTo(s2);
+            });
             String curr_line;
 
             while ((curr_line = stopwords_br.readLine()) != null) {
@@ -114,11 +146,45 @@ public class Parse {
         termPosition = 0;
         //text = remove_stop_words(text);
         String[] tokens;
-        tokens = StringUtils.split(text , "\"\\`:)?*(|;!&=}{[],'<> ");
-        SortedMap<String, Term> AllTerms = getTerms(tokens, currDoc);
+        tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> ") ;
+        getTerms(tokens, currDoc);
         currDoc.updateAfterParsing();
-        segmantFile.signToSpecificPartition(AllTerms , currDoc);
+
         return null;
+    }
+
+    public void sendToSeg ( int chunk ){
+        // write to file
+        //Thread seg = new Thread(() ->writeSeg(chunk));
+        //seg.start();
+        writeSeg(chunk);
+    }
+
+    public void writeSeg (int chunk ) {
+
+        SegmentFilePartition sfp = new SegmentFilePartition( posting_path, chunk) ;
+
+        Iterator it = TermsOnly.keySet().iterator();
+        //signNewDocSection(currDoc);
+        while (it.hasNext()) {
+            //String key = (String)it.next();
+            String term = (String) it.next() ;
+            StringBuilder  value = FilesTerms.get(term );
+            if ( stemming ) {
+                Stemmer stemmer = new Stemmer() ;
+                stemmer.add(term.toCharArray(), term.length());
+                String stemmed = "";
+                stemmer.stem();
+                term = stemmer.toString();
+
+            }
+            sfp.signNewTerm(term  , value);
+            value.delete(0, value.length()) ;
+            value.setLength(0);
+        }
+        System.out.println(sfp.getPath());
+        sfp.flushFile();
+        sfp.closeBuffers();
     }
 
     /**
@@ -129,12 +195,12 @@ public class Parse {
      * @return a sorted map of all the terms in curr doc text
      */
     private SortedMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
-        TreeMap<String, Term> docTerms = new TreeMap<String, Term>((Comparator) (o1, o2) -> {
-            String s1 = ((String)(o1)).toLowerCase();
-            String s2 = ((String)(o2)).toLowerCase();
-            return s1.compareTo(s2);
-        });  // < str_term , obj_term >  // will store all the terms in curpos
+  // < str_term , obj_term >  // will store all the terms in curpos
+        //doc no. , perent ,term , tf , n,uniqueterm , pointer
         String addTerm = "" ;
+        num_unique_term = 0 ;
+        mostFreqTerm = "";
+        tf_mft = 0 ;
         for (int i = 0; i < tokensArray.length; ) {
 
             addTerm = "" ;
@@ -144,7 +210,6 @@ public class Parse {
                 i += 1;
                 continue;
             }
-
 //            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
 //                System.out.print("");
 
@@ -173,21 +238,8 @@ public class Parse {
                         String phrase_temp  = phrase.toString();
                         phrase_temp = cleanToken(phrase_temp) ;
                         if ( debug ) System.out.println(phrase_temp);
-                        if (docTerms.containsKey(phrase_temp)) {
-                            Term tmp = docTerms.get(phrase_temp);
-                            tmp.advanceTf();
-                            tmp.addPosition(termPosition);
-                            docTerms.put(phrase_temp, tmp);
-                            currDoc.addTerm(tmp);
-                            termPosition++;
+                            addTermFunc(phrase_temp , currDoc.docNo);
                             break;
-                        } else { // new term
-                            Term obj_term = new Term(termPosition, 1, phrase_temp);
-                            termPosition++;
-                            currDoc.addTerm(obj_term);
-                            docTerms.put(phrase_temp, obj_term);
-                            break;
-                        } // ***** adding to doc terms ****
                     } else {
                         phrase = phrase.append(" "+ tokensArray[j]);
                         j++ ;
@@ -236,25 +288,14 @@ public class Parse {
                         i = j ;
                     }
                     if (debug)System.out.println(what_to_add);
-                    if (docTerms.containsKey(what_to_add)) {
-                        Term tmp = docTerms.get(what_to_add);
-                        tmp.advanceTf();
-                        tmp.addPosition(termPosition);
-                        currDoc.addTerm(tmp);
-                        docTerms.put( what_to_add, tmp);
-                        termPosition++;
-                        if ( stop) break;
-                    } else { // new term
-                        Term obj_term = new Term(termPosition, 1,what_to_add);
-                        termPosition++;
-                        currDoc.addTerm(obj_term);
-                        docTerms.put( what_to_add, obj_term);
+                        addTermFunc(what_to_add , currDoc.docNo);
                         if ( stop ) break;
-                    } // ***** adding to doc terms ****
                 }
                 i = j  ;
                 continue;
             }// second law
+
+
             if (addTerm.equals("") && ! tokensArray[i].equals("") && tokensArray[i] != null)
                 tokensArray[i] = cleanToken(tokensArray[i]);
             //tokensArray[i] = remove_stop_words(tokensArray[i]);
@@ -348,26 +389,88 @@ public class Parse {
                     addTerm = tokensArray[i] ;
             }
 
-            if ( addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%+^;]#!<>")){ i++; continue;}
+            if ( StringUtils.containsAny(addTerm , "-")){
+                String[] term = StringUtils.split(addTerm , "-");
+                for (String s :term
+                     ) {
+                    if ( s.length() < 2 ) {
+                        addTerm = "";
+                        break ;
+                    }
+                }
+            }
+
+            if ( addTerm.length() < 2 ||addTerm.equals("") || StringUtils.containsAny( addTerm , "?\"\\':)(`*[}|{=&@~%$+^;]#!<>")){ i++; continue;}
 
             if ( debug ) System.out.println(addTerm);
-            if (docTerms.containsKey(addTerm)) {
-                Term tmp = docTerms.get(addTerm);
-                tmp.advanceTf();
-                tmp.addPosition(termPosition);
-                currDoc.addTerm(tmp);
-                docTerms.put(addTerm, tmp);
-                termPosition++;
-            } else { // new term
-                Term obj_term = new Term(termPosition, 1, addTerm);
-                termPosition++;
-                currDoc.addTerm(obj_term);
-                docTerms.put(addTerm, obj_term);
-            }
+
+            addTermFunc ( addTerm , currDoc.docNo ) ;
             if ( !is_joint_term)
                 i++;
-        } //end for
-        return docTerms ;
+        }//end for
+
+         writeToDocsFiles( currDoc.docNo , currDoc.getParentFileName() , mostFreqTerm , tf_mft, num_unique_term) ;
+        return null ;
+    }
+
+    private void writeToDocsFiles(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms) {
+        Posting.writeToDocumentsPosting(docNo, parentFileName, mostFreqTerm, tf_mft, numOfUniqueTerms);
+
+
+    }
+
+
+    private synchronized void addTermFunc(String addTerm, String docNo ) {
+        StringBuilder sb = new StringBuilder();
+        if (Character.isUpperCase(addTerm.charAt(0))){
+            addTerm = addTerm.toLowerCase();
+            addTerm = "*" + addTerm;
+        }
+
+//        if ( FilesTerms == null ||FilesTerms.isEmpty()  )
+//            return;
+       // System.out.println( addTerm + " , " + docNo);
+        if ( docNo =="" )
+            System.out.println("stop !");
+        if (FilesTerms.containsKey(addTerm) ) {
+            StringBuilder value = FilesTerms.get(addTerm);
+            //String[] docs = StringUtils.split(value.toString(), "#") ;
+            //String[] getnum =StringUtils.split(docs[docs.length-1] , "|") ;
+            int start = value.lastIndexOf("#") ;
+            String doc = value.substring(start+1 , value.length()-2);
+            if ( !doc.equals(docNo)){ //new doc
+                sb.append(value) ;
+                value.append( "#"+ docNo + "|" + "1" );
+            }
+            else { //existing doc
+                int num = 0 ;
+                if ( isNumber(value.charAt(value.length()-1)+""))
+                 num= Integer.parseInt(value.substring(value.lastIndexOf("|")+1 , value.length())) ;
+                else{
+                    System.out.println("problem : " + value + addTerm);
+                    return ;
+                }
+                num ++ ;
+                if ( num > tf_mft ) {
+                    tf_mft = num;
+                    mostFreqTerm = addTerm ;
+                }
+                value.replace(value.lastIndexOf("|")+1,value.length() ,num+""  );
+                //value = StringUtils.substring(value, 0 , value.length()-(getnum[1].length()+1));
+                //sb.append(value);
+                //sb.append(num) ;
+                //value= sb.toString() ;
+            }
+            FilesTerms.put(addTerm, value);
+        } else {
+            num_unique_term++ ;
+            sb.append("#" + docNo + "|" +"1" ) ;
+            FilesTerms.put(addTerm, sb );
+            TermsOnly.put(addTerm , addTerm) ;
+            }
+
+            //sb.delete(0 , sb.length()) ;
+
     }
 
     /**
@@ -412,7 +515,9 @@ public class Parse {
             changed = false;
             s = new StringBuilder(token);
             String a = " " ;
-            if (specialchars.contains(""+s.charAt(0)) || a.equals(""+s.charAt(0)) ) {
+            if (specialchars.contains(""+s.charAt(0)) || a.equals(""+s.charAt(0))  ) {
+                if ( s.charAt(0) == '-' && s.length() > 1 && isNumber(s.charAt(1)+""))
+                    continue;
                 s.deleteCharAt(0);
                 token = s.toString() ;
                 changed = true ;

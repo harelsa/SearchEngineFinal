@@ -3,130 +3,157 @@ package Engine.Model;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class Indexer {
-    public static TreeMap<String, String> terms_dictionary;
-    public static TreeMap<String, String> cities_dictionary;
-    public static TreeMap<String, String> docs_dictionary;
-    private static FileWriter termDictionary_fw;
-    public static String staticPostingsPath;
+class Indexer {
+    static TreeMap<String, String> terms_dictionary;
+    static TreeMap<String, String> cities_dictionary;
+    static TreeMap<String, Integer> docs_dictionary;
+    private static String staticPostingsPath;
 
 
     private static BufferedWriter termDictionary_bf;
 
 
-    public static void initIndexer(String postingPath) {
-        terms_dictionary = new TreeMap<>();
+    static void initIndexer(String postingPath) {
+        terms_dictionary = new TreeMap<>(new TermComparator());
         try {
-            termDictionary_fw = new FileWriter(postingPath + "\\termDictionary.txt");
+            FileWriter termDictionary_fw = new FileWriter(postingPath + "\\termDictionary.txt");
             termDictionary_bf = new BufferedWriter(termDictionary_fw);
         } catch (IOException e) {
             e.printStackTrace();
         }
         cities_dictionary = new TreeMap<>();
-
-//        cities_dictionary = new TreeMap<>((Comparator) (o1, o2) -> {
-//            String s1 = ((City) (o1)).getCityName();
-//            String s2 = ((City) (o2)).getCityName();
-//            return s1.compareTo(s2);
-//        });
-
         docs_dictionary = new TreeMap<>(new DocComparator());
         staticPostingsPath = postingPath;
     }
 
-    private SegmentFilePartition[] segmentFilePartitions;
+    private String[] chunksCurrLines;
+    private BufferedReader[] segsReaders;
     private Posting termsPosting;
-    private Posting docsPosting;
+    private HashMap<String, Boolean> ifTermStartsWithCapital;
 
-    public Indexer(SegmentFilePartition[] segmentFilePartitions) {
-        this.segmentFilePartitions = segmentFilePartitions;
-    }
 
-    public Indexer(SegmentFilePartition[] segmentFilesInverter, Posting termsPostingFile) {
+    Indexer(Posting termsPostingFile) {
         termsPosting = termsPostingFile;
         //docsPosting = docsPostingFile;
-        this.segmentFilePartitions = segmentFilesInverter;
     }
 
-
-    public void appendSegmentPartitionRangeToPostingAndIndexes() {
-        //TreeMap<String, String> TermToDocs = new TreeMap<>(new TermComparator()); // <TermContent, list of docs in format: <docNum>,<tf>,<termLocationInDoc>,"#">
-        HashMap<String, String> charTerms = new HashMap<>();
-        HashMap<String, Boolean> ifTermStartsWithCapital = new HashMap<>();
-        for (int i = 0; i < segmentFilePartitions.length; i++) {
-            StringBuilder sb;
-            String line = segmentFilePartitions[i].readLine();
-            while (line != null) {
-                if (line.contains("<D>")) {
-                    sb = new StringBuilder();
-                    String docNo = "";
-                    line = line.replace("<D>", "");
-                    String[] docLineSplited = StringUtils.split(line, ",");
-                    docNo = docLineSplited[0];
-                    line = segmentFilePartitions[i].readLine();
-                    while (line != null && !line.contains("<D>")) {
-                        String tf = "";
-                        String[] termLineSplitedByLocsPar = StringUtils.split(line, "[");
-                        int lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-                        if (lastIndexOfComma == -1) { // Not a really term (there is no location)
-                            line = segmentFilePartitions[i].readLine();
-                            continue;
-                        }
-                        termLineSplitedByLocsPar[0] = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // To get <Term>,<tf>
-                        lastIndexOfComma = StringUtils.lastIndexOf(termLineSplitedByLocsPar[0], ",");
-                        if (lastIndexOfComma == -1) {
-                            line = segmentFilePartitions[i].readLine();
-                            continue;
-                        }
-                        String locs = "";
-                        if (termLineSplitedByLocsPar.length > 1)
-                            locs = "[" + termLineSplitedByLocsPar[1];
-                        tf = StringUtils.substring(termLineSplitedByLocsPar[0], lastIndexOfComma + 1); // to get <tf>
-                        String term = StringUtils.substring(termLineSplitedByLocsPar[0], 0, lastIndexOfComma); // to get <term>
-                        sb.append(docNo).append(",").append(tf).append(",").append(locs).append("#");
-
-                        if (term.charAt(0) == '*' && term.length() > 1) {
-                            term = StringUtils.substring(term, 1);
-                            if (!ifTermStartsWithCapital.containsKey(term))
-                                ifTermStartsWithCapital.put(term, true);
-                        } else if (term.charAt(0) != '*') {
-                            ifTermStartsWithCapital.put(term, false);
-                        }
-                        if (charTerms.containsKey(term)) {
-                            String value = charTerms.get(term);
-                            value = sb.append(value).toString();
-                            charTerms.put(term, value);
-                        } else
-                            charTerms.put(term, sb.toString());
-                        line = segmentFilePartitions[i].readLine();
-                        sb.delete(0, sb.length());
-                        sb.setLength(0);
-                    }
+    void appendSegmentPartitionRangeToPostingAndIndexes() throws FileNotFoundException {
+        ArrayList<String> chunksPath = getChunkPath();
+        chunksCurrLines = new String[chunksPath.size()];
+        segsReaders = new BufferedReader[chunksPath.size()];
+        TreeMap<String, String> termToDocs = new TreeMap<>(new TermComparator());
+        ifTermStartsWithCapital = new HashMap<>();
+        for (int i = 0; i < segsReaders.length; i++) {
+            segsReaders[i] = new BufferedReader(new FileReader(chunksPath.get(i)));
+            try {
+                chunksCurrLines[i] = segsReaders[i].readLine(); // each readers reads it's first term.
+                if (chunksCurrLines[i].charAt(0) == '*' && chunksCurrLines[i].length() > 1) {
+                    chunksCurrLines[i] = StringUtils.substring(chunksCurrLines[i], 1);
+                    if (!ifTermStartsWithCapital.containsKey(chunksCurrLines[i]))
+                        ifTermStartsWithCapital.put(chunksCurrLines[i], true);
+                } else if (chunksCurrLines[i].charAt(0) != '*') {
+                    ifTermStartsWithCapital.put(chunksCurrLines[i], false);
                 }
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-        System.out.println("Starting to writeTermToPosting");
-        termsPosting.writeToTermsPosting(charTerms, ifTermStartsWithCapital);
+        while (!finishToRead()) {
+            termToDocs.clear();
+            while (termToDocs.size() < 2500 || isContainsTheNextMin(termToDocs)) {
+                String minTermDetails = getMinimum(chunksCurrLines);
+                if (minTermDetails.contains("null"))
+                    break;
+                int termIsUntilIndex = StringUtils.indexOf(minTermDetails, "@");
+                String term = StringUtils.substring(minTermDetails, 0, termIsUntilIndex);
+
+                String listOfDocs = StringUtils.substring(minTermDetails, termIsUntilIndex + 1);
+                if (termToDocs.containsKey(term)) {
+                    String curValue = termToDocs.get(term);
+                    String newValue = curValue + listOfDocs;
+                    termToDocs.put(term, newValue);
+                } else
+                    termToDocs.put(term, listOfDocs);
+            }
+            termsPosting.writeToTermsPosting(termToDocs, ifTermStartsWithCapital);
+            ifTermStartsWithCapital.clear();
+            ifTermStartsWithCapital = new HashMap<>();
+        }
+        for (BufferedReader segsReader : segsReaders) {
+            try {
+                segsReader.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
-//    private boolean isRealDoc(String line) {
-//        if (line.contains("null"))
-//            return false;
-//        return true;
-//    }
+    private boolean isContainsTheNextMin(TreeMap<String, String> termToDocs) {
+        for (String chunksCurrLine : chunksCurrLines) {
+            if (termToDocs.containsKey(chunksCurrLine))
+                return true;
+        }
+        return false;
+    }
 
-    public static void writeDictionariesToDisc() {
+    private String getMinimum(String[] chunksCurrLines) {
+        String docsOfTerm = "";
+        String minSoFar = ""; // The term it self
+        for (String chunksCurrLine : chunksCurrLines) {
+            if (chunksCurrLine != null && !chunksCurrLine.equals("")) {
+                minSoFar = chunksCurrLine;
+                break;
+            }
+        }
+        int indexOfMin = 0;
+        for (int i = 0; i < chunksCurrLines.length; i++) {
+            if (chunksCurrLines[i] != null && minSoFar != null && chunksCurrLines[i].compareTo(minSoFar) < 1) {
+                minSoFar = chunksCurrLines[i];
+                indexOfMin = i;
+            }
+        }
+        try {
+            docsOfTerm = segsReaders[indexOfMin].readLine();  // The docs which contains the minimum term
+            String nextTerm = segsReaders[indexOfMin].readLine(); // Hold the next term
+            chunksCurrLines[indexOfMin] = nextTerm;
+            if (chunksCurrLines[indexOfMin] != null) {
+                if (nextTerm.charAt(0) == '*' && nextTerm.length() > 1) {
+                    nextTerm = StringUtils.substring(nextTerm, 1);
+                    chunksCurrLines[indexOfMin] = nextTerm;
+                    if (!ifTermStartsWithCapital.containsKey(nextTerm))
+                        ifTermStartsWithCapital.put(nextTerm, true);
+                } else if (nextTerm.charAt(0) != '*') {
+                    ifTermStartsWithCapital.put(nextTerm, false);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return minSoFar + "@" + docsOfTerm; // <Term>"@"<ListOfDocs>
+    }
+
+    private boolean finishToRead() {
+        for (String chunksCurrLine : chunksCurrLines) {
+            if (chunksCurrLine != null)
+                return false;
+        }
+        return true;
+    }
+
+
+    static void writeDictionariesToDisc() {
         try {
             Iterator termIt = terms_dictionary.entrySet().iterator();
             int counter = 0;
             while (termIt.hasNext()) {
                 Map.Entry pair = (Map.Entry) termIt.next();
                 try {
-                    termDictionary_bf.append(pair.getKey().toString() + "," + pair.getValue().toString() + "\n");
+                    termDictionary_bf.append(pair.getKey().toString()).append(",").append(pair.getValue().toString()).append("\n");
                     counter++;
                     if (counter > 10000) {
                         termDictionary_bf.flush();
@@ -135,6 +162,7 @@ public class Indexer {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                termDictionary_bf.flush();
                 termIt.remove(); // avoids a ConcurrentModificationException
             }
             termDictionary_bf.flush();
@@ -142,20 +170,21 @@ public class Indexer {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        FileWriter docDictionary_fw = null;
+        AtomicReference<FileWriter> docDictionary_fw = new AtomicReference<>(null);
 
         try {
-            docDictionary_fw = new FileWriter(staticPostingsPath + "\\docDictionary.txt");
+            docDictionary_fw.set(new FileWriter(staticPostingsPath + "\\docDictionary.txt"));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        BufferedWriter docDictionary_bf = new BufferedWriter(docDictionary_fw);
+        assert docDictionary_fw.get() != null;
+        BufferedWriter docDictionary_bf = new BufferedWriter(docDictionary_fw.get());
         Iterator docIt = docs_dictionary.entrySet().iterator();
         int counter = 0;
         while (docIt.hasNext()) {
             Map.Entry pair = (Map.Entry) docIt.next();
             try {
-                docDictionary_bf.append(pair.getKey().toString() + "," + pair.getValue().toString() + "\n");
+                docDictionary_bf.append(pair.getKey().toString()).append(",").append(pair.getValue().toString()).append("\n");
                 counter++;
                 if (counter > 10000) {
                     docDictionary_bf.flush();
@@ -183,7 +212,7 @@ public class Indexer {
                 try {
                     String key = pair.getKey().toString();
                     String cityDetailsFromApi = getCityDetailsFromApi(key);
-                    citiesDictionary_bf.append(key).append(",").append(cityDetailsFromApi).append(",").append(pair.getValue().toString() + "\n");
+                    citiesDictionary_bf.append(key).append(",").append(cityDetailsFromApi).append(",").append(pair.getValue().toString()).append("\n");
                     counter++;
                     if (counter > 10000) {
                         citiesDictionary_bf.flush();
@@ -218,16 +247,16 @@ public class Indexer {
     }
 
 
-    synchronized public static void addNewDocToDocDictionary(String docNo, String docValue) {
+    synchronized static void addNewDocToDocDictionary(String docNo, int docValue) {
         docs_dictionary.put(docNo, docValue);
     }
 
-    public static void closeIO() {
-        try {
-            termDictionary_bf.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private ArrayList<String> getChunkPath() {
+        ArrayList<String> filesPathsList = new ArrayList<>();
+        final File folder = new File(staticPostingsPath + "\\Segment Files");
+        for (final File fileEntry : folder.listFiles())
+            filesPathsList.add(fileEntry.getPath());
+        return filesPathsList;
     }
 
     public static class TermComparator implements Comparator<Object> {
@@ -254,4 +283,6 @@ public class Indexer {
         }
     }
 }
+
+
 
