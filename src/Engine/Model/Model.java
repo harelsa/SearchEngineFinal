@@ -109,9 +109,9 @@ public class Model extends Observable {
                     String docsList = "";
                     int firstIndexOfComma = StringUtils.indexOf(line, ",");
                     int lastIndexOfComma = StringUtils.lastIndexOf(line, ",");
-                    city = StringUtils.substring(line, 0, firstIndexOfComma);
+                    city = StringUtils.substring(line, 0, lastIndexOfComma); // city with details
                     docsList = StringUtils.substring(line, lastIndexOfComma + 1);
-                    ;
+
                     citiesDictionary.put(city, docsList);
                 }
             } catch (Exception e) {
@@ -143,23 +143,23 @@ public class Model extends Observable {
                 }
             } catch (Exception e) {
             }
-            String docPointer = docsDictionary.get("FBIS3-3366");
-            int docPointerInt = Integer.parseInt(docPointer);
-            try {
-                BufferedReader br_docPosting = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming() + "\\Docs" + "\\docsPosting.txt"));
-                for (int i = 0; i < docPointerInt; i++) {
-                    br_docPosting.readLine();
-                }
-                String docPostingLine = br_docPosting.readLine();
-
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-
-            String line = null;
+//            String docPointer = docsDictionary.get("FBIS3-3366");
+//            int docPointerInt = Integer.parseInt(docPointer);
+//            try {
+//                BufferedReader br_docPosting = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming() + "\\Docs" + "\\docsPosting.txt"));
+//                for (int i = 0; i < docPointerInt; i++) {
+//                    br_docPosting.readLine();
+//                }
+//                String docPostingLine = br_docPosting.readLine();
+//
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//
+//            String line = null;
 
 
         }
@@ -217,12 +217,29 @@ public class Model extends Observable {
     }
 
     public void printTests() {
+
+        printAnswer5();
         printAnswer6();
         try {
             printAnswer7();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void printAnswer5(){
+        int noneCapitalCity = 0;
+        int totalNumOfCities = citiesDictionary.size();
+        for(Map.Entry<String,String> entry : citiesDictionary.entrySet()) {
+            String currCity = entry.getKey();
+            String[] cityAndDetails = StringUtils.split(currCity, ",");
+            if (cityAndDetails.length < 2 || cityAndDetails[1].equals("")){
+                noneCapitalCity++;
+                }
+            }
+        System.out.println("---THE ANSWER FOR QUESTION 5---");
+        System.out.println("Number of unique cities: " + totalNumOfCities);
+        System.out.println("Number of none capital cities: " + noneCapitalCity);
     }
 
     private void printAnswer6() {
@@ -250,7 +267,7 @@ public class Model extends Observable {
         System.out.println("---THE ANSWER FOR QUESTION 6---");
 
 
-        System.out.println(maxDocNumSoFar + maxCitySoFar + maxTfSoFar);
+        System.out.println(maxDocNumSoFar + " " +  maxCitySoFar + " " +  maxTfSoFar);
     }
 
     private void printAnswer7() throws IOException {

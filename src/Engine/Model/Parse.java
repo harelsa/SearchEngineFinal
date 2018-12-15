@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.math.BigDecimal;
 import java.util.*;
 
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -604,7 +605,12 @@ public class Parse {
             temp = cleanToken(temp) ;
             if (token2.equals("billion")) {
                 temp = temp.replaceAll("," , "");
-                if (isNumber(temp)) value = new BigDecimal(Double.parseDouble(temp) * BILLION);
+                try {
+                    if (isNumber(temp)) value = new BigDecimal(Double.parseDouble(temp) * BILLION);
+                }
+                catch (Exception e){
+
+                }
             }
             if (token2.equals("million")) {
                 temp = temp.replaceAll("," , "");
@@ -624,7 +630,12 @@ public class Parse {
             if (token1.endsWith("bn")) {
                 temp = saved_original.replaceAll("bn", "");
                 Matcher regularNUMmatcher = REGULAR_NUM.matcher(temp);
-                if (regularNUMmatcher.find()) value = new BigDecimal(Double.parseDouble(temp) * BILLION) ;
+                try {
+                    if (regularNUMmatcher.find()) value = new BigDecimal(Double.parseDouble(temp) * BILLION);
+                }
+                catch (Exception e){
+
+                }
 
             }
             if (token1.endsWith("m")) {
