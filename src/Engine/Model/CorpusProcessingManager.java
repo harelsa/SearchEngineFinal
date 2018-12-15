@@ -128,6 +128,7 @@ public class CorpusProcessingManager {
     /**
      * This method manages the parallel run of the parsers.
      * The method is part of a mechanism that takes care of parallelism in performing the reading and parsing operation of multiple files simultaneously.
+     * Each time a chunk of 20 files will be sent on which the read and parse operations will be performed
      * @throws InterruptedException
      */
     private void readAndParse() throws InterruptedException {

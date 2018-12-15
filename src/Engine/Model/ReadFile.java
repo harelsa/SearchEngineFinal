@@ -43,8 +43,6 @@ public class ReadFile {
     /**
      * read line by line from giving file path and sends doc  & doc text's to parser
      * @param
-
-
      */
     public void readAndParseLineByLine(ArrayList<String> paths_list , int chunk  ) {
         int y = 0 ;
@@ -179,7 +177,6 @@ public class ReadFile {
                     e.printStackTrace();
                 }
             }
-
         }
     }
 
