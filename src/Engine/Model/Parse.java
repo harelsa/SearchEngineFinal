@@ -418,6 +418,8 @@ public class Parse {
 
 
     private synchronized void addTermFunc(String addTerm, String docNo ) {
+        if (stopwords.contains(addTerm.toLowerCase()))
+            return;
         StringBuilder sb = new StringBuilder();
         if (Character.isUpperCase(addTerm.charAt(0))){
             addTerm = addTerm.toLowerCase();
