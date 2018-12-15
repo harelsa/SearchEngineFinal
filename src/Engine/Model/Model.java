@@ -108,7 +108,7 @@ public class Model extends Observable {
      */
     public boolean resetAll() {
         File dir = new File(postingPath + "\\Postings" + ifStemming());
-        System.out.println("Deletes :" + postingPath + "\\Postings"+ifStemming());
+        System.out.println("Deletes: " + postingPath + "\\Postings"+ifStemming());
         if (dir.exists()) {
 
             try {

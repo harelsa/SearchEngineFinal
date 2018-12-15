@@ -23,43 +23,29 @@ import java.util.concurrent.Executors;
 public class CorpusProcessingManager {
     public static final boolean testMode = true;
 
-    private final int NUM_OF_PARSERS = 2; // Number of parsers threads
-    private final int NUM_OF_SEGMENT_FILES= 8; // Unique segment file for each parse thread
-    private final int NUM_OF_SEGMENT_PARTITIONS= 36; // Unique segment file for each parse thread
-    private final int NUM_OF_INVERTERS = 36; // Num of inverters. Determined according to the subgroups that will be defined for each segment file (a-c, d-g, etc)
     private static double MILLION = Math.pow(10, 6);
-    private ReadFile reader;
-    private String corpusPath;
-    private String postingPath ;
-    private String originalPath;
-    private final boolean stemming; // If the current processing should be used in the stemming
-    private Parse parser ;
-    private SegmentFile[] segmentFiles = new SegmentFile[NUM_OF_SEGMENT_FILES];
-    private Indexer[] inverters = new Indexer[NUM_OF_INVERTERS];
+    private ReadFile reader; // The reader will be responsible for reading the files and breaking them into parts that will be passed to the parser
+    private String corpusPath; // The document repository path to perform the processing operation
+    private String postingPath ; // A path for the posting files depending on the user's selection
+    private Indexer inverter; // The inverter will be responsible for constructing the inverter indexes
     private ArrayList<String> filesPathsList; // A data structure that will hold all file paths in the corpus
-    private static ExecutorService parseExecutor; // Thread pool for the parsers run
-    private static ExecutorService invertedExecutor; // Thread pool for the inverters run
     private HashMap<String,String > inverted_city; // < State , City >
-    public static ExecutorService docsPostingWriterExecutor;
+    private static ExecutorService parseExecutor; // Thread pool for the parsers run
     public static ConcurrentHashMap<String, City> cities ; // < City , City_obj >  cities after parsing
 
 
     public CorpusProcessingManager(String corpusPath, String postingPath  , boolean stemming) {
         this.corpusPath = corpusPath;
-        this.originalPath = postingPath;
         this.postingPath =  postingPath + "\\Postings" + ifStemming(stemming);
-        this.stemming = stemming ;
 
         this.reader = new ReadFile(postingPath , stemming);
         createDirs(this.postingPath);
         Posting.initPosting(this.postingPath + "\\Docs");
-        initParsers();
-        initInverters();
+        inverter = new Indexer(new Posting(this.postingPath));
 
         filesPathsList = new ArrayList<>();
+        int NUM_OF_PARSERS = 2;
         parseExecutor = Executors.newFixedThreadPool(NUM_OF_PARSERS);
-        invertedExecutor = Executors.newFixedThreadPool(NUM_OF_INVERTERS);
-        docsPostingWriterExecutor = Executors.newFixedThreadPool(8);
         cities = new ConcurrentHashMap<>();
         inverted_city = new HashMap<>() ;
     }
@@ -80,26 +66,6 @@ public class CorpusProcessingManager {
         new File(postingPath + "\\Segment Files").mkdirs();
     }
 
-    /**
-     * Initialization of the inverters.
-     * The method links each inverter to bunch of specific segment file partition (a certain alphabet range of terms) from the segment files.
-     * In addition, each inverter is linked to its own unique posting file.
-     * This posting will eventually contain the terms that will be in the alphabetical range defined for each inverter.
-     */
-    private void initInverters() {
-        inverters[0] = new Indexer(new Posting(postingPath));
-    }
-
-    /**
-     * Initialization of the parsers.
-     * And links each parser to specific segment file which will contain the parsing results of all documents parse processed.
-     */
-    private void initParsers() {
-//        for (int i = 0; i < NUM_OF_PARSERS; i++) {
-//            segmentFiles[i] = new SegmentFile(getSegmentFilePath(i) , stemming );
-//            parsers[i] = new Parse(segmentFiles[i], originalPath);
-//        }
-    }
 
 
     /**
@@ -142,27 +108,20 @@ public class CorpusProcessingManager {
             String timeStamp1 = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
             System.out.println("Finished building Inverted Index: " + timeStamp1);
         }
-//        closeAllSegmentFiles();
-//        try {
-//            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        //closeAllSegmentFiles();
+        try {
+            FileUtils.deleteDirectory(new File(postingPath + "//Segment Files"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         buildCitiesPosting();
-//        docsPostingWriterExecutor.shutdown();
-//        while (!docsPostingWriterExecutor.isTerminated()) {
-//        }
-
     }
 
 
 
 
     private void buildInvertedIndex() throws FileNotFoundException {
-//        for (int i = 0; i < NUM_OF_INVERTERS; i++) {
-//            System.out.println("inverter : " + i%NUM_OF_INVERTERS);
-            inverters[0].appendSegmentPartitionRangeToPostingAndIndexes();
-
+            inverter.appendSegmentPartitionRangeToPostingAndIndexes();
         System.out.println("done");
     }
 
@@ -173,7 +132,6 @@ public class CorpusProcessingManager {
      */
     private void readAndParse() throws InterruptedException {
         for (int i = 0; i < filesPathsList.size(); i++) {
-            int finalI = i;
             int j = i ;
             ArrayList<String> temp_list= new ArrayList<>() ;
             int u = 0 ;
@@ -201,42 +159,6 @@ public class CorpusProcessingManager {
         //end of parse
     }
 
-    /**
-     * An auxiliary method that makes it easy to retrieve a segment file path that belongs to a specific parser
-     * @param i The parse number
-     * @return Segment file path of a specific parse.
-     */
-    private String getSegmentFilePath(int i) {
-        String segmantBaseFilePath = this.postingPath + "\\Segment Files";
-        String segmantFilePath = "";
-        switch (i) {
-            case 0:
-                segmantFilePath = segmantBaseFilePath + "\\Parser1";
-                break;
-            case 1:
-                segmantFilePath = segmantBaseFilePath + "\\Parser2";
-                break;
-            case 2:
-                segmantFilePath = segmantBaseFilePath + "\\Parser3";
-                break;
-            case 3:
-                segmantFilePath = segmantBaseFilePath + "\\Parser4";
-                break;
-            case 4:
-                segmantFilePath = segmantBaseFilePath + "\\Parser5";
-                break;
-            case 5:
-                segmantFilePath = segmantBaseFilePath + "\\Parser6";
-                break;
-            case 6:
-                segmantFilePath = segmantBaseFilePath + "\\Parser7";
-                break;
-            case 7:
-                segmantFilePath = segmantBaseFilePath + "\\Parser8";
-                break;
-        }
-        return segmantFilePath;
-    }
 
     /**
      * This method, along with the following method, is responsible for adding the paths of all corpus files into the filePathsList data structure.

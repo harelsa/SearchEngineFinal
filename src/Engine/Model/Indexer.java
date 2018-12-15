@@ -1,5 +1,12 @@
 package Engine.Model;
-
+/**
+ * This class is responsible for creating the various indexes.
+ * The methods in this class manage the creation of the Posting files for the terms index,
+ * And the creation of dictionaries:
+ *  1) Doc to Terms
+ *  2) Term to Docs
+ *  3) City to Docs
+ */
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
@@ -11,8 +18,6 @@ class Indexer {
     static TreeMap<String, String> cities_dictionary;
     static TreeMap<String, Integer> docs_dictionary;
     private static String staticPostingsPath;
-
-
     private static BufferedWriter termDictionary_bf;
 
 
@@ -39,7 +44,14 @@ class Indexer {
         termsPosting = termsPostingFile;
         //docsPosting = docsPostingFile;
     }
-
+    /**
+     * This method is triggered by a number of threads as the number of Partitions we have divided into each Segment File.
+     * Each thread is actually contains an instance of the indexer and is responsible for processing a specific alphabetic range of terms.
+     * The following method makes preliminary processing of information in the Segment Files Partitions;
+     * it creates a TreeMap array when the keys of each TreeMap is the Term value and the value is details about the Term.
+     * Each TreeMap contains the information from one Segment File Partition.
+     * After the information of all segment file partitions has been entered into the array, we send the array to write in posting.
+     */
     void appendSegmentPartitionRangeToPostingAndIndexes() throws FileNotFoundException {
         ArrayList<String> chunksPath = getChunkPath();
         chunksCurrLines = new String[chunksPath.size()];
