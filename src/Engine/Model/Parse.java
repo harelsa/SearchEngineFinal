@@ -208,8 +208,7 @@ public class Parse {
                 i += 1;
                 continue;
             }
-            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
-                System.out.print("");
+
 
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
