@@ -208,8 +208,7 @@ public class Parse {
                 i += 1;
                 continue;
             }
-            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
-                System.out.print("");
+
 
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
@@ -419,6 +418,8 @@ public class Parse {
 
 
     private synchronized void addTermFunc(String addTerm, String docNo ) {
+        if (stopwords.contains(addTerm.toLowerCase()))
+            return;
         StringBuilder sb = new StringBuilder();
         if (Character.isUpperCase(addTerm.charAt(0))){
             addTerm = addTerm.toLowerCase();
