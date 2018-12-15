@@ -146,8 +146,8 @@ public class Parse {
         String[] tokens;
         tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> ") ;
         getTerms(tokens, currDoc);
-
-        printFBIS3ToFile() ;
+//        if ( currDoc.docNo.equals("FBIS3-3366"))
+//        printFBIS3ToFile() ;
         currDoc.updateAfterParsing();
 
         return null;
@@ -446,10 +446,10 @@ public class Parse {
 
     private synchronized void addTermFunc(String addTerm, String docNo ) {
         //help with testin for the word doc
-        if (docNo.equals("FBIS3-3366"))
-            addTo_FBIS3_Terms(addTerm);
+//        if (docNo.equals("FBIS3-3366"))
+//            addTo_FBIS3_Terms(addTerm);
 
-        if (stopwords.contains(addTerm.toLowerCase()))
+        if (stopwords.contains(addTerm.toLowerCase()) || addTerm.equals("xx"))
             return;
         StringBuilder sb = new StringBuilder();
         if (Character.isUpperCase(addTerm.charAt(0))){
