@@ -10,6 +10,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.net.HttpURLConnection;
@@ -114,7 +115,7 @@ public class CorpusProcessingManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        buildCitiesPosting();
+        AddInfoToCities();
     }
 
 
@@ -154,7 +155,7 @@ public class CorpusProcessingManager {
     }
 
 
-    public void buildCitiesPosting(){
+    public void AddInfoToCities(){
         cities = reader.getCities() ;
         getCitiesInfo () ;
         //end of parse
@@ -231,16 +232,26 @@ public class CorpusProcessingManager {
         //while (() != null) {
         //response.append(inputLine);
         String[] splited = StringUtils.split(inputLine,"[]}{,:\"") ;
-        for ( int i= 0 ; i < splited.length-3; ) {
-            String s =  splited[i] ;
-            if (s.equals("[") || s.equals(",") || s.equals("]") || s.equals("name") || s.equals("capital")) {
+        for ( int i= 0 ; i < splited.length; ) {
+            String s = splited[i];
+            String state = "";
+            String city = "";
+            if (!splited[i].equals("name")){
                 i++;
-                continue;
+            continue;
             }
-            //String[] splited_split = StringUtils.split(inputLine,"") ;
+            if ( splited[i].equals("name")) {
+                i++;
+                state = splited[i].toLowerCase();
+                i++;
+            }
+            if ( splited[i].equals("capital")) {
+                i++;
+                if ( Character.isUpperCase(splited[i].charAt(0)))
+                    city = splited[i].toLowerCase();
+                else city = "none" ;
 
-            String state = splited[i].toLowerCase();
-            String city = splited[i+2].toLowerCase();
+            }
             String first_part = "" ;
             if ( city.contains(" ") ) // 2 word city
                 first_part = city.split(" ")[0].toLowerCase();
@@ -249,7 +260,6 @@ public class CorpusProcessingManager {
                 if (city_obj == null )
                     city_obj = cities.get(first_part) ;
                 if ( city_obj == null ) {
-                    i=i+3 ;
                     continue;
                 }
                 try {
@@ -262,7 +272,7 @@ public class CorpusProcessingManager {
                 }
 
             }
-            i=i+3;
+
         }
 
         // }
