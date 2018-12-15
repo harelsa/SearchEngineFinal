@@ -19,6 +19,7 @@ public class Model extends Observable {
     // will be used in project part 2
     HashMap < String , String[] > termDictionary = new HashMap<>();
     TreeMap < String , String > citiesDictionary = new TreeMap<>();
+    TreeMap < String , String > docsDictionary = new TreeMap<>();
 
     /**
      * run corpus processing manager , get back info from posting process and
@@ -71,57 +72,96 @@ public class Model extends Observable {
      * @param stemming
      */
     public void loadDicToMemory(String stemming) {
-        File dir = new File(postingPath + "\\Postings"+ ifStemming() );
-        if ( dir!= null && dir.exists()){
+        File dir = new File(postingPath + "\\Postings" + ifStemming());
+        if (dir != null && dir.exists()) {
             StringBuilder sb = new StringBuilder();
             try {
-                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming()+ "\\termDictionary.txt"));
-                String line = "" ;
-                while ((line = br_dic.readLine()) != null){
+                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming() + "\\termDictionary.txt"));
+                String line = "";
+                while ((line = br_dic.readLine()) != null) {
 
                     String term = "";
                     String tf = "";
-                    String[] splited = StringUtils.split(line,"<D>");
+                    String[] splited = StringUtils.split(line, "<D>");
                     String[] termSplited = StringUtils.split(splited[1], ",");
                     term = splited[0];
-                    termDictionary.put ( term , termSplited) ;
+                    termDictionary.put(term, termSplited);
                 }
+            } catch (Exception e) {
             }
-            catch (Exception e ){}
 
             String line = null;
 
             JOptionPane.showMessageDialog(null, "Directoy Loaded to Memory", "Load", JOptionPane.INFORMATION_MESSAGE);
-        }
-        else {
+        } else {
             JOptionPane.showMessageDialog(null, "Posting Directory does not Exists", "Error", JOptionPane.ERROR_MESSAGE);
         }
 
-        File cityDir = new File(postingPath + "\\Postings"+ ifStemming() );
-        if ( dir!= null && cityDir.exists()){
+        File cityDir = new File(postingPath + "\\Postings" + ifStemming());
+        if (dir != null && cityDir.exists()) {
             StringBuilder sb = new StringBuilder();
             try {
-                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming()+ "\\citiesDictionary.txt"));
-                String line = "" ;
-                while ((line = br_dic.readLine()) != null){
+                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming() + "\\citiesDictionary.txt"));
+                String line = "";
+                while ((line = br_dic.readLine()) != null) {
 
                     String city = "";
                     String docsList = "";
                     int firstIndexOfComma = StringUtils.indexOf(line, ",");
                     int lastIndexOfComma = StringUtils.lastIndexOf(line, ",");
-                    city = StringUtils.substring(line, 0, firstIndexOfComma);
-                    docsList = StringUtils.substring(line, lastIndexOfComma+1);;
-                    citiesDictionary.put ( city , docsList) ;
+                    city = StringUtils.substring(line, 0, lastIndexOfComma); // city with details
+                    docsList = StringUtils.substring(line, lastIndexOfComma + 1);
+
+                    citiesDictionary.put(city, docsList);
                 }
+            } catch (Exception e) {
             }
-            catch (Exception e ){}
 
             String line = null;
 
+
             JOptionPane.showMessageDialog(null, "Directoy Loaded to Memory", "Load", JOptionPane.INFORMATION_MESSAGE);
-        }
-        else {
+        } else {
             JOptionPane.showMessageDialog(null, "Posting Directory does not Exists", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+
+        File docsDir = new File(postingPath + "\\Postings" + ifStemming());
+        if (dir != null && docsDir.exists()) {
+            StringBuilder sb = new StringBuilder();
+            try {
+                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming() + "\\docsDictionary.txt"));
+                String line = "";
+                while ((line = br_dic.readLine()) != null) {
+
+                    String docNumber = "";
+                    String pointer = "";
+                    int firstIndexOfComma = StringUtils.indexOf(line, ",");
+                    docNumber = StringUtils.substring(line, 0, firstIndexOfComma);
+                    pointer = StringUtils.substring(line,  firstIndexOfComma + 1);
+
+                    docsDictionary.put(docNumber, pointer);
+                }
+            } catch (Exception e) {
+            }
+//            String docPointer = docsDictionary.get("FBIS3-3366");
+//            int docPointerInt = Integer.parseInt(docPointer);
+//            try {
+//                BufferedReader br_docPosting = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming() + "\\Docs" + "\\docsPosting.txt"));
+//                for (int i = 0; i < docPointerInt; i++) {
+//                    br_docPosting.readLine();
+//                }
+//                String docPostingLine = br_docPosting.readLine();
+//
+//            } catch (FileNotFoundException e) {
+//                e.printStackTrace();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//
+//
+//            String line = null;
+
+
         }
     }
 
@@ -177,12 +217,29 @@ public class Model extends Observable {
     }
 
     public void printTests() {
+
+        printAnswer5();
         printAnswer6();
         try {
             printAnswer7();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void printAnswer5(){
+        int noneCapitalCity = 0;
+        int totalNumOfCities = citiesDictionary.size();
+        for(Map.Entry<String,String> entry : citiesDictionary.entrySet()) {
+            String currCity = entry.getKey();
+            String[] cityAndDetails = StringUtils.split(currCity, ",");
+            if (cityAndDetails.length < 2 || cityAndDetails[1].equals("")){
+                noneCapitalCity++;
+                }
+            }
+        System.out.println("---THE ANSWER FOR QUESTION 5---");
+        System.out.println("Number of unique cities: " + totalNumOfCities);
+        System.out.println("Number of none capital cities: " + noneCapitalCity);
     }
 
     private void printAnswer6() {
@@ -208,7 +265,9 @@ public class Model extends Observable {
             }
         }
         System.out.println("---THE ANSWER FOR QUESTION 6---");
-        System.out.println(maxDocNumSoFar + maxCitySoFar + maxTfSoFar);
+
+
+        System.out.println(maxDocNumSoFar + " " +  maxCitySoFar + " " +  maxTfSoFar);
     }
 
     private void printAnswer7() throws IOException {
