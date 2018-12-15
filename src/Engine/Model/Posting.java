@@ -1,6 +1,15 @@
 package Engine.Model;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
+/**
+ * This class represents a Posting File.
+ * The Posting File contains additional information
+ * we need to save for keys that are in a particular index.
+ * We save this information in a text file and link the
+ * relevant information to the keys by adding a pointer in the dictionary,
+ * in our case the pointer will be represented
+ * by a line number of the relevant information in posting file.
+ */
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
@@ -9,8 +18,8 @@ import java.util.*;
 
 public class Posting {
     private static int docsPointer = 1;
-    private static int counter = 0;
     private static int termsPointer = 1;
+    private static int counter = 0;
     private static int docsCounter = 0;
     private static BufferedWriter terms_buffer_writer;
     private static BufferedWriter documents_buffer_writer;
@@ -32,6 +41,14 @@ public class Posting {
         }
     }
 
+    /**
+     * Writes to the disk the list of terms that are contained in the TreeMap.
+     * In addition, the method adds the terms to the term dictionary.
+     * @param termDocs A collection of terms that are sorted in alphabetical order
+     * @param ifTermStartsWithCapital A Hashmap that provides an indication of whether
+     * we should keep a certain term in upper or lower case letters.
+     * The size of this data structure will be the size of the data structure termDocs
+     */
     void writeToTermsPosting(TreeMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
         for (Object o : termDocs.entrySet()) {
             Map.Entry pair = (Map.Entry) o;
@@ -70,8 +87,18 @@ public class Posting {
         }
     }
 
-//
 
+    /**
+     * The method accepts a string of a collection of docs in which a particular term is contained.
+     * And returns the following information:
+     *      1. Which document in the document collection contains
+     *          the highest number of instances from Term.
+     *      2. How many documents there are in the collection
+     *      3. What is the total number of occurrences
+     *          of Term within these documents.
+     * @param listOfTermDocs string of a collection of docs in which a particular term is contained
+     * @return "<D>"<DOC-NO>","<MaxTf>","<TotalTf>,<df>
+     */
     private String getMostFreqDocAndTotalTf(String listOfTermDocs) { // return "<D>"<DOC-NO>","<MaxTf>","<TotalTf>,<df>
         String[] docs = StringUtils.split(listOfTermDocs, "#");
         int df = getDf(listOfTermDocs);
@@ -116,9 +143,13 @@ public class Posting {
         }
     }
 
-    synchronized public static void writeToDocumentsPosting(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms) {
+    /**
+     * This method is responsible for writing to Docs,
+     * it is synchronized because it is called a method that is run by a thread number at the same time.
+     */
+    synchronized public static void writeToDocumentsPosting(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms, String city) {
         try {
-            documents_buffer_writer.append(docNo + "," + parentFileName + "," + mostFreqTerm + "," + tf_mft + "," + numOfUniqueTerms + "\n");
+            documents_buffer_writer.append(docNo + "," + parentFileName + "," + mostFreqTerm + "," + tf_mft + "," + numOfUniqueTerms + "," + city+ "\n");
             docsCounter++;
             if (docsCounter > 7000) {
                 documents_buffer_writer.flush();

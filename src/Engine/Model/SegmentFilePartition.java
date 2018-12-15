@@ -1,20 +1,15 @@
 package Engine.Model;
-
-import javafx.util.Pair;
+/**
+ * This class represents a Segment File of chunk.
+ * In fact, this department manages the writing
+ * text file intended to hold information in the following format: <Term>
+ *                                                                 "#"<DocNo>"|"<tf>"#"<DocNo>"|"<tf>"#"....
+ */
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.TreeMap;
-import java.util.stream.Stream;
 
 public class SegmentFilePartition implements Serializable {
     private BufferedWriter file_buffer_writer;
-    private BufferedReader file_buffer_reader;
     private int counter;
     private int chunk_num;
     private String path_u ;
@@ -24,15 +19,12 @@ public class SegmentFilePartition implements Serializable {
         String segmantPartitionFilePath = path+"\\Segment Files\\seg" + "_" + this.chunk_num + ".txt";
         File newFile = new File(segmantPartitionFilePath );
         try {
-            //newFile.getParentFile().mkdirs();
             newFile.createNewFile();
         }
         catch (Exception e ){}
         this.path_u = segmantPartitionFilePath ;
-        //this.partitionChar = partitionChar;
         try {
             file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
-            file_buffer_reader = new BufferedReader(new FileReader(segmantPartitionFilePath));
         } catch (FileNotFoundException e1) {
             e1.printStackTrace();
         } catch (IOException e1) {
@@ -40,10 +32,11 @@ public class SegmentFilePartition implements Serializable {
         }
     }
 
-   // public int getPartitionChar() {
-//        return chunk_num;
-//    }
-
+    /**
+     * With this method we write a new term to seg file
+     * @param term to be written to the file
+     * @param sb object that holds the list of documents (from those belonging to the chunk) in which the Term is contained
+     */
     synchronized public void signNewTerm(String term , StringBuilder sb) {
         try {
             file_buffer_writer.append(term + "\n");
@@ -53,37 +46,6 @@ public class SegmentFilePartition implements Serializable {
                 file_buffer_writer.flush();
                 counter = 0;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public String readLine(){
-        String line;
-        try {
-            if ((line = file_buffer_reader.readLine()) != null){
-                return line;
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public List<String> readAllLines(){
-        try {
-            System.out.println(path_u);
-        List<String> lines = Files.readAllLines(Paths.get(path_u), StandardCharsets.UTF_8);
-        return lines ;
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-        return null;
-    }
-
-    public void signDocSection(Document currDoc) {
-        try {
-            file_buffer_writer.append("<D>" + currDoc.lightToString() +"</D>" + "\n");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -101,8 +63,6 @@ public class SegmentFilePartition implements Serializable {
         try {
             if (file_buffer_writer != null)
                 file_buffer_writer.close();
-            if (file_buffer_reader != null)
-                file_buffer_reader.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -111,8 +71,4 @@ public class SegmentFilePartition implements Serializable {
     public String getPath() {
         return  path_u ;
     }
-
-//
-//}
-
 }

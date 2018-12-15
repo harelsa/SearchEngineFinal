@@ -59,7 +59,6 @@ public class Parse {
     private static FileReader specialchars_fr;
     private static FileReader months_fr;
 
-    private SegmentFile segmantFile; // each parser gets one segment file to write to
     String path ;
     boolean stemming = false ;
 
@@ -101,7 +100,6 @@ public class Parse {
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
             BufferedReader months_br = new BufferedReader(months_fr);
 
-            this.segmantFile = new SegmentFile(path , stemming );
             FilesTerms = new HashMap< >() ;
             TermsOnly = new TreeMap<String, String>((Comparator) (o1, o2) -> {
                 String s1 = ((String)(o1)).toLowerCase();
@@ -409,12 +407,12 @@ public class Parse {
                 i++;
         }//end for
 
-         writeToDocsFiles( currDoc.docNo , currDoc.getParentFileName() , mostFreqTerm , tf_mft, num_unique_term) ;
+         writeToDocsFiles( currDoc.docNo , currDoc.getParentFileName() , mostFreqTerm , tf_mft, num_unique_term, currDoc.getCity()) ;
         return null ;
     }
 
-    private void writeToDocsFiles(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms) {
-        Posting.writeToDocumentsPosting(docNo, parentFileName, mostFreqTerm, tf_mft, numOfUniqueTerms);
+    private void writeToDocsFiles(String docNo, String parentFileName, String mostFreqTerm, int tf_mft, int numOfUniqueTerms, String city) {
+        Posting.writeToDocumentsPosting(docNo, parentFileName, mostFreqTerm, tf_mft, numOfUniqueTerms, city);
 
 
     }
