@@ -208,8 +208,8 @@ public class Parse {
                 i += 1;
                 continue;
             }
-//            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
-//                System.out.print("");
+            if (tokensArray[i].toUpperCase().contains("MOSCOW"))
+                System.out.print("");
 
             // catch point joint terms
             String temp_char = cleanToken(tokensArray[i]);
@@ -435,14 +435,14 @@ public class Parse {
             //String[] docs = StringUtils.split(value.toString(), "#") ;
             //String[] getnum =StringUtils.split(docs[docs.length-1] , "|") ;
             int start = value.lastIndexOf("#") ;
-            String doc = value.substring(start+1 , value.length()-2);
+            String doc = value.substring(start+1 , value.lastIndexOf("|"));
             if ( !doc.equals(docNo)){ //new doc
                 sb.append(value) ;
                 value.append( "#"+ docNo + "|" + "1" );
             }
             else { //existing doc
                 int num = 0 ;
-                if ( isNumber(value.charAt(value.length()-1)+""))
+                if ( isNumber(value.substring(value.lastIndexOf("|")+1 , value.length())))
                  num= Integer.parseInt(value.substring(value.lastIndexOf("|")+1 , value.length())) ;
                 else{
                     System.out.println("problem : " + value + addTerm);
