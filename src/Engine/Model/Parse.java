@@ -145,7 +145,7 @@ public class Parse {
         String[] tokens;
         tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> ") ;
         getTerms(tokens, currDoc);
-
+        if ( currDoc.docNo.equals("FBIS3-3366"))
         printFBIS3ToFile() ;
         currDoc.updateAfterParsing();
 
