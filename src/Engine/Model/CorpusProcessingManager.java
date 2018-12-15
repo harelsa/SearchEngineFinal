@@ -122,14 +122,13 @@ public class CorpusProcessingManager {
 
 
     private void buildInvertedIndex() throws FileNotFoundException {
-            inverter.appendSegmentPartitionRangeToPostingAndIndexes();
+        inverter.appendSegmentPartitionRangeToPostingAndIndexes();
         System.out.println("done");
     }
 
     /**
      * This method manages the parallel run of the parsers.
      * The method is part of a mechanism that takes care of parallelism in performing the reading and parsing operation of multiple files simultaneously.
-     * Each time a chunk of 20 files will be sent on which the read and parse operations will be performed
      * @throws InterruptedException
      */
     private void readAndParse() throws InterruptedException {
@@ -138,9 +137,9 @@ public class CorpusProcessingManager {
             ArrayList<String> temp_list= new ArrayList<>() ;
             int u = 0 ;
             while ( j < filesPathsList.size() && u < 20 ){
-               temp_list.add( filesPathsList.get(j));
-               j++ ;
-               u++ ;
+                temp_list.add( filesPathsList.get(j));
+                j++ ;
+                u++ ;
             }
             i = j -1  ;
             int finalJ = j;
@@ -238,7 +237,7 @@ public class CorpusProcessingManager {
             String city = "";
             if (!splited[i].equals("name")){
                 i++;
-            continue;
+                continue;
             }
             if ( splited[i].equals("name")) {
                 i++;
