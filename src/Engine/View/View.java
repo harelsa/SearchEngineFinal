@@ -3,6 +3,7 @@ package Engine.View;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -192,4 +193,8 @@ public class View extends Observable {
         } else return false;
     }
 
+    public void printTests(ActionEvent actionEvent) {
+        setChanged();
+        notifyObservers("showTests");
+    }
 }

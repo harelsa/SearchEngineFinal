@@ -34,6 +34,9 @@ public class Controller extends Observable implements Observer {
                 case "update_path":
                     model.pathUpdate(view.corpus_txt_field.getText(), view.posting_txt_field.getText(), view.check_stemming.isSelected());
                     break;
+                case "showTests":
+                    model.printTests();
+                    break;
 
                 default:
                     System.out.println("no match");

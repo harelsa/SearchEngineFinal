@@ -4,12 +4,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Observable;
+import java.io.*;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 /**
  * Part of MVC Design pattern  , get called from controller after View events
@@ -22,6 +18,7 @@ public class Model extends Observable {
     // will allow to load the term dic to prog memory -
     // will be used in project part 2
     HashMap < String , String[] > termDictionary = new HashMap<>();
+    TreeMap < String , String > citiesDictionary = new TreeMap<>();
 
     /**
      * run corpus processing manager , get back info from posting process and
@@ -95,7 +92,33 @@ public class Model extends Observable {
             String line = null;
 
             JOptionPane.showMessageDialog(null, "Directoy Loaded to Memory", "Load", JOptionPane.INFORMATION_MESSAGE);
+        }
+        else {
+            JOptionPane.showMessageDialog(null, "Posting Directory does not Exists", "Error", JOptionPane.ERROR_MESSAGE);
+        }
 
+        File cityDir = new File(postingPath + "\\Postings"+ ifStemming() );
+        if ( dir!= null && cityDir.exists()){
+            StringBuilder sb = new StringBuilder();
+            try {
+                BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings" + ifStemming()+ "\\citiesDictionary.txt"));
+                String line = "" ;
+                while ((line = br_dic.readLine()) != null){
+
+                    String city = "";
+                    String docsList = "";
+                    int firstIndexOfComma = StringUtils.indexOf(line, ",");
+                    int lastIndexOfComma = StringUtils.lastIndexOf(line, ",");
+                    city = StringUtils.substring(line, 0, firstIndexOfComma);
+                    docsList = StringUtils.substring(line, lastIndexOfComma+1);;
+                    citiesDictionary.put ( city , docsList) ;
+                }
+            }
+            catch (Exception e ){}
+
+            String line = null;
+
+            JOptionPane.showMessageDialog(null, "Directoy Loaded to Memory", "Load", JOptionPane.INFORMATION_MESSAGE);
         }
         else {
             JOptionPane.showMessageDialog(null, "Posting Directory does not Exists", "Error", JOptionPane.ERROR_MESSAGE);
@@ -151,5 +174,117 @@ public class Model extends Observable {
         if (is_stemming)
             return "withStemming";
         return "";
+    }
+
+    public void printTests() {
+        printAnswer6();
+        try {
+            printAnswer7();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void printAnswer6() {
+        String docNum = "";
+        String city = "";
+        String locs = "";
+
+        String maxCitySoFar = "";
+        String maxDocNumSoFar = "";
+        int maxTfSoFar = 0;
+
+        for(Map.Entry<String,String> entry : citiesDictionary.entrySet()) {
+            String currCity = entry.getKey();
+            String docsList = entry.getValue();
+            String[] docs = StringUtils.split(docsList, "#");
+            for (int i = 0; i < docs.length; i++) {
+                String[] docNumAndTf = StringUtils.split(docs[i], "|");
+                if ((Integer.parseInt(docNumAndTf[1]) > maxTfSoFar)){
+                    maxCitySoFar = currCity;
+                    maxDocNumSoFar = docNumAndTf[0];
+                    maxTfSoFar = Integer.parseInt(docNumAndTf[1]);
+                }
+            }
+        }
+        System.out.println("---THE ANSWER FOR QUESTION 6---");
+        System.out.println(maxDocNumSoFar + maxCitySoFar + maxTfSoFar);
+    }
+
+    private void printAnswer7() throws IOException {
+        BufferedReader br_dic = new BufferedReader(new FileReader(postingPath + "\\Postings\\termDictionary.txt"));
+        PriorityQueue<String> maxQueue = new PriorityQueue<>(new TermMaxTFComparator());
+        PriorityQueue<String> minQueue = new PriorityQueue<>(new TermMinTFComparator());
+        String line = null;
+        while ((line = br_dic.readLine()) != null){
+            String term = "";
+            String tf = "";
+            String[] splited = StringUtils.split(line,",");
+            String[] termSplited = StringUtils.split(splited[0], "<D>");
+            if (termSplited.length < 1)
+                continue;
+            term = termSplited[0];
+            if (splited.length > 4){
+                tf = splited[splited.length-3];
+            }
+            if (!tf.equals("")){
+                maxQueue.add(tf + "," + term);
+                minQueue.add(tf + "," + term);
+            }
+        }
+        System.out.println("---THE ANSWER FOR QUESTION 7---");
+        System.out.println("The less frequency terms: ");
+        for (int i = 0; i < 10; i++) {
+            String ans = maxQueue.poll();
+            System.out.println(ans);
+        }
+        System.out.println("The most frequency terms: ");
+        for (int i = 0; i < 10; i++) {
+            String ans = minQueue.poll();
+            System.out.println(ans);
+        }
+
+    }
+
+    public static class TermMaxTFComparator implements Comparator<Object> {
+        @Override
+        public int compare(Object o1, Object o2) {
+            String s1 = ((String) (o1));
+            String s2 = ((String) (o2));
+            if (s1.charAt(0) == '*')
+                s1 = s1.substring(1);
+            if (s2.charAt(0) == '*')
+                s2 = s2.substring(1);
+            s1 = StringUtils.split(s1, ",")[0];
+            s2 = StringUtils.split(s2, ",")[0];
+            int intS1 = Integer.parseInt(s1);
+            int intS2 = Integer.parseInt(s2);
+            if (intS1 > intS2)
+                return 1;
+            if (intS1 == intS2)
+                return 0;
+            return -1;
+        }
+    }
+
+    public static class TermMinTFComparator implements Comparator<Object> {
+        @Override
+        public int compare(Object o1, Object o2) {
+            String s1 = ((String) (o1));
+            String s2 = ((String) (o2));
+            if (s1.charAt(0) == '*')
+                s1 = s1.substring(1);
+            if (s2.charAt(0) == '*')
+                s2 = s2.substring(1);
+            s1 = StringUtils.split(s1, ",")[0];
+            s2 = StringUtils.split(s2, ",")[0];
+            int intS1 = Integer.parseInt(s1);
+            int intS2 = Integer.parseInt(s2);
+            if (intS1 > intS2)
+                return -1;
+            if (intS1 == intS2)
+                return 0;
+            return 1;
+        }
     }
 }
