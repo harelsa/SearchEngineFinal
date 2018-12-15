@@ -49,7 +49,7 @@ public class Posting {
      * we should keep a certain term in upper or lower case letters.
      * The size of this data structure will be the size of the data structure termDocs
      */
-    void writeToTermsPosting(TreeMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
+    void writeToTermsPosting(HashMap<String, String> termDocs, HashMap<String, Boolean> ifTermStartsWithCapital) {
         for (Object o : termDocs.entrySet()) {
             Map.Entry pair = (Map.Entry) o;
             String key = pair.getKey().toString(); // term

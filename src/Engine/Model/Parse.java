@@ -1043,7 +1043,4 @@ public class Parse {
     public static boolean isBetween(double x, double lower, double upper) {
         return lower <= x && x <= upper;
     }
-
-
-
 }

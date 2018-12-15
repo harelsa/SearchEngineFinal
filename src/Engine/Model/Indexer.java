@@ -56,7 +56,7 @@ class Indexer {
         ArrayList<String> chunksPath = getChunkPath();
         chunksCurrLines = new String[chunksPath.size()];
         segsReaders = new BufferedReader[chunksPath.size()];
-        TreeMap<String, String> termToDocs = new TreeMap<>(new TermComparator());
+        HashMap<String, String> termToDocs = new HashMap<>();
         ifTermStartsWithCapital = new HashMap<>();
         for (int i = 0; i < segsReaders.length; i++) {
             segsReaders[i] = new BufferedReader(new FileReader(chunksPath.get(i)));
@@ -105,7 +105,7 @@ class Indexer {
     }
 
 
-    private boolean isContainsTheNextMin(TreeMap<String, String> termToDocs) {
+    private boolean isContainsTheNextMin(HashMap<String, String> termToDocs) {
         for (String chunksCurrLine : chunksCurrLines) {
             if (termToDocs.containsKey(chunksCurrLine))
                 return true;
@@ -223,6 +223,8 @@ class Indexer {
                 Map.Entry pair = (Map.Entry) termIt.next();
                 try {
                     String key = pair.getKey().toString();
+                    if (Character.isLowerCase(key.charAt(0)))
+                        continue;
                     String cityDetailsFromApi = getCityDetailsFromApi(key);
                     citiesDictionary_bf.append(key).append(",").append(cityDetailsFromApi).append(",").append(pair.getValue().toString()).append("\n");
                     counter++;
