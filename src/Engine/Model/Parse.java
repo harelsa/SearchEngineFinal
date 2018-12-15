@@ -5,9 +5,7 @@ package Engine.Model;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -47,6 +45,7 @@ public class Parse {
 
     TreeMap< String , String > TermsOnly;
     HashMap < String  , StringBuilder  > FilesTerms ;
+    TreeMap < String , Integer > FBIS3_Terms ;
     String lastDoc = "";
 
     private static HashSet<String> stopwords = new HashSet<>(); // list of all stop words
@@ -100,7 +99,7 @@ public class Parse {
             BufferedReader specialwords_br = new BufferedReader(specialwords_fr);
             BufferedReader specialchars_br = new BufferedReader(specialchars_fr);
             BufferedReader months_br = new BufferedReader(months_fr);
-
+            FBIS3_Terms = new TreeMap<>() ;
             FilesTerms = new HashMap< >() ;
             TermsOnly = new TreeMap<String, String>((Comparator) (o1, o2) -> {
                 String s1 = ((String)(o1)).toLowerCase();
@@ -147,9 +146,35 @@ public class Parse {
         String[] tokens;
         tokens = StringUtils.split(text , "\\`:)?*(|+@#^;!&=}{[]'<> ") ;
         getTerms(tokens, currDoc);
+
+        printFBIS3ToFile() ;
         currDoc.updateAfterParsing();
 
         return null;
+    }
+
+    private void printFBIS3ToFile()  {
+        String segmantPartitionFilePath = path + "\\FBIS3-3366_Terms"  + ".txt";
+        File newFile = new File(segmantPartitionFilePath );
+        Map.Entry<String , Integer> en ;
+        try {
+        BufferedWriter file_buffer_writer = new BufferedWriter(new FileWriter(segmantPartitionFilePath));
+
+            newFile.createNewFile();
+            while( !FBIS3_Terms.isEmpty()) {
+                en = FBIS3_Terms.firstEntry();
+                String term = en.getKey();
+                int tf = en.getValue();
+                file_buffer_writer.append( term + ": " + tf +"\n");
+                FBIS3_Terms.remove(term);
+            }
+            file_buffer_writer.flush();
+            file_buffer_writer.close();
+        }
+
+        catch (Exception e ){}
+
+
     }
 
     public void sendToSeg ( int chunk ){
@@ -196,6 +221,7 @@ public class Parse {
     private SortedMap<String, Term> getTerms(String[] tokensArray, Document currDoc) {
   // < str_term , obj_term >  // will store all the terms in curpos
         //doc no. , perent ,term , tf , n,uniqueterm , pointer
+
         String addTerm = "" ;
         num_unique_term = 0 ;
         mostFreqTerm = "";
@@ -419,6 +445,10 @@ public class Parse {
 
 
     private synchronized void addTermFunc(String addTerm, String docNo ) {
+        //help with testin for the word doc
+        if (docNo.equals("FBIS3-3366"))
+            addTo_FBIS3_Terms(addTerm);
+
         if (stopwords.contains(addTerm.toLowerCase()))
             return;
         StringBuilder sb = new StringBuilder();
@@ -470,6 +500,18 @@ public class Parse {
             }
 
             //sb.delete(0 , sb.length()) ;
+
+    }
+
+    private void addTo_FBIS3_Terms(String addTerm) {
+        if ( FBIS3_Terms.containsKey(addTerm)) {
+            int n = FBIS3_Terms.get(addTerm);
+            n++;
+            FBIS3_Terms.put(addTerm, n);
+        }else {
+                FBIS3_Terms.put(addTerm , 1 ) ;
+
+        }
 
     }
 
